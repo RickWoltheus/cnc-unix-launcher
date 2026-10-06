@@ -37,6 +37,7 @@ jobs:
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash linux/build.sh
       - name: Validate packaged resources and virtual desktop window
         run: |
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash dist/linux/GeneralsXLauncher/start-launcher.sh --check
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test dist/linux/GeneralsXLauncher/GeneralsXLauncher --self-check
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/linux-x11.sh
       - uses: actions/upload-artifact@v4

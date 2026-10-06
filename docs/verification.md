@@ -129,3 +129,13 @@ for the supported target and the remaining desktop tests. No game was started.
 The checksum pins in `manifests/rotr.tsv` were recorded from downloaded archives
 that matched the public mirror's MD5 ETags and sizes. No independent publisher
 signature was available. Keep this qualification in public documentation.
+# Fresh Linux dependency check
+
+The packaged binary failed on a minimal Debian 12 container with
+`ImportError: libGL.so.1: cannot open shared object file`. The new
+`start-launcher.sh --check` reports missing GL/EGL, Wayland and Xcb libraries
+before importing Qt, and prints the Ubuntu/Debian installation command.
+Installing that library list in the disposable container made the preflight
+pass. The standard build container also passed preflight, packaged self-check,
+seven UI/state tests and the virtual X11 launcher smoke test. These checks did
+not sign in to Steam or start a game.

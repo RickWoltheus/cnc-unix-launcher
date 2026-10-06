@@ -311,8 +311,11 @@ struct LauncherView: View {
                 Button("Repair selected mod") { playAfterModInstall = false; model.showModConsent = true }.disabled(model.selectedModInfo == nil || model.selectedGame == "base")
                 Button("Open installation folder") { NSWorkspace.shared.open(model.root) }
                 Link("Game ownership on Steam", destination: steamStore)
+                Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
             }.menuStyle(.borderlessButton).frame(width: 70).disabled(model.busy || model.gameRunning)
             Button(showDetails ? "Hide details" : "Details") { showDetails.toggle() }.buttonStyle(.plain)
+            Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
+                .font(.system(size: 11)).accessibilityIdentifier("github-issues")
             Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
                 Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
                     .font(.system(size: 14, weight: .bold))

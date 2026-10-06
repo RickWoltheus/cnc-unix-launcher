@@ -6,7 +6,7 @@ The Linux view mirrors the four-step flow and one selected-profile Play action.
 
 ## Supported target
 
-The first target is x86_64 Ubuntu/Debian-based desktops with Vulkan-capable GPU
+The first target is x86_64 Ubuntu 24.04+ / Debian 12+ desktops (glibc 2.36 or newer) with Vulkan-capable GPU
 drivers. The upstream GeneralsX engines are the pinned 1.0.2 Flatpak bundles.
 ARM Linux and Steam Deck-specific controller integration are not supported.
 The launcher itself is distributed as a standalone archive, outside Flatpak;
@@ -17,8 +17,12 @@ the game engines run inside Flatpak with explicit access to the installation fol
 Extract `GeneralsX-Launcher-linux-x86_64.tar.gz`, then run:
 
 ```sh
-./GeneralsXLauncher/GeneralsXLauncher
+bash ./GeneralsXLauncher/start-launcher.sh
 ```
+
+The startup script checks glibc and Qt's host desktop libraries, then offers an
+Ubuntu/Debian package installation if libraries are missing. Use `--check` for
+a read-only preflight. Opening the binary directly bypasses this check.
 
 Choose a game and follow the stepper. If Linux dependencies are missing,
 Prepare Linux opens a local terminal to install Flatpak, curl, file and Valve's
@@ -31,6 +35,11 @@ distributions, install those dependencies through the package manager first.
 The native Vulkan driver remains the responsibility of the host distribution;
 the launcher does not replace GPU drivers. NVIDIA Flatpak driver extensions
 must match the host driver.
+
+A supported desktop terminal is required for dependency setup and Steam sign-in:
+`x-terminal-emulator`, GNOME Terminal, Konsole, Xfce Terminal or xterm. Minimal
+systems can install `xterm` through their package manager. Headless servers,
+musl-based distributions and Linux ARM are outside this package's target.
 
 ## Paths and differences
 

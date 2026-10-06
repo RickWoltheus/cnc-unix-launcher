@@ -26,7 +26,8 @@ See [verification.md](docs/verification.md) for the evidence and remaining check
 End users do not need Homebrew, Xcode, a compiler, CrossOver, or a VM. SteamCMD
 requires Apple's free Rosetta; the game engine runs natively as ARM64.
 
-**Linux preview:** x86_64 Ubuntu/Debian-based desktops with Vulkan-capable drivers.
+**Linux preview:** x86_64 Ubuntu 24.04+ / Debian 12+ desktops with Vulkan-capable drivers
+and glibc 2.36 or newer. Intel Macs, macOS 14 and ARM Linux are not supported by these packages.
 The Linux archive bundles Python and Qt; the game engines use upstream Flatpak
 bundles. Prepare Linux guides installation of Flatpak and SteamCMD's 32-bit
 dependencies in a local terminal. See [Linux setup and validation](docs/linux.md).
@@ -64,13 +65,21 @@ SteamCMD updates itself using Valve's normal bootstrap.
 Extract `GeneralsX-Launcher-linux-x86_64.tar.gz` and run:
 
 ```sh
-./GeneralsXLauncher/GeneralsXLauncher
+bash ./GeneralsXLauncher/start-launcher.sh
 ```
 
-Follow the same four-step setup. If your Linux tools are missing, the launcher
+The startup script checks desktop libraries before opening the UI and offers
+installation on Ubuntu/Debian. Follow the same four-step setup. If your Linux tools are missing, the launcher
 opens a terminal for package installation and then continues engine preparation.
 Enter administrator and Steam passwords only in their respective local terminals.
 Vulkan drivers must be installed through the host distribution.
+
+## Bugs and feature requests
+
+Use [GitHub Issues](https://github.com/RickWoltheus/generalsx-mac-launcher/issues)
+or **Bugs & feature requests** in the launcher. Include your OS version, CPU/GPU,
+launcher version, selected game/mod and steps to reproduce. Share relevant error
+messages after removing personal information; never post Steam credentials or game assets.
 
 The four-step setup checks prerequisites before unlocking Steam or Play. Existing
 verified installations can skip completed steps. Steam sign-in guidance updates
