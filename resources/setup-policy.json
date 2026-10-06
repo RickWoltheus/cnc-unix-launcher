@@ -1,0 +1,36 @@
+{
+  "steps": [
+    [],
+    [
+      "platform",
+      "selected"
+    ],
+    [
+      "platform",
+      "selected",
+      "engine",
+      "steam"
+    ],
+    [
+      "platform",
+      "selected",
+      "engine",
+      "steam",
+      "assets"
+    ]
+  ],
+  "completed": [
+    [
+      "platform",
+      "selected"
+    ],
+    [
+      "engine",
+      "steam"
+    ],
+    [
+      "assets"
+    ],
+    []
+  ]
+}

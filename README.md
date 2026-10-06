@@ -1,7 +1,9 @@
-# GeneralsX Launcher for Mac
+# GeneralsX Launcher
 
-A native Mac launcher for Generals and Zero Hour. It installs GeneralsX,
-downloads your owned files through Steam, and installs five curated Zero Hour mods.
+Native macOS and Linux launchers for Generals and Zero Hour. They install
+GeneralsX, download your owned files through Steam, and install five curated
+Zero Hour mods. macOS uses SwiftUI; Linux has a separate Qt/PySide6 interface
+with the same guided flow.
 
 **Development preview. Headless installer checks pass; full gameplay and fresh
 Steam sign-in testing remain pending.** The app builds for ARM64 and its ad-hoc signature
@@ -21,7 +23,14 @@ See [verification.md](docs/verification.md) for the evidence and remaining check
 End users do not need Homebrew, Xcode, a compiler, CrossOver, or a VM. SteamCMD
 requires Apple's free Rosetta; the game engine runs natively as ARM64.
 
-## Install and play
+**Linux preview:** x86_64 Ubuntu/Debian-based desktops with Vulkan-capable drivers.
+The Linux archive bundles Python and Qt; the game engines use upstream Flatpak
+bundles. Prepare Linux guides installation of Flatpak and SteamCMD's 32-bit
+dependencies in a local terminal. See [Linux setup and validation](docs/linux.md).
+Linux headless/offscreen checks have passed; real desktop, sign-in, Flatpak
+sandbox and GPU/gameplay tests remain pending.
+
+## Install and play on macOS
 
 When a verified release is available:
 
@@ -46,6 +55,19 @@ When a verified release is available:
 The app pins GeneralsX 1.0.2 and the mod versions below. Installing the engine
 again repairs it; it does not silently upgrade to an untested upstream version.
 SteamCMD updates itself using Valve's normal bootstrap.
+
+## Install and play on Linux
+
+Extract `GeneralsX-Launcher-linux-x86_64.tar.gz` and run:
+
+```sh
+./GeneralsXLauncher/GeneralsXLauncher
+```
+
+Follow the same four-step setup. If your Linux tools are missing, the launcher
+opens a terminal for package installation and then continues engine preparation.
+Enter administrator and Steam passwords only in their respective local terminals.
+Vulkan drivers must be installed through the host distribution.
 
 The four-step setup checks prerequisites before unlocking Steam or Play. Existing
 verified installations can skip completed steps. Steam sign-in guidance updates
@@ -181,6 +203,11 @@ bash scripts/backend.sh launch base -win -xres 1280 -yres 720
 
 Tests use dummy launchers by default. Never start real games unless the person
 using the machine explicitly asks for a game launch or an end-to-end game test.
+
+For Linux builds and offscreen tests, use the commands in [docs/linux.md](docs/linux.md).
+`CLAUDE.md` requires behavior changes to update both native frontends. Installation,
+checksums, mod activation, Steam status parsing, setup prerequisites and guidance
+resources are shared; platform adapters contain the OS-specific commands.
 
 ## Credits and license
 

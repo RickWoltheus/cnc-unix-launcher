@@ -81,21 +81,15 @@ final class LauncherModel: ObservableObject {
 
     func canEnterStep(_ index: Int) -> Bool {
         guard !busy && !gameRunning else { return false }
-        if index == 0 { return true }
-        guard systemSupported && ["vanilla", "base"].contains(selectedGame) else { return false }
-        if index == 1 { return true }
-        guard gameEngineReady && steam else { return false }
-        if index == 2 { return true }
-        return index == 3 && gameAssetsReady
+        return SetupPolicy.shared.allows(index, facts: setupFacts)
     }
 
     func stepComplete(_ index: Int) -> Bool {
-        switch index {
-        case 0: return systemSupported && ["vanilla", "base"].contains(selectedGame)
-        case 1: return gameEngineReady && steam
-        case 2: return gameAssetsReady
-        default: return false
-        }
+        SetupPolicy.shared.isComplete(index, facts: setupFacts)
+    }
+    private var setupFacts: [String: Bool] {
+        ["platform": systemSupported, "selected": ["vanilla", "base"].contains(selectedGame),
+         "engine": gameEngineReady, "steam": steam, "assets": gameAssetsReady]
     }
 
     func stepHelp(_ index: Int) -> String {

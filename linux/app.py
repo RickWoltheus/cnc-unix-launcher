@@ -1,0 +1,569 @@
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+
+from PySide6.QtCore import QProcess, QProcessEnvironment, QSettings, QTimer, QUrl, Qt
+from PySide6.QtGui import QDesktopServices, QFont, QPixmap
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressBar, QPushButton, QScrollArea, QStackedWidget, QTextEdit, QVBoxLayout, QWidget
+from state import LauncherState
+
+VERSION = "0.1.0"
+RELEASES = "https://api.github.com/repos/RickWoltheus/generalsx-mac-launcher/releases?per_page=10"
+ROOT = Path(os.environ.get("GX_INSTALL_ROOT", str(Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))) / "generalsx-launcher")))
+RESOURCES = Path(sys._MEIPASS) / "share" if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
+
+STYLE = """
+QWidget { background:#101619; color:#ecedeb; font-family:DejaVu Sans; font-size:13px; }
+QLabel { background:transparent; }
+QFrame#panel { background:#1a2226; border:1px solid #30393b; border-radius:5px; }
+QPushButton { background:#1c2529; color:#d7dddd; border:1px solid #354044; padding:12px 16px; border-radius:3px; }
+QPushButton:hover { border-color:#efad40; }
+QPushButton:disabled { color:#697478; border-color:#263034; }
+QPushButton#primary { background:#efad40; color:#111719; font-weight:bold; padding:16px 25px; }
+QPushButton#primary:disabled { background:#635334; color:#a29a89; }
+QPushButton#selected { border:2px solid #efad40; color:#efad40; }
+QPushButton#step { background:transparent; border:none; padding:12px; }
+QPushButton#step:checked { color:#efad40; }
+QComboBox { background:#232c30; padding:6px; border:1px solid #354044; }
+QCheckBox { padding:6px; }
+QTextEdit { background:#151e22; color:#aab8b9; border:1px solid #354044; }
+QScrollArea { border:none; }
+QProgressBar { border:1px solid #354044; max-height:8px; }
+QProgressBar::chunk { background:#efad40; }
+"""
+
+
+class LauncherWindow(QMainWindow):
+    def __init__(self, resources=RESOURCES, auto_poll=True, load_media=True):
+        super().__init__()
+        self.resources = resources
+        self.backend = resources / "scripts/backend.sh"
+        self.state = LauncherState(resources)
+        self.step = 0
+        self.queue = []
+        self.worker = None
+        self.status_worker = None
+        self.play_after_install = False
+        self.waiting_dependencies = False
+        self.output = ""
+        self.image_labels = {}
+        self.update_url = None
+        self.media_loaded = False
+        self.load_media = load_media
+        self.settings = QSettings("GeneralsXLauncher", "Linux")
+        self.network = QNetworkAccessManager(self)
+        self.setWindowTitle("GeneralsX Launcher")
+        self.resize(1000, 760)
+        self.setStyleSheet(STYLE)
+        container = QWidget()
+        self.setCentralWidget(container)
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(32, 24, 32, 18)
+        layout.setSpacing(18)
+        header = QHBoxLayout()
+        wordmark = QLabel("◈  GENERALS")
+        font = QFont("DejaVu Sans", 23, QFont.Weight.Black)
+        font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 3)
+        wordmark.setFont(font)
+        wordmark.setStyleSheet("font-size:24px; font-weight:900;")
+        header.addWidget(wordmark)
+        header.addStretch()
+        header.addWidget(QLabel("LINUX COMMAND CENTER · x86_64"))
+        layout.addLayout(header)
+        steps = QHBoxLayout()
+        self.step_buttons = []
+        for index, title in enumerate(("Choose game", "Prepare Linux", "Steam download", "Play")):
+            button = QPushButton(f"{index + 1}  {title.upper()}")
+            button.setObjectName("step")
+            button.setCheckable(True)
+            button.clicked.connect(lambda checked=False, i=index: self.go_to(i))
+            self.step_buttons.append(button)
+            steps.addWidget(button)
+        layout.addLayout(steps)
+        self.pages = QStackedWidget()
+        layout.addWidget(self.pages, 1)
+        self.make_choose()
+        self.make_prepare()
+        self.make_steam()
+        self.make_play()
+        self.notice = QLabel("")
+        self.notice.setWordWrap(True)
+        self.notice.setStyleSheet("color:#efad40;")
+        layout.addWidget(self.notice)
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 0)
+        self.progress.hide()
+        layout.addWidget(self.progress)
+        self.details = QTextEdit()
+        self.details.setReadOnly(True)
+        self.details.setMaximumHeight(110)
+        self.details.hide()
+        layout.addWidget(self.details)
+        footer = QHBoxLayout()
+        help_menu = QComboBox()
+        help_menu.addItems(["Help…", "Repair game engine", "Check Steam files", "Repair selected mod", "Open installation folder", "Steam account help"])
+        help_menu.activated.connect(self.help_action)
+        self.help_menu = help_menu
+        footer.addWidget(help_menu)
+        detail_button = QPushButton("Details")
+        detail_button.clicked.connect(lambda: self.details.setVisible(not self.details.isVisible()))
+        footer.addWidget(detail_button)
+        footer.addStretch()
+        self.update_label = QLabel("Reviewed engine and mod versions")
+        footer.addWidget(self.update_label)
+        self.update_link = QPushButton("Download update")
+        self.update_link.clicked.connect(lambda: self.open_url(self.update_url) if self.update_url else None)
+        self.update_link.hide()
+        footer.addWidget(self.update_link)
+        update_button = QPushButton("Check updates")
+        update_button.clicked.connect(self.check_updates)
+        footer.addWidget(update_button)
+        layout.addLayout(footer)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.read_status)
+        if auto_poll:
+            self.timer.start(2500)
+            QTimer.singleShot(0, self.read_status)
+        self.refresh_view()
+
+    def page(self):
+        body = QWidget()
+        layout = QVBoxLayout(body)
+        layout.setContentsMargins(0, 15, 0, 15)
+        layout.setSpacing(18)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(body)
+        self.pages.addWidget(scroll)
+        return layout
+
+    def title(self, layout, eyebrow, heading, description):
+        kicker = QLabel(eyebrow.upper())
+        kicker.setStyleSheet("color:#efad40; font-weight:bold;")
+        layout.addWidget(kicker)
+        headline = QLabel(heading)
+        headline.setFont(QFont("DejaVu Sans", 28, QFont.Weight.Black))
+        headline.setStyleSheet("font-size:36px; font-weight:900;")
+        layout.addWidget(headline)
+        copy = QLabel(description)
+        copy.setWordWrap(True)
+        copy.setStyleSheet("color:#a4b0b3;")
+        layout.addWidget(copy)
+        return headline, copy
+
+    def primary(self, text, handler):
+        button = QPushButton(text)
+        button.setObjectName("primary")
+        button.clicked.connect(handler)
+        return button
+
+    def make_choose(self):
+        layout = self.page()
+        self.title(layout, "Your mission", "Choose your battlefield.", "Play the original Generals or expand your arsenal with Zero Hour.")
+        cards = QHBoxLayout()
+        self.game_buttons = {}
+        for id, title, description in [("vanilla", "ZERO HOUR", "Campaigns, skirmish, Generals Challenge and mods."), ("base", "GENERALS", "The 2003 classic. USA, China and the GLA.")]:
+            button = QPushButton(f"{title}\n\n{description}")
+            button.setMinimumHeight(130)
+            button.clicked.connect(lambda checked=False, game=id: self.choose_game(game))
+            self.game_buttons[id] = button
+            cards.addWidget(button)
+        layout.addLayout(cards)
+        note = QLabel("Own the selected game on Steam. Ultimate Collection includes both; Remastered does not. Linux preview targets x86_64 Ubuntu/Debian desktops with Vulkan support.")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+        self.continue_button = self.primary("CONTINUE →", self.continue_setup)
+        layout.addWidget(self.continue_button)
+        layout.addStretch()
+
+    def make_prepare(self):
+        layout = self.page()
+        self.title(layout, "Step 2", "We’ll handle the setup.", "Native engines through Flatpak. No Windows VM or paid compatibility layer.")
+        self.engine_row = QLabel("")
+        self.steam_row = QLabel("")
+        for row in (self.engine_row, self.steam_row):
+            row.setMargin(22)
+            row.setStyleSheet("background:#1a2226; border:1px solid #30393b;")
+            layout.addWidget(row)
+        self.prepare_button = self.primary("PREPARE MY LINUX DESKTOP →", self.prepare)
+        layout.addWidget(self.prepare_button)
+        note = QLabel("If Linux tools are missing, a terminal opens to install Flatpak and Valve’s 32-bit support. Your distribution may ask for your administrator password there.")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+        layout.addStretch()
+
+    def make_steam(self):
+        layout = self.page()
+        self.title(layout, "Step 3", "Bring your Steam copy.", "One local sign-in, then Steam downloads and checks your owned files.")
+        for text in ["1  Sign in locally with your Steam account login name, not your display name.", "2  Enter your password and newest Steam Guard code only in the Steam terminal.", "3  Keep it open until the download finishes. Play unlocks after validation."]:
+            label = QLabel(text)
+            label.setWordWrap(True)
+            label.setMargin(12)
+            layout.addWidget(label)
+        self.signin_button = self.primary("SIGN IN TO STEAM →", self.signin)
+        layout.addWidget(self.signin_button)
+        self.steam_help_title = QLabel("")
+        self.steam_help_title.setStyleSheet("color:#efad40; font-weight:bold;")
+        layout.addWidget(self.steam_help_title)
+        self.steam_help_detail = QLabel("")
+        self.steam_help_detail.setWordWrap(True)
+        layout.addWidget(self.steam_help_detail)
+        account_help = QPushButton("Recover your Steam account or password")
+        account_help.clicked.connect(lambda: self.open_url("https://help.steampowered.com/en/wizard/HelpWithLogin"))
+        layout.addWidget(account_help)
+        layout.addStretch()
+
+    def make_play(self):
+        layout = self.page()
+        self.play_title, self.play_summary = self.title(layout, "Ready to deploy", "ZERO HOUR", "Your game is ready. Select what to play.")
+        self.play_button = self.primary("PLAY →", self.play)
+        layout.addWidget(self.play_button)
+        choices = QHBoxLayout()
+        self.fullscreen = QCheckBox("Fullscreen")
+        self.fullscreen.setChecked(self.settings.value("fullscreen", True, type=bool))
+        self.fullscreen.toggled.connect(lambda value: self.settings.setValue("fullscreen", value))
+        choices.addWidget(self.fullscreen)
+        choices.addWidget(QLabel("Graphics"))
+        self.graphics = QComboBox()
+        self.graphics.addItems(["Balanced", "Maximum"])
+        self.graphics.setCurrentIndex(self.settings.value("maximumGraphics", 0, type=int))
+        self.graphics.currentIndexChanged.connect(lambda value: self.settings.setValue("maximumGraphics", value))
+        choices.addWidget(self.graphics)
+        choices.addStretch()
+        another = QPushButton("Set up another game")
+        another.clicked.connect(lambda: self.go_to(0))
+        choices.addWidget(another)
+        layout.addLayout(choices)
+        self.mod_section = QWidget()
+        mods = QVBoxLayout(self.mod_section)
+        mods.setContentsMargins(0, 10, 0, 0)
+        mods.addWidget(QLabel("CHOOSE WHAT TO PLAY"))
+        cards = QHBoxLayout()
+        cards.setSpacing(10)
+        self.profile_buttons = {}
+        for mod in [{"id": "vanilla", "title": "Zero Hour"}] + self.state.mods:
+            panel = QFrame()
+            panel.setObjectName("panel")
+            body = QVBoxLayout(panel)
+            image = QLabel("◈")
+            image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            image.setFixedHeight(90)
+            body.addWidget(image)
+            button = QPushButton(mod["title"])
+            button.clicked.connect(lambda checked=False, profile=mod["id"]: self.choose_profile(profile))
+            self.profile_buttons[mod["id"]] = button
+            self.image_labels[mod["id"]] = image
+            body.addWidget(button)
+            cards.addWidget(panel)
+        mods.addLayout(cards)
+        self.mod_caption = QLabel("")
+        self.mod_caption.setWordWrap(True)
+        mods.addWidget(self.mod_caption)
+        self.mod_link = QPushButton("Mod page & artwork credits")
+        self.mod_link.clicked.connect(lambda: self.open_url(self.state.mod["homepage"]) if self.state.mod else None)
+        mods.addWidget(self.mod_link)
+        layout.addWidget(self.mod_section)
+        layout.addWidget(QLabel("Experimental mod support. Windowed mode uses 1280×720; Balanced is recommended."))
+        layout.addStretch()
+
+    def choose_game(self, game):
+        self.state.selected_game = game
+        self.refresh_view()
+
+    def choose_profile(self, profile):
+        self.state.selected_profile = profile
+        self.refresh_view()
+
+    def go_to(self, index):
+        if self.state.can_enter(index):
+            self.step = index
+            self.refresh_view()
+
+    def continue_setup(self):
+        for index in (3, 2, 1):
+            if self.state.can_enter(index):
+                self.go_to(index)
+                return
+
+    def refresh_view(self):
+        if not self.state.busy and not self.state.game_running:
+            while self.step > 0 and not self.state.can_enter(self.step):
+                self.step -= 1
+        self.pages.setCurrentIndex(self.step)
+        for index, button in enumerate(self.step_buttons):
+            marker = "✓" if index != self.step and self.state.complete(index) else str(index + 1)
+            title = ("CHOOSE GAME", "PREPARE LINUX", "STEAM DOWNLOAD", "PLAY")[index]
+            button.setText(f"{marker}  {title}")
+            button.setEnabled(self.state.can_enter(index))
+            button.setChecked(index == self.step)
+        for game, button in self.game_buttons.items():
+            button.setObjectName("selected" if game == self.state.selected_game else "")
+            button.style().unpolish(button); button.style().polish(button)
+            button.setEnabled(not self.state.busy and not self.state.game_running)
+        self.continue_button.setEnabled(self.state.can_enter(1))
+        self.prepare_button.setEnabled(self.state.can_enter(1))
+        self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + "Native GeneralsX engine")
+        self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + "Valve Steam downloader and Linux support")
+        self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and self.state.values.get("install") != "busy")
+        self.steam_help_title.setText(self.state.steam_guidance["title"])
+        self.steam_help_detail.setText(self.state.steam_guidance["detail"])
+        self.play_title.setText(self.state.title)
+        self.play_summary.setText(self.state.mod["summary"] if self.state.mod else "Your original game is ready to deploy.")
+        self.play_button.setText("GAME RUNNING" if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
+        self.play_button.setEnabled(self.state.can_enter(3))
+        self.fullscreen.setEnabled(not self.state.busy and not self.state.game_running)
+        self.graphics.setEnabled(not self.state.busy and not self.state.game_running)
+        self.mod_section.setVisible(self.state.selected_game == "vanilla")
+        for profile, button in self.profile_buttons.items():
+            button.setObjectName("selected" if profile == self.state.selected_profile else "")
+            button.style().unpolish(button); button.style().polish(button)
+            button.setEnabled(not self.state.busy and not self.state.game_running)
+        mod = self.state.mod
+        self.mod_caption.setText(f'{mod["version"]} · Experimental support' if mod else "Original Zero Hour · No mod active")
+        self.mod_link.setVisible(mod is not None)
+        self.progress.setVisible(self.state.busy)
+        self.help_menu.setEnabled(not self.state.busy and not self.state.game_running)
+        if self.step == 3 and self.load_media and not self.media_loaded:
+            self.media_loaded = True
+            for item in self.state.mods:
+                self.fetch_image(item)
+
+    def environment(self):
+        environment = QProcessEnvironment.systemEnvironment()
+        environment.insert("GX_INSTALL_ROOT", str(ROOT))
+        return environment
+
+    def read_status(self):
+        if self.status_worker is not None:
+            return
+        process = QProcess(self)
+        self.status_worker = process
+        process.setProcessEnvironment(self.environment())
+        process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        def finished(code, status):
+            text = bytes(process.readAllStandardOutput()).decode(errors="replace")
+            if code == 0:
+                previous_ready = self.state.assets_ready
+                self.state.update(text)
+                if self.waiting_dependencies and self.state.values.get("dependencies") == "ready":
+                    self.waiting_dependencies = False
+                    self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
+                if self.state.can_enter(3) and (not previous_ready or self.step == 2):
+                    self.step = 3
+                elif self.step == 1 and self.state.can_enter(2):
+                    self.step = 2
+            else:
+                self.notice.setText(text[-1000:])
+            self.status_worker = None
+            process.deleteLater()
+            self.refresh_view()
+        process.finished.connect(finished)
+        process.start("/bin/bash", [str(self.backend), "status"])
+
+    def run_actions(self, actions, play_after=False):
+        if self.state.busy or self.state.game_running:
+            return
+        self.queue = list(actions)
+        self.play_after_install = play_after
+        self.state.busy = True
+        self.output = ""
+        self.refresh_view()
+        self.next_action()
+
+    def next_action(self):
+        if not self.queue:
+            self.state.busy = False
+            self.read_status()
+            if self.play_after_install:
+                self.play_after_install = False
+                self.start_game()
+            elif self.state.can_enter(2) and self.step == 1:
+                self.step = 2
+            self.refresh_view()
+            return
+        action = self.queue.pop(0)
+        self.notice.setText("Working: " + action[0])
+        process = QProcess(self)
+        self.worker = process
+        process.setProcessEnvironment(self.environment())
+        process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        def output():
+            self.output = (self.output + bytes(process.readAllStandardOutput()).decode(errors="replace"))[-12000:]
+            self.details.setPlainText(self.output)
+        def finished(code, status):
+            output()
+            self.worker = None
+            process.deleteLater()
+            if code != 0:
+                self.queue = []
+                self.play_after_install = False
+                self.state.busy = False
+                advice = self.state.recovery_for(self.output)
+                self.notice.setText(advice["title"] + " — " + advice["message"])
+                self.read_status()
+                self.refresh_view()
+            else:
+                self.notice.setText("Step completed.")
+                self.next_action()
+        process.readyReadStandardOutput.connect(output)
+        process.finished.connect(finished)
+        process.start("/bin/bash", [str(self.backend), *action])
+
+    def prepare(self):
+        if not self.state.can_enter(1): return
+        if self.state.values.get("dependencies") != "ready":
+            self.waiting_dependencies = True
+            self.open_terminal("Linux dependencies", ["linux-tools"])
+        else:
+            self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
+
+    def signin(self):
+        if self.state.can_enter(2) and not self.state.steam_active:
+            self.open_terminal("Steam sign-in", ["steam-login", self.state.selected_game])
+
+    def open_terminal(self, title, arguments):
+        ROOT.mkdir(parents=True, exist_ok=True)
+        script = ROOT / (title.lower().replace(" ", "-") + ".sh")
+        command = shlex.join(["/bin/bash", str(self.backend), *arguments])
+        script.write_text(f'#!/bin/bash\nexport GX_INSTALL_ROOT={shlex.quote(str(ROOT))}\n{command}\nresult=$?\nprintf "\\nReturn to the launcher. Press Return to close.\\n"\nread -r\nexit "$result"\n')
+        script.chmod(0o700)
+        for program, prefix in [("x-terminal-emulator", ["-e"]), ("gnome-terminal", ["--"]), ("konsole", ["-e"]), ("xfce4-terminal", ["-x"]), ("xterm", ["-e"])]:
+            if shutil.which(program):
+                subprocess.Popen([program, *prefix, "/bin/bash", str(script)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                self.notice.setText("Complete " + title.lower() + " in the terminal. Never enter your password in this launcher.")
+                return
+        self.waiting_dependencies = False
+        self.notice.setText("No supported terminal was found. Install your desktop terminal, then retry.")
+
+    def play(self):
+        if not self.state.can_enter(3): return
+        if self.state.needs_install:
+            answer = QMessageBox.question(self, "Install & Play?", "Install " + self.state.mod["title"] + "? Allow up to 8 GB. Data comes from GenLauncher’s HTTP mirror with pinned checksums. Gameplay support is experimental; your normal game stays separate.")
+            if answer == QMessageBox.StandardButton.Yes:
+                self.run_actions([("mod", self.state.profile)], play_after=True)
+        else:
+            self.start_game()
+
+    def start_game(self):
+        if self.state.game_running: return
+        self.state.game_running = True
+        profile = self.state.profile
+        self.state.busy = False
+        quality = "maximum" if self.graphics.currentIndex() else "balanced"
+        process = QProcess(self)
+        self.worker = process
+        process.setProcessEnvironment(self.environment())
+        process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        def graphics_done(code, status):
+            process.deleteLater()
+            if code != 0:
+                self.state.game_running = False
+                self.notice.setText("Could not save graphics settings. Check that no other game is running.")
+                self.refresh_view()
+                return
+            game = QProcess(self)
+            self.worker = game
+            game.setProcessEnvironment(self.environment())
+            def closed(code, status):
+                self.state.game_running = False
+                self.worker = None
+                game.deleteLater()
+                self.notice.setText("Game closed." if code == 0 else "Game stopped. Use Help to repair the engine, or inspect the profile log.")
+                self.read_status()
+                self.refresh_view()
+            game.finished.connect(closed)
+            screen = QApplication.primaryScreen()
+            size = screen.size() if screen else None
+            width, height = (size.width(), size.height()) if self.fullscreen.isChecked() and size else (1280, 720)
+            game.start("/bin/bash", [str(self.backend), "launch", profile, "-fullscreen" if self.fullscreen.isChecked() else "-win", "-xres", str(width), "-yres", str(height)])
+        process.finished.connect(graphics_done)
+        process.start("/bin/bash", [str(self.backend), "graphics", "base" if profile == "base" else "vanilla", quality])
+        self.refresh_view()
+
+    def fetch_image(self, mod):
+        reply = self.network.get(QNetworkRequest(QUrl(mod["image"])))
+        def finished():
+            pixmap = QPixmap()
+            if pixmap.loadFromData(bytes(reply.readAll())):
+                self.image_labels[mod["id"]].setPixmap(pixmap.scaled(130, 90, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            reply.deleteLater()
+        reply.finished.connect(finished)
+
+    def check_updates(self):
+        self.update_label.setText("Checking releases…")
+        reply = self.network.get(QNetworkRequest(QUrl(RELEASES)))
+        def finished():
+            try:
+                releases = json.loads(bytes(reply.readAll()))
+                if not isinstance(releases, list): raise ValueError()
+                release = next(item for item in releases if not item["draft"] and any(asset["name"] == "GeneralsX-Launcher-linux-x86_64.tar.gz" for asset in item["assets"]))
+                version = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?", release["tag_name"])
+                current = tuple(map(int, VERSION.split(".")))
+                if version and tuple(map(int, version.groups())) > current:
+                    self.update_url = "https://github.com/RickWoltheus/generalsx-mac-launcher/releases/tag/" + release["tag_name"]
+                    self.update_label.setText("Update available — open release")
+                    self.update_link.show()
+                else:
+                    self.update_link.hide()
+                    self.update_label.setText("Launcher is up to date.")
+            except (ValueError, StopIteration, KeyError, TypeError):
+                self.update_label.setText("No downloadable Linux release yet.")
+            reply.deleteLater()
+        reply.finished.connect(finished)
+
+    def help_action(self, index):
+        self.help_menu.setCurrentIndex(0)
+        if index == 1: self.prepare()
+        elif index == 2: self.go_to(2)
+        elif index == 3 and self.state.mod: self.run_actions([("mod", self.state.profile)])
+        elif index == 4: QDesktopServices.openUrl(QUrl.fromLocalFile(str(ROOT)))
+        elif index == 5: self.open_url("https://help.steampowered.com/en/wizard/HelpWithLogin")
+
+    @staticmethod
+    def open_url(url):
+        QDesktopServices.openUrl(QUrl(url))
+
+    def closeEvent(self, event):
+        if self.state.busy or self.state.game_running:
+            QMessageBox.information(self, "Keep the launcher open", "Finish the installation or quit your game normally before closing the launcher.")
+            event.ignore()
+        else:
+            event.accept()
+
+
+def main():
+    if sys.platform != "linux":
+        raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
+    if "--self-check" in sys.argv:
+        state = LauncherState(RESOURCES)
+        for name in ("backend.sh", "platform-linux.sh", "steam-status.sh"):
+            subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
+        if len(state.mods) != 5 or len(state.policy["steps"]) != 4:
+            raise SystemExit("Packaged catalog or setup policy is incomplete.")
+        print("Linux package resources and native Qt imports passed; no windows or games launched.")
+        return 0
+    application = QApplication(sys.argv)
+    application.setApplicationName("GeneralsX Launcher")
+    if "--ui-smoke-test" in sys.argv:
+        window = LauncherWindow(auto_poll=False, load_media=False)
+        window.show()
+        application.processEvents()
+        if window.step_buttons[2].isEnabled() or window.step_buttons[3].isEnabled():
+            raise SystemExit("Unvalidated steps were enabled in the packaged UI.")
+        QTimer.singleShot(200, application.quit)
+        result = application.exec()
+        print("Packaged Linux window rendered with locked steps; no network, sign-in or game launches.")
+        return result
+    window = LauncherWindow()
+    window.show()
+    return application.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

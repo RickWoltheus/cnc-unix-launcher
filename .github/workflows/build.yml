@@ -1,4 +1,4 @@
-name: Build Mac launcher
+name: Build native launchers
 on:
   workflow_dispatch:
 permissions:
@@ -22,3 +22,24 @@ jobs:
         with:
           name: GeneralsX-Launcher-macOS-arm64
           path: dist/GeneralsX-Launcher-macOS-arm64.zip
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated Linux environment
+        run: docker build --platform linux/amd64 -t gx-launcher-linux-test -f linux/Dockerfile.test .
+      - name: Check Linux UI and shared backend
+        run: |
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test python3 tests/linux-ui.py
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/backend.sh
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-status.sh
+      - name: Build standalone Linux archive
+        run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash linux/build.sh
+      - name: Validate packaged resources and virtual desktop window
+        run: |
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test dist/linux/GeneralsXLauncher/GeneralsXLauncher --self-check
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/linux-x11.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GeneralsX-Launcher-linux-x86_64
+          path: dist/GeneralsX-Launcher-linux-x86_64.tar.gz

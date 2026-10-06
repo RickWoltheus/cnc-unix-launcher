@@ -75,6 +75,36 @@ A fresh temporary installation was opened in the native GUI. Accessibility check
 confirmed Steam Download and Play had `AXEnabled=false`; Continue remained enabled
 for the valid default game choice. No Steam client or game was started in this check.
 
+## Linux preview validation
+
+The separate PySide6 Linux interface mirrors the SwiftUI command-center flow.
+Installer business logic remains in one backend with small OS adapters. Both
+frontends read the same setup policy, Steam guidance, recovery guidance, mod
+manifests and graphics presets. `CLAUDE.md` requires synchronized behavior changes.
+
+OrbStack's Linux VM ran an isolated x86_64 Debian container. Seven model/offscreen
+widget tests passed: gated steps, per-game readiness, failed-sign-in blocking,
+single Play routing, graphics locking and shared guidance. The backend checks
+passed using actual Linux Flatpak bundles and the Linux SteamCMD bootstrap;
+Flatpak services and Steam authentication were replaced by local fixtures.
+Case-sensitive archive readiness and Linux settings paths were also checked.
+
+The standalone Linux archive built successfully and its packaged `--self-check`
+validated native Qt imports, shared resources and shell syntax without opening
+windows or launching games. An offscreen UI screenshot was captured locally.
+The packaged Qt/X11 window also rendered on Xvfb's virtual desktop with unfinished
+steps locked and networking disabled. The `xvfb-run` wrapper stalled before
+launching under emulation; a direct ready-display check succeeded, and the
+reproducible `tests/linux-x11.sh` uses that direct path. Missing X11 libraries
+found during packaging were added to the build environment and collected into
+the standalone archive. LGPL/GPL texts and Qt attribution accompany the package.
+The macOS model/backend/status checks and native build still passed after sharing
+these resources and separating the OS adapters.
+
+These checks do not establish real Linux desktop terminal handoff, Flatpak
+sandbox operation, GPU rendering or game/mod compatibility. See `docs/linux.md`
+for the supported target and the remaining desktop tests. No game was started.
+
 ## Still pending before calling the release fully verified
 
 1. Re-run automated checks on a clean Apple Silicon Mac.

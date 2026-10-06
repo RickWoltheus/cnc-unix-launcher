@@ -1,0 +1,71 @@
+{
+  "rules": [
+    {
+      "containsAny": [
+        "no subscription",
+        "license"
+      ],
+      "title": "Steam could not find your game",
+      "message": "Sign in with the account that owns Generals or Zero Hour. The Ultimate Collection includes them; Remastered does not. You do not need an extra subscription."
+    },
+    {
+      "containsAny": [
+        "checksum mismatch"
+      ],
+      "title": "The download did not match",
+      "message": "Retry the installation. If it fails again, check for a launcher update. We keep the previous installation and never bypass the file check."
+    },
+    {
+      "containsAny": [
+        "no space left"
+      ],
+      "title": "Your computer needs more space",
+      "message": "Free at least 8 GB for a game or mod, then retry. Your existing installation has been kept."
+    },
+    {
+      "containsAny": [
+        "steam files are incomplete",
+        "steam assets"
+      ],
+      "title": "Steam has not finished installing",
+      "message": "Return to Steam sign-in and repeat the download. Steam checks and repairs the files. Wait for the success message before playing."
+    },
+    {
+      "containsAny": [
+        "vk_error",
+        "library not loaded",
+        "dyld"
+      ],
+      "title": "The graphics runtime needs repair",
+      "message": "Quit the game, then choose Repair game engine in Help. The launcher restores its verified runtime libraries."
+    },
+    {
+      "containsAny": [
+        "already running",
+        "quit the game"
+      ],
+      "title": "Close your current game first",
+      "message": "Save and quit normally, then retry. The launcher will not replace files while a game is running."
+    },
+    {
+      "containsAny": [
+        "installation or steam download"
+      ],
+      "title": "Your installation is still running",
+      "message": "Wait for the download or repair to finish, then play. We keep the game closed while its files are changing."
+    },
+    {
+      "containsAny": [
+        "could not resolve",
+        "failed to connect",
+        "curl:"
+      ],
+      "title": "The download server is unavailable",
+      "message": "Check your internet connection and retry. Verified files are reused, so you will not need to download everything again."
+    }
+  ],
+  "fallback": {
+    "title": "We could not finish that step",
+    "message": "Retry once. If it still fails, open Details below and share the error text. Your existing game data remains in place."
+  }
+}
