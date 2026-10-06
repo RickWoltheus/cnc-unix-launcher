@@ -6,7 +6,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/scripts" "$APP/Contents/
 xcrun swiftc -parse-as-library -O -target arm64-apple-macos15.0 \
   "$REPO/Sources/Launcher.swift" -o "$APP/Contents/MacOS/GeneralsXLauncher"
 cp "$REPO/scripts/backend.sh" "$APP/Contents/Resources/scripts/"
-cp "$REPO/manifests/rotr.tsv" "$APP/Contents/Resources/manifests/"
+cp "$REPO"/manifests/*.tsv "$APP/Contents/Resources/manifests/"
 cp "$REPO/resources/max-options.ini" "$APP/Contents/Resources/resources/"
 cp "$REPO/resources/Info.plist" "$APP/Contents/"
 cp "$REPO/LICENSE" "$APP/Contents/Resources/"

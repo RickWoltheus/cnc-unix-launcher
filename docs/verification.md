@@ -29,6 +29,33 @@ their names and synthetic base-game fixtures.
 The cached installer check requires your own existing engine ZIP, SteamCMD
 bootstrap, and ROTR downloads; those fixtures are not committed to this repo.
 
+## Expanded catalog and GUI checks on 2026-10-06
+
+`tests/catalog.sh` passed using the actual base Generals engine ZIP and all five
+mods' pinned data downloads. It checked base-engine extraction, base Steam app
+ID selection, each mod's install and repeat-install, separate folders, stock
+AI preservation, and launch parameters through dummy launchers. The End of Days'
+own loose AI scripts were verified after installation. Windows binaries,
+optional movies and duplicated EA movies were excluded from the new mod packages.
+
+The native GUI was opened with the user's explicit authorization for a windowed
+end-to-end test. Its Install button installed the engine and SteamCMD using the
+verified local cache. Existing, owned Steam assets were copied into the new
+managed installation; a fresh Steam authentication/download was not repeated.
+The Fullscreen checkbox was switched off through Accessibility automation.
+Play Zero Hour reached the 1280×720 main menu and exited normally when the user
+closed it. The ROTR Install confirmation and installation succeeded through the
+GUI; Play mod reached the mod-specific 1280×720 menu with a captured screenshot.
+
+Automated input into the SDL game menu did not reliably navigate to a match.
+Actual match behavior, save/load and base-game runtime remain unverified unless
+separately recorded below. The user was asked to run a short manual skirmish.
+Screenshots remain local in /tmp/gx-e2e and are not bundled in the release.
+
+The launcher checks this repository's GitHub releases for newer launcher ZIPs.
+Self-replacement is manual; engine and mod changes require reviewed manifest
+updates in a newer launcher. No silent upstream upgrades are enabled.
+
 ## Still pending before calling the release fully verified
 
 1. Re-run automated checks on a clean Apple Silicon Mac.

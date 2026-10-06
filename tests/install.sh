@@ -8,10 +8,11 @@ export GX_INSTALL_ROOT="$SANDBOX/installation with spaces"
 export GX_PREFERENCES_DIR="$SANDBOX/preferences"
 BACKEND="$REPO/scripts/backend.sh"
 mkdir -p "$GX_INSTALL_ROOT/downloads"
-cp -c "$1" "$GX_INSTALL_ROOT/downloads/engine-1.0.2.zip"
+cp -c "$1" "$GX_INSTALL_ROOT/downloads/GeneralsXZH-1.0.2.zip"
 cp -c "$2" "$GX_INSTALL_ROOT/downloads/steamcmd-bootstrap.tar.gz"
-while IFS=$'\t' read -r name checksum; do
-  cp -c "$3/$name" "$GX_INSTALL_ROOT/downloads/$name"
+mkdir -p "$GX_INSTALL_ROOT/downloads/rotr"
+while IFS=$'\t' read -r name checksum url; do
+  cp -c "$3/$name" "$GX_INSTALL_ROOT/downloads/rotr/$name"
 done < "$REPO/manifests/rotr.tsv"
 bash "$BACKEND" engine
 bash "$BACKEND" engine

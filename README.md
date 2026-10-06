@@ -1,10 +1,10 @@
 # GeneralsX Launcher for Mac
 
-A native Mac launcher that installs GeneralsX, downloads your own Zero Hour
-files through Steam, and optionally installs Rise of the Reds.
+A native Mac launcher for Generals and Zero Hour. It installs GeneralsX,
+downloads your owned files through Steam, and installs five curated Zero Hour mods.
 
-**Development preview. Headless installer checks pass; GUI and Steam sign-in
-testing remain pending.** The app builds for ARM64 and its ad-hoc signature
+**Development preview. Headless installer checks pass; full gameplay and fresh
+Steam sign-in testing remain pending.** The app builds for ARM64 and its ad-hoc signature
 verifies. Engine/SteamCMD downloads, ROTR installation and repair, settings
 backups, and launch arguments have been checked without starting the game.
 See [verification.md](docs/verification.md) for the evidence and remaining checks.
@@ -12,9 +12,9 @@ See [verification.md](docs/verification.md) for the evidence and remaining check
 ## Requirements
 
 - Apple Silicon Mac with macOS 15 or later.
-- Zero Hour owned on the Steam account you sign in with. The Ultimate Collection
+- The selected game owned on your Steam account. The Ultimate Collection
   includes it. **The Remastered Collection does not.**
-- About 12 GB free for the engine, downloads, game files, and optional ROTR.
+- About 8 GB free per game and up to 8 GB per optional mod. Allow 40 GB to install everything.
 - Internet access and your Steam password/Steam Guard. Enter credentials only in
   the local SteamCMD Terminal window.
 
@@ -25,7 +25,7 @@ requires Apple's free Rosetta; the game engine runs natively as ARM64.
 
 When a verified release is available:
 
-1. Download `GeneralsX-Launcher-macOS-arm64.zip` from this repository's releases.
+1. Download [GeneralsX-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/generalsx-mac-launcher/releases/download/v0.1.0/GeneralsX-Launcher-macOS-arm64.zip).
 2. Extract it, and move **GeneralsX Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively
@@ -35,16 +35,40 @@ When a verified release is available:
    xattr -dr com.apple.quarantine "/Applications/GeneralsX Launcher.app"
    ```
 
-4. Click **Install engine & SteamCMD**.
+4. Select **Generals** or **Zero Hour**, then click **Install engine & SteamCMD**.
 5. Click **Download Steam game**. SteamCMD opens in Terminal. Sign in and wait
    for the download to finish, then click **Refresh** in the launcher.
-6. Click **Play Zero Hour**. Fullscreen uses your current display's resolution.
-7. Optionally click **Install Rise of the Reds**, review its download source,
-   then use its Play button.
+6. Click **Play Generals** or **Play Zero Hour**. Fullscreen uses your display's
+   resolution; windowed mode uses 1280×720. The fullscreen choice is remembered.
+7. For Zero Hour, select a mod, click **Install mod**, review its download source,
+   then use **Play mod**. Use **Repair** to repair a damaged mod installation.
 
-The app pins GeneralsX 1.0.2 and ROTR 1.87 Public Build 2.0. Installing the engine
+The app pins GeneralsX 1.0.2 and the mod versions below. Installing the engine
 again repairs it; it does not silently upgrade to an untested upstream version.
 SteamCMD updates itself using Valve's normal bootstrap.
+
+## Mods and updates
+
+| Mod | Pinned version |
+| --- | --- |
+| Rise of the Reds | 1.87 Public Build 2.0 |
+| ShockWave | 1.201 GenLauncher Fix 1 |
+| ShockWave Chaos | 49 |
+| Contra | 10.0.2 Beta 2 Patch 1 |
+| The End of Days | 0.98.6 Patch 11 |
+
+These are well-known mods, not a measured popularity ranking. Their installation,
+repeat-install, checksum and launch-argument checks passed headlessly. Gameplay
+compatibility is **experimental**. The installer excludes Windows binaries,
+font replacements, backups, optional mod videos and duplicated EA movie files.
+Mods requiring Windows engine patches can have missing features under GeneralsX.
+
+**Check for updates** checks this repository's GitHub releases and links to a
+newer launcher ZIP. For this preview, download it, quit the launcher and games,
+and replace the app. Game data remains outside the app. Self-replacement is not
+automatic. Engine/mod upgrades come through reviewed launcher releases and their
+pinned manifests; rerun engine installation or mod installation after updating.
+Repeating **Download Steam game** runs Steam's own update and validation.
 
 ## Files and privacy
 
@@ -52,9 +76,12 @@ The launcher installs into `~/Library/Application Support/GeneralsX Launcher/`:
 
 ```text
 engine/          GeneralsX app and bundled runtime libraries
+engine-base/     Base Generals engine and runtime
 steamcmd/        Valve's downloader
+Generals/        Your Steam base Generals installation
 GeneralsZH/      Your Steam game installation
 RiseOfTheReds/   Separate game installation with ROTR archives
+mods/            Other separate mod installations
 downloads/      Verified download cache
 logs/           Game launch logs
 ```
@@ -66,8 +93,9 @@ reads the password or Steam Guard code. Valve may cache authentication locally
 using its own client behavior. The launcher adds no analytics.
 
 GeneralsX stores settings and saves in its upstream user-data folder,
-`~/Library/Application Support/GeneralsX/GeneralsZH/`. Both game profiles share
-that folder. Name mod saves clearly and load them only with the matching mod.
+`~/Library/Application Support/GeneralsX/GeneralsZH/`. All Zero Hour mod profiles
+share that folder. Base Generals uses the sibling `Generals` user-data folder.
+Name mod saves clearly and load them only with the matching mod.
 Maximum graphics backs up `Options.ini` as `Options.before-launcher.ini` before
 changing it. Turning off the launcher's checkbox stops applying the preset; it
 does not reset already saved options. Change those in the game or restore the
@@ -79,8 +107,8 @@ The engine ZIP and SteamCMD bootstrap must match pinned SHA-256 hashes before
 extraction. Valve's bootstrap URL can change; an unexpected update stops the
 installation until the checksum is reviewed and updated here.
 
-ROTR comes from the public file mirror listed in the GenLauncher catalog. This
-mirror serves HTTP. Every mod archive must match a SHA-256 recorded from the
+Mods come from the public mirrors listed in the GenLauncher catalog. These
+mirrors serve HTTP. Every mod data file must match a SHA-256 recorded from the
 previously installed files. Those pins prevent changed downloads from being
 accepted, but are **not publisher signatures** and do not establish independent
 authenticity of the original mirror contents. The launcher asks for consent
@@ -126,11 +154,18 @@ Both the app and command-line workflow call the same backend:
 
 ```sh
 bash scripts/backend.sh engine
+bash scripts/backend.sh engine base
 bash scripts/backend.sh steam
 bash scripts/backend.sh steam-login
+bash scripts/backend.sh steam-login base
 bash scripts/backend.sh rotr
+bash scripts/backend.sh mod shockwave
 bash scripts/backend.sh launch vanilla -fullscreen -xres 1920 -yres 1080
+bash scripts/backend.sh launch base -win -xres 1280 -yres 720
 ```
+
+Tests use dummy launchers by default. Never start real games unless the person
+using the machine explicitly asks for a game launch or an end-to-end game test.
 
 ## Credits and license
 

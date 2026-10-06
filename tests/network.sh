@@ -12,6 +12,7 @@ curl -fL --retry 2 --max-time 60 -sS \
 [[ "$(shasum -a 256 "$SANDBOX/sample.gib" | awk '{print $1}')" == "$EXPECTED" ]]
 mkdir -p "$SANDBOX/fixture/scripts" "$SANDBOX/fixture/manifests"
 cp "$REPO/scripts/backend.sh" "$SANDBOX/fixture/scripts/backend.sh"
+cp "$REPO/manifests/mods.tsv" "$SANDBOX/fixture/manifests/mods.tsv"
 printf '!Rotr_Blckr.gib\t%064d\n' 0 > "$SANDBOX/fixture/manifests/rotr.tsv"
 GAME="$GX_INSTALL_ROOT/GeneralsZH"
 mkdir -p "$GAME/ZH_Generals" "$GAME/steamapps" "$GX_INSTALL_ROOT/RiseOfTheReds"
