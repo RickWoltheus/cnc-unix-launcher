@@ -1,0 +1,20 @@
+name: Build Mac launcher
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check backend behavior
+        run: bash tests/backend.sh
+      - name: Build Apple Silicon app
+        run: bash scripts/build.sh
+      - name: Verify app signature
+        run: codesign --verify --deep --strict 'dist/GeneralsX Launcher.app'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GeneralsX-Launcher-macOS-arm64
+          path: dist/GeneralsX-Launcher-macOS-arm64.zip
