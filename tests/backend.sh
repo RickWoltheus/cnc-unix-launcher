@@ -30,6 +30,9 @@ grep -q 'UseShadowVolumes = yes' "$OPTIONS"
 grep -q 'UseShadowVolumes = no' "${OPTIONS%.ini}.before-launcher.ini"
 bash "$BACKEND" graphics
 [[ "$(grep -c '^UseShadowVolumes' "$OPTIONS")" == 1 ]]
+bash "$BACKEND" graphics vanilla balanced
+grep -q 'AntiAliasing = 2' "$OPTIONS"
+grep -q 'UseShadowVolumes = no' "${OPTIONS%.ini}.before-launcher.ini"
 mkdir "$GX_INSTALL_ROOT/.install-lock"
 printf '%s\n' "$$" > "$GX_INSTALL_ROOT/.install-lock/pid"
 if bash "$BACKEND" engine; then echo 'Concurrent install should have failed.' >&2; exit 1; fi

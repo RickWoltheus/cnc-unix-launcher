@@ -7,6 +7,7 @@ trap 'rm -rf "$SANDBOX"' EXIT
 export GX_INSTALL_ROOT="$SANDBOX/catalog install with spaces"
 export GX_PREFERENCES_DIR="$SANDBOX/preferences"
 BACKEND="$REPO/scripts/backend.sh"
+export GX_LAUNCH_WRAPPER="$REPO/tests/fixtures/record-launch.sh"
 mkdir -p "$GX_INSTALL_ROOT/downloads"
 cp -c "$1" "$GX_INSTALL_ROOT/downloads/GeneralsX-1.0.2.zip"
 bash "$BACKEND" engine base
@@ -22,15 +23,12 @@ for pair in "$BASE:2229870" "$GAME:2732960"; do
   dir="${pair%:*}"; appid="${pair##*:}"
   printf '"AppState"\n{\n"StateFlags" "4"\n}\n' > "$dir/steamapps/appmanifest_$appid.acf"
 done
-for engine in "$GX_INSTALL_ROOT/engine-base/GeneralsX.app" "$GX_INSTALL_ROOT/engine/GeneralsXZH.app"; do
-  mkdir -p "$engine/Contents/MacOS"
-  cat > "$engine/Contents/MacOS/run.sh" <<'FIXTURE'
-#!/bin/bash
-printf 'base=%s\nzh=%s\n' "$CNC_GENERALS_PATH" "$CNC_GENERALS_ZH_PATH"
-printf 'arg=%s\n' "$@"
-FIXTURE
-  chmod +x "$engine/Contents/MacOS/run.sh"
-done
+mkdir -p "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/Resources"
+cp -cR "$GX_INSTALL_ROOT/engine-base/GeneralsX.app/Contents/Resources/lib" "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/Resources/lib"
+mkdir -p "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/MacOS" "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/Resources/bin"
+printf 'fixture' > "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/Resources/bin/GeneralsXZH"
+printf '#!/bin/bash\n' > "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/MacOS/run.sh"
+chmod +x "$GX_INSTALL_ROOT/engine/GeneralsXZH.app/Contents/MacOS/run.sh"
 bash "$BACKEND" launch base -fullscreen -xres 1920 -yres 1080
 grep -Fq "base=$BASE" "$GX_INSTALL_ROOT/logs/base.log"
 bash "$BACKEND" graphics base

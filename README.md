@@ -35,17 +35,28 @@ When a verified release is available:
    xattr -dr com.apple.quarantine "/Applications/GeneralsX Launcher.app"
    ```
 
-4. Select **Generals** or **Zero Hour**, then click **Install engine & SteamCMD**.
-5. Click **Download Steam game**. SteamCMD opens in Terminal. Sign in and wait
-   for the download to finish, then click **Refresh** in the launcher.
-6. Click **Play Generals** or **Play Zero Hour**. Fullscreen uses your display's
-   resolution; windowed mode uses 1280×720. The fullscreen choice is remembered.
-7. For Zero Hour, select a mod, click **Install mod**, review its download source,
-   then use **Play mod**. Use **Repair** to repair a damaged mod installation.
+4. Choose **Generals** or **Zero Hour** and click **Continue**.
+5. Click **Prepare my Mac**. The launcher installs the native engine and Steam downloader.
+6. Click **Sign in to Steam**. SteamCMD opens in Terminal for your password and
+   Steam Guard. Let it finish; the launcher checks automatically and moves to Play.
+7. Select **Zero Hour** or a mod in **Choose what to play**. The one big **Play**
+   button always launches your highlighted selection. For a new mod it becomes
+   **Install & Play**, with a download confirmation first.
 
 The app pins GeneralsX 1.0.2 and the mod versions below. Installing the engine
 again repairs it; it does not silently upgrade to an untested upstream version.
 SteamCMD updates itself using Valve's normal bootstrap.
+
+The four-step setup checks prerequisites before unlocking Steam or Play. Existing
+verified installations can skip completed steps. Steam sign-in guidance updates
+for password errors, Steam Guard, expired codes, rate limits, missing ownership,
+connection errors and interrupted downloads. Only a status label reaches the GUI;
+credentials stay in Valve's local client. See [issue-handling.md](docs/issue-handling.md).
+
+The mod cards load promotional thumbnails from URLs in the publisher-linked
+GenLauncher catalog. Images are fetched at runtime, with placeholders offline;
+they are not bundled in this repository or release. Each mod links to its page
+for artwork credit and more information.
 
 ## Mods and updates
 
@@ -100,6 +111,10 @@ Maximum graphics backs up `Options.ini` as `Options.before-launcher.ini` before
 changing it. Turning off the launcher's checkbox stops applying the preset; it
 does not reset already saved options. Change those in the game or restore the
 backup while the game is closed.
+
+Balanced graphics uses high detail with 2× anti-aliasing and 8× anisotropic
+filtering. Maximum uses 8× anti-aliasing and 16× filtering. Both preserve unrelated
+options and the original backup. Use Help to repair the engine or selected mod.
 
 ## Download verification
 

@@ -10,6 +10,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check backend behavior
         run: bash tests/backend.sh
+      - name: Check profile selection and recovery
+        run: bash tests/model.sh
+      - name: Check Steam sign-in guidance
+        run: bash tests/steam-status.sh
       - name: Build Apple Silicon app
         run: bash scripts/build.sh
       - name: Verify app signature

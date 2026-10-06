@@ -22,6 +22,14 @@ select_mod() {
 }
 if [[ "$PROFILE" == base ]]; then ENGINE="$ROOT/engine-base/GeneralsX.app"; GAME="$ROOT/Generals"; fi
 verify() { [[ -f "$1" ]] && [[ "$(shasum -a 256 "$1" | awk '{print $1}')" == "$2" ]]; }
+engine_ready() {
+  local app="$1" binary library
+  binary="$(basename "$app" .app)"
+  [[ -x "$app/Contents/MacOS/run.sh" && -s "$app/Contents/Resources/bin/$binary" ]] || return 1
+  for library in libvulkan.1.dylib libMoltenVK.dylib libdxvk_d3d8.0.dylib libdxvk_d3d9.0.dylib libSDL3.0.dylib; do
+    [[ -s "$app/Contents/Resources/lib/$library" ]] || return 1
+  done
+}
 installed_name() {
   if [[ "$1" == *.gib ]]; then printf '%s.big' "${1%.gib}"; else printf '%s' "$1"; fi
 }
@@ -56,11 +64,24 @@ mod_ready() {
 }
 
 if [[ "$ACTION" == status ]]; then
-  [[ -x "$ENGINE/Contents/MacOS/run.sh" ]] && echo 'engine=ready' || echo 'engine=missing'
+  install=idle
+  if [[ -f "$ROOT/.install-lock/pid" ]] && kill -0 "$(cat "$ROOT/.install-lock/pid")" 2>/dev/null; then install=busy; fi
+  echo "install=$install"
+  engine_ready "$ENGINE" && echo 'engine=ready' || echo 'engine=missing'
   [[ -x "$ROOT/steamcmd/MacOS/steamcmd.sh" ]] && echo 'steam=ready' || echo 'steam=missing'
   assets_ready "$GAME" && echo 'assets=ready' || echo 'assets=missing'
-  [[ -x "$ROOT/engine-base/GeneralsX.app/Contents/MacOS/run.sh" ]] && echo 'base_engine=ready' || echo 'base_engine=missing'
+  engine_ready "$ROOT/engine-base/GeneralsX.app" && echo 'base_engine=ready' || echo 'base_engine=missing'
   assets_ready "$ROOT/Generals" base && echo 'base_assets=ready' || echo 'base_assets=missing'
+  for game in vanilla base; do
+    state=idle
+    if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
+    case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
+    case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading)
+      if [[ "$install" != busy || "$(cat "$ROOT/.install-lock/kind" 2>/dev/null || true)" != "steam-login:$game" ]]; then state=incomplete; fi ;;
+    esac
+    echo "steam_download_$game=$state"
+    if [[ "$install" == busy && "$(cat "$ROOT/.install-lock/kind" 2>/dev/null || true)" == "steam-login:$game" ]]; then echo "steam_session_$game=active"; fi
+  done
   while IFS=$'\t' read -r id rest; do
     select_mod "$id"
     [[ -f "$MOD/.$id-complete" ]] && assets_ready "$MOD" && echo "$id=ready" || echo "$id=missing"
@@ -69,9 +90,16 @@ if [[ "$ACTION" == status ]]; then
 fi
 
 if [[ "$ACTION" == launch ]]; then
+  [[ ! -d "$ROOT/.install-lock" ]] || fail 'An installation or Steam download is still running. Wait for it to finish before playing.'
   [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || select_mod "$PROFILE"
-  [[ -x "$ENGINE/Contents/MacOS/run.sh" ]] || fail 'Install the engine first.'
   if pgrep -x 'GeneralsX(ZH)?' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
+  if ! engine_ready "$ENGINE"; then
+    repair_profile=vanilla
+    [[ "$PROFILE" != base ]] || repair_profile=base
+    echo 'Repairing missing engine runtime files before launch.'
+    /bin/bash "$0" engine "$repair_profile"
+    engine_ready "$ENGINE" || fail 'The engine runtime is incomplete after repair.'
+  fi
   assets_ready "$GAME" "$PROFILE" || fail 'Download and verify your Steam assets first.'
   export CNC_GENERALS_ZH_PATH="$GAME"
   if [[ "$PROFILE" != vanilla && "$PROFILE" != base ]]; then
@@ -81,9 +109,11 @@ if [[ "$ACTION" == launch ]]; then
   export CNC_GENERALS_PATH="$CNC_GENERALS_ZH_PATH/ZH_Generals"
   if [[ "$PROFILE" == base ]]; then export CNC_GENERALS_PATH="$GAME"; fi
   export CNC_GENERALS_INSTALLPATH="$CNC_GENERALS_PATH"
+  export DXVK_HUD=0
   mkdir -p "$ROOT/logs"
   shift 2
-  exec "$ENGINE/Contents/MacOS/run.sh" -noshellmap "$@" > "$ROOT/logs/$PROFILE.log" 2>&1
+  launch_wrapper="${GX_LAUNCH_WRAPPER:-$ENGINE/Contents/MacOS/run.sh}"
+  exec /bin/bash "$launch_wrapper" -noshellmap "$@" > "$ROOT/logs/$PROFILE.log" 2>&1
 fi
 
 [[ "$(uname -m)" == arm64 ]] || fail 'This launcher requires an Apple Silicon Mac and a native Terminal.'
@@ -101,8 +131,15 @@ if ! mkdir "$LOCK" 2>/dev/null; then
   mkdir "$LOCK" || fail 'Could not acquire installation lock.'
 fi
 printf '%s\n' "$$" > "$LOCK/pid"
+printf '%s:%s\n' "$ACTION" "$PROFILE" > "$LOCK/kind"
 WORK="$(mktemp -d "$ROOT/.staging.XXXXXX")"
-cleanup() { rm -rf "$WORK" "$LOCK"; }
+cleanup() {
+  if [[ "$ACTION" == steam-login && "${steam_finished:-0}" != 1 ]]; then
+    current="$(cat "$ROOT/steam-$PROFILE.status" 2>/dev/null || true)"
+    case "$current" in wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) printf 'incomplete\n' > "$ROOT/steam-$PROFILE.status" ;; esac
+  fi
+  rm -rf "$WORK" "$LOCK"
+}
 trap cleanup EXIT
 trap 'exit 130' INT TERM
 
@@ -119,13 +156,15 @@ case "$ACTION" in
     touch "$WORK/empty-options"
     EXISTING="$OPTIONS"
     [[ -f "$EXISTING" ]] || EXISTING="$WORK/empty-options"
+    preset=max-options.ini
+    [[ "${3:-maximum}" != balanced ]] || preset=balanced-options.ini
     awk -F= '
       NR==FNR { key=$1; gsub(/^[ \t]+|[ \t]+$/, "", key); updated[key]=$0; next }
       { key=$1; gsub(/^[ \t]+|[ \t]+$/, "", key); if (!(key in updated)) print }
       END { for (key in updated) print updated[key] }
-    ' "$RESOURCES/resources/max-options.ini" "$EXISTING" > "$WORK/Options.ini"
+    ' "$RESOURCES/resources/$preset" "$EXISTING" > "$WORK/Options.ini"
     mv "$WORK/Options.ini" "$OPTIONS"
-    echo 'Maximum graphics saved; previous options backed up.'
+    echo 'Graphics preset saved; previous options backed up.'
     ;;
   engine)
     engine_name=GeneralsXZH; engine_directory=engine
@@ -161,19 +200,33 @@ case "$ACTION" in
     [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || fail 'Choose Generals or Zero Hour for Steam downloads.'
     appid=2732960; title='Zero Hour'
     if [[ "$PROFILE" == base ]]; then appid=2229870; title=Generals; fi
+    printf 'waiting\n' > "$ROOT/steam-$PROFILE.status"
     [[ -x "$ROOT/steamcmd/MacOS/steamcmd.sh" ]] || fail 'Install SteamCMD first.'
     if ! /usr/bin/arch -x86_64 /usr/bin/true 2>/dev/null; then
+      printf 'installing-rosetta\n' > "$ROOT/steam-$PROFILE.status"
       printf 'SteamCMD needs Apple Rosetta. Review and accept Apple’s agreement below.\n'
       /usr/sbin/softwareupdate --install-rosetta || fail 'Rosetta installation did not complete.'
     fi
+    printf 'waiting\n' > "$ROOT/steam-$PROFILE.status"
     printf 'Own %s on this Steam account (The Ultimate Collection, not Remastered).\n' "$title"
     printf 'Enter your password and Steam Guard only in this Terminal.\n'
+    printf 'Use your Steam account login name, not your profile display name.\n'
     read -r -p 'Steam account username: ' steam_account
     [[ -n "$steam_account" && "$steam_account" != -* && "$steam_account" != +* ]] || fail 'Enter a Steam account username.'
     mkdir -p "$GAME"
+    printf 'downloading\n' > "$ROOT/steam-$PROFILE.status"
+    mkfifo "$WORK/steam-status.pipe"
+    /bin/bash "$RESOURCES/scripts/steam-status.sh" "$ROOT/steam-$PROFILE.status" < "$WORK/steam-status.pipe" &
+    status_reader=$!
+    steam_result=0
     "$ROOT/steamcmd/MacOS/steamcmd.sh" +@sSteamCmdForcePlatformType windows \
-      +force_install_dir "$GAME" +login "$steam_account" +app_update "$appid" validate +quit
+      +force_install_dir "$GAME" +login "$steam_account" +app_update "$appid" validate +quit \
+      2>&1 | tee "$WORK/steam-status.pipe" || steam_result=$?
+    wait "$status_reader" || true
+    [[ "$steam_result" == 0 ]] || fail 'Steam sign-in stopped. Check the launcher for the next step.'
     assets_ready "$GAME" "$PROFILE" || fail "Steam files are incomplete. No subscription means this account lacks the $title license. Retry after checking ownership."
+    steam_finished=1
+    printf 'complete\n' > "$ROOT/steam-$PROFILE.status"
     echo "$title assets verified. Return to the launcher and click Refresh."
     ;;
   mod)

@@ -56,6 +56,25 @@ The launcher checks this repository's GitHub releases for newer launcher ZIPs.
 Self-replacement is manual; engine and mod changes require reviewed manifest
 updates in a newer launcher. No silent upstream upgrades are enabled.
 
+## Guided UI and Steam validation
+
+The command-center redesign loaded promotional mod thumbnails in the native UI.
+It has one Play action driven by the highlighted game/mod; selecting an uninstalled
+mod offers Install & Play with explicit confirmation. No game was launched while
+validating this redesign.
+
+`tests/model.sh` passed selection routing, per-game step prerequisites, unsupported
+platform handling, active-download blocking, failed-sign-in blocking and recovery
+guidance checks. `tests/steam-status.sh` passed representative password/account,
+Steam Guard, rate-limit, license and connection status lines, retaining only a
+status enum. Installer integration tests exercised failed password and no-license
+responses through a dummy Steam client. These do not replace real Steam sign-in
+testing.
+
+A fresh temporary installation was opened in the native GUI. Accessibility checks
+confirmed Steam Download and Play had `AXEnabled=false`; Continue remained enabled
+for the valid default game choice. No Steam client or game was started in this check.
+
 ## Still pending before calling the release fully verified
 
 1. Re-run automated checks on a clean Apple Silicon Mac.
