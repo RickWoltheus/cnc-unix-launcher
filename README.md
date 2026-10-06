@@ -5,6 +5,9 @@ GeneralsX, download your owned files through Steam, and install five curated
 Zero Hour mods. macOS uses SwiftUI; Linux has a separate Qt/PySide6 interface
 with the same guided flow.
 
+Enjoy the launcher? [Support its development on Ko-fi](https://ko-fi.com/ricklemore).
+Support is optional; the launcher stays free and open source.
+
 **Development preview. Headless installer checks pass; full gameplay and fresh
 Steam sign-in testing remain pending.** The app builds for ARM64 and its ad-hoc signature
 verifies. Engine/SteamCMD downloads, ROTR installation and repair, settings
