@@ -1,11 +1,38 @@
 # Verification before release
 
-No build, tests, GUI launch, or fresh installation has been run for this launcher.
-The user asked to defer testing. Do not mark a release verified until these
-checks have actually passed.
+## Passed on 2026-10-06
 
-1. Run shell syntax checks and the backend checks in `tests/backend.sh`.
-2. Build the app with `bash scripts/build.sh` and verify the ad-hoc signature.
+Headless validation ran on an Apple M3 Pro, macOS 26.0.1. No launcher window,
+Steam sign-in, or game was started. Existing game installations and preferences
+were left untouched; installer checks used disposable folders with spaces in
+their names and synthetic base-game fixtures.
+
+- `bash tests/backend.sh`: asset readiness and corrupted-header detection;
+  graphics merge preserves unrelated options and backs up original settings;
+  repeated merges remain stable; concurrent installer locks reject another run.
+- `bash scripts/build.sh`: native ARM64 app compiled successfully.
+- `codesign --verify --deep --strict`: ad-hoc app signature verified.
+- `plutil -lint`: app metadata passed validation.
+- `bash tests/install.sh ENGINE_ZIP STEAMCMD_TAR ROTR_DOWNLOAD_FOLDER`: actual
+  engine and SteamCMD extraction, repeated installs, all ROTR checksum pins,
+  separate mod-folder activation, preservation of stock AI scripts, corrupt mod
+  rejection and repair. A dummy executable verified profile environment variables
+  and launch flags without invoking the engine. A dummy SteamCMD verified
+  argument construction and rejected incomplete assets and invalid usernames.
+- `bash tests/network.sh`: fresh engine and SteamCMD downloads and their pinned
+  checksums; a live ROTR mirror file; deliberate checksum mismatch rejected
+  before replacing an existing installation. Install lock cleaned up on failure.
+- ZIP inventory: launcher executable, metadata, scripts, license and manifests
+  only. No game/mod archives or credentials. Compiled binary string inspection
+  found no personal build path or Steam username.
+
+The cached installer check requires your own existing engine ZIP, SteamCMD
+bootstrap, and ROTR downloads; those fixtures are not committed to this repo.
+
+## Still pending before calling the release fully verified
+
+1. Re-run automated checks on a clean Apple Silicon Mac.
+2. Validate Gatekeeper's first-open flow on an internet-downloaded app.
 3. On an Apple Silicon Mac, launch the app from a path containing spaces and
    confirm setup progress remains responsive.
 4. Install into a fresh user account with no Homebrew or existing GeneralsX

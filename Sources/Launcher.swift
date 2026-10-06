@@ -106,13 +106,22 @@ final class LauncherModel: ObservableObject {
                     _ = try await Task.detached { try Self.run(script, arguments: ["graphics"]) }.value
                 }
                 let process = Process()
+                let logDirectory = root.appendingPathComponent("logs")
+                try FileManager.default.createDirectory(at: logDirectory, withIntermediateDirectories: true)
+                let launcherLog = logDirectory.appendingPathComponent("launcher-\(profile).log")
+                FileManager.default.createFile(atPath: launcherLog.path, contents: nil, attributes: [.posixPermissions: 0o600])
+                let logHandle = try FileHandle(forWritingTo: launcherLog)
                 process.executableURL = URL(fileURLWithPath: "/bin/bash")
                 process.arguments = [script.path] + arguments
-                process.standardOutput = FileHandle.nullDevice
-                process.standardError = FileHandle.nullDevice
+                process.standardOutput = logHandle
+                process.standardError = logHandle
                 process.terminationHandler = { finished in
+                    logHandle.closeFile()
                     Task { @MainActor in
                         self.status = finished.terminationStatus == 0 ? "Game closed." : "Game stopped with an error. Open the installation folder and check logs/\(profile).log."
+                        if finished.terminationStatus != 0 {
+                            self.output = (try? String(contentsOf: launcherLog, encoding: .utf8)) ?? "Could not read launcher log."
+                        }
                         self.refresh()
                     }
                 }

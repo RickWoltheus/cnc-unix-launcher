@@ -3,10 +3,11 @@
 A native Mac launcher that installs GeneralsX, downloads your own Zero Hour
 files through Steam, and optionally installs Rise of the Reds.
 
-**Development preview. The installer has not been built or tested yet.**
-The underlying engine, Steam download, and ROTR installation were played on
-one Apple M3 Pro Mac before this launcher was written. That does not validate
-the automated installer. See [verification.md](docs/verification.md).
+**Development preview. Headless installer checks pass; GUI and Steam sign-in
+testing remain pending.** The app builds for ARM64 and its ad-hoc signature
+verifies. Engine/SteamCMD downloads, ROTR installation and repair, settings
+backups, and launch arguments have been checked without starting the game.
+See [verification.md](docs/verification.md) for the evidence and remaining checks.
 
 ## Requirements
 

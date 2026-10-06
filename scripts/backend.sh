@@ -70,6 +70,7 @@ fi
 [[ "$(uname -m)" == arm64 ]] || fail 'This launcher requires an Apple Silicon Mac and a native Terminal.'
 OS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
 [[ "$OS_MAJOR" -ge 15 ]] || fail 'GeneralsX 1.0.2 requires macOS 15 or later.'
+if pgrep -x GeneralsXZH >/dev/null 2>&1; then fail 'Quit Zero Hour before installing, downloading assets, or changing settings.'; fi
 mkdir -p "$ROOT" "$CACHE"
 LOCK="$ROOT/.install-lock"
 if ! mkdir "$LOCK" 2>/dev/null; then
@@ -92,7 +93,8 @@ case "$ACTION" in
     OPTIONS_DIR="${GX_PREFERENCES_DIR:-$HOME/Library/Application Support/GeneralsX/GeneralsZH}"
     mkdir -p "$OPTIONS_DIR"
     OPTIONS="$OPTIONS_DIR/Options.ini"
-    if [[ -f "$OPTIONS" && ! -f "$OPTIONS.before-launcher.ini" ]]; then cp "$OPTIONS" "$OPTIONS.before-launcher.ini"; fi
+    BACKUP="$OPTIONS_DIR/Options.before-launcher.ini"
+    if [[ -f "$OPTIONS" && ! -f "$BACKUP" ]]; then cp "$OPTIONS" "$BACKUP"; fi
     touch "$WORK/empty-options"
     EXISTING="$OPTIONS"
     [[ -f "$EXISTING" ]] || EXISTING="$WORK/empty-options"
