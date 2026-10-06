@@ -313,8 +313,13 @@ struct LauncherView: View {
                 Link("Game ownership on Steam", destination: steamStore)
             }.menuStyle(.borderlessButton).frame(width: 70).disabled(model.busy || model.gameRunning)
             Button(showDetails ? "Hide details" : "Details") { showDetails.toggle() }.buttonStyle(.plain)
-            Link("Support on Ko-fi", destination: URL(string: "https://ko-fi.com/ricklemore")!)
-                .font(.system(size: 11)).accessibilityIdentifier("support-kofi")
+            Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
+                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.black)
+                    .padding(.horizontal, 18).padding(.vertical, 12)
+                    .background(CommandTheme.amber, in: RoundedRectangle(cornerRadius: 8))
+            }.accessibilityIdentifier("support-kofi")
             Spacer()
             Text(model.updateStatus).lineLimit(1).font(.system(size: 10)).foregroundStyle(CommandTheme.muted)
             if let url = model.updateURL { Link("Download update", destination: url).font(.system(size: 11)) }

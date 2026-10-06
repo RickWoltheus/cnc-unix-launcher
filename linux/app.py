@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, QSettings, QTimer, QUrl, Qt
-from PySide6.QtGui import QDesktopServices, QFont, QPixmap
+from PySide6.QtGui import QDesktopServices, QFont, QIcon, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressBar, QPushButton, QScrollArea, QStackedWidget, QTextEdit, QVBoxLayout, QWidget
 from state import LauncherState
@@ -27,6 +27,7 @@ QPushButton:hover { border-color:#efad40; }
 QPushButton:disabled { color:#697478; border-color:#263034; }
 QPushButton#primary { background:#efad40; color:#111719; font-weight:bold; padding:16px 25px; }
 QPushButton#primary:disabled { background:#635334; color:#a29a89; }
+QPushButton#support-kofi { background:#efad40; color:#111719; font-size:14px; font-weight:bold; padding:12px 18px; border-radius:8px; }
 QPushButton#selected { border:2px solid #efad40; color:#efad40; }
 QPushButton#step { background:transparent; border:none; padding:12px; }
 QPushButton#step:checked { color:#efad40; }
@@ -59,6 +60,7 @@ class LauncherWindow(QMainWindow):
         self.settings = QSettings("GeneralsXLauncher", "Linux")
         self.network = QNetworkAccessManager(self)
         self.setWindowTitle("GeneralsX Launcher")
+        self.setWindowIcon(QIcon(str(resources / "resources/launcher-icon.png")))
         self.resize(1000, 760)
         self.setStyleSheet(STYLE)
         container = QWidget()
@@ -114,7 +116,7 @@ class LauncherWindow(QMainWindow):
         detail_button = QPushButton("Details")
         detail_button.clicked.connect(lambda: self.details.setVisible(not self.details.isVisible()))
         footer.addWidget(detail_button)
-        support_button = QPushButton("Support on Ko-fi")
+        support_button = QPushButton("☕  Buy me a coffee")
         support_button.setObjectName("support-kofi")
         support_button.clicked.connect(lambda: self.open_url("https://ko-fi.com/ricklemore"))
         footer.addWidget(support_button)
