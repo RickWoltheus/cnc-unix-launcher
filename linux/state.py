@@ -14,6 +14,8 @@ class LauncherState:
     values: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        with (self.resources / "manifests/games.tsv").open() as stream:
+            self.games = [dict(zip(("id", "title", "subtitle", "engine", "steam_id", "directory", "accent", "emblem", "summary"), row)) for row in csv.reader(stream, delimiter="\t")]
         self.policy = json.loads((self.resources / "resources/setup-policy.json").read_text())
         self.guidance = json.loads((self.resources / "resources/steam-guidance.json").read_text())
         self.recovery = json.loads((self.resources / "resources/recovery-guidance.json").read_text())
@@ -28,8 +30,17 @@ class LauncherState:
         self.values = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
 
     @property
+    def game(self):
+        return next(game for game in self.games if game["id"] == self.selected_game)
+
+    @property
+    def classic(self):
+        return self.game["engine"] == "OpenRA"
+
+    @property
     def engine_ready(self):
-        return self.values.get("base_engine" if self.selected_game == "base" else "engine") == "ready"
+        key = self.selected_game + "_engine" if self.classic else ("base_engine" if self.selected_game == "base" else "engine")
+        return self.values.get(key) == "ready"
 
     @property
     def steam_status(self):
@@ -41,12 +52,12 @@ class LauncherState:
 
     @property
     def assets_ready(self):
-        key = "base_assets" if self.selected_game == "base" else "assets"
+        key = self.selected_game + "_assets" if self.classic else ("base_assets" if self.selected_game == "base" else "assets")
         return self.values.get(key) == "ready" and self.values.get("install") != "busy" and not self.steam_active and self.steam_status in ("idle", "complete")
 
     @property
     def facts(self):
-        return {"platform": self.values.get("platform") == "ready", "selected": self.selected_game in ("base", "vanilla"),
+        return {"platform": self.values.get("platform") == "ready", "selected": self.selected_game in [game["id"] for game in self.games],
                 "engine": self.engine_ready, "steam": self.values.get("steam") == "ready", "assets": self.assets_ready}
 
     def can_enter(self, index):
@@ -58,7 +69,7 @@ class LauncherState:
 
     @property
     def profile(self):
-        return "base" if self.selected_game == "base" else self.selected_profile
+        return self.selected_profile if self.selected_game == "vanilla" else self.selected_game
 
     @property
     def mod(self):
@@ -66,7 +77,7 @@ class LauncherState:
 
     @property
     def title(self):
-        return self.mod["title"].upper() if self.mod else ("GENERALS" if self.profile == "base" else "ZERO HOUR")
+        return self.mod["title"].upper() if self.mod else self.game["title"].upper()
 
     @property
     def needs_install(self):

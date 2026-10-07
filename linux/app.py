@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, QSettings, QTimer, QUrl, Qt
-from PySide6.QtGui import QDesktopServices, QFont, QIcon, QPixmap
+from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressBar, QPushButton, QScrollArea, QStackedWidget, QTextEdit, QVBoxLayout, QWidget
 from state import LauncherState
@@ -21,12 +21,14 @@ RESOURCES = Path(sys._MEIPASS) / "share" if getattr(sys, "frozen", False) else P
 STYLE = """
 QWidget { background:#101619; color:#ecedeb; font-family:DejaVu Sans; font-size:13px; }
 QLabel { background:transparent; }
+QFrame#library { background:#0b1013; }
 QFrame#panel { background:#1a2226; border:1px solid #30393b; border-radius:5px; }
 QPushButton { background:#1c2529; color:#d7dddd; border:1px solid #354044; padding:12px 16px; border-radius:3px; }
 QPushButton:hover { border-color:#efad40; }
 QPushButton:disabled { color:#697478; border-color:#263034; }
 QPushButton#primary { background:#efad40; color:#111719; font-weight:bold; padding:16px 25px; }
 QPushButton#primary:disabled { background:#635334; color:#a29a89; }
+QLabel#eyebrow { color:#efad40; font-weight:bold; }
 QPushButton#support-kofi { background:#efad40; color:#111719; font-size:14px; font-weight:bold; padding:12px 18px; border-radius:8px; }
 QPushButton#selected { border:2px solid #efad40; color:#efad40; }
 QPushButton#step { background:transparent; border:none; padding:12px; }
@@ -61,15 +63,59 @@ class LauncherWindow(QMainWindow):
         self.network = QNetworkAccessManager(self)
         self.setWindowTitle("GeneralsX Launcher")
         self.setWindowIcon(QIcon(str(resources / "resources/launcher-icon.png")))
-        self.resize(1000, 760)
+        self.resize(1200, 790)
         self.setStyleSheet(STYLE)
         container = QWidget()
         self.setCentralWidget(container)
-        layout = QVBoxLayout(container)
+        collection = QHBoxLayout(container)
+        collection.setContentsMargins(0, 0, 0, 0)
+        collection.setSpacing(0)
+        sidebar = QFrame()
+        sidebar.setFixedWidth(230)
+        sidebar.setObjectName("library")
+        library = QVBoxLayout(sidebar)
+        library.setContentsMargins(18, 28, 18, 20)
+        library.setSpacing(12)
+        library.addWidget(QLabel("YOUR COLLECTION"))
+        self.game_buttons = {}
+        for game in self.state.games:
+            button = QPushButton()
+            button.setMinimumHeight(84)
+            row = QHBoxLayout(button)
+            row.setContentsMargins(10, 10, 10, 10)
+            badge = QLabel(game["emblem"])
+            badge.setFixedWidth(38)
+            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            badge.setStyleSheet(f'color:#{game["accent"]}; font-size:17px; font-weight:bold;')
+            badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            row.addWidget(badge)
+            caption = QLabel(game["title"] + "\n" + game["engine"])
+            caption.setWordWrap(True)
+            caption.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            row.addWidget(caption, 1)
+            button.clicked.connect(lambda checked=False, id=game["id"]: self.choose_game(id))
+            self.game_buttons[game["id"]] = button
+            library.addWidget(button)
+        library.addStretch()
+        future = QLabel("More games will join as their engine support is ready.")
+        future.setWordWrap(True)
+        library.addWidget(future)
+        issues_button = QPushButton("Bugs && feature requests")
+        issues_button.setObjectName("github-issues")
+        issues_button.clicked.connect(lambda: self.open_url("https://github.com/RickWoltheus/generalsx-mac-launcher/issues"))
+        library.addWidget(issues_button)
+        support_button = QPushButton("☕  Buy me a coffee")
+        support_button.setObjectName("support-kofi")
+        support_button.clicked.connect(lambda: self.open_url("https://ko-fi.com/ricklemore"))
+        library.addWidget(support_button)
+        collection.addWidget(sidebar)
+        main = QWidget()
+        collection.addWidget(main, 1)
+        layout = QVBoxLayout(main)
         layout.setContentsMargins(32, 24, 32, 18)
         layout.setSpacing(18)
         header = QHBoxLayout()
-        wordmark = QLabel("◈  GENERALS")
+        wordmark = QLabel("◈  COMMAND & CONQUER")
         font = QFont("DejaVu Sans", 23, QFont.Weight.Black)
         font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 3)
         wordmark.setFont(font)
@@ -116,14 +162,6 @@ class LauncherWindow(QMainWindow):
         detail_button = QPushButton("Details")
         detail_button.clicked.connect(lambda: self.details.setVisible(not self.details.isVisible()))
         footer.addWidget(detail_button)
-        issues_button = QPushButton("Bugs & feature requests")
-        issues_button.setObjectName("github-issues")
-        issues_button.clicked.connect(lambda: self.open_url("https://github.com/RickWoltheus/generalsx-mac-launcher/issues"))
-        footer.addWidget(issues_button)
-        support_button = QPushButton("☕  Buy me a coffee")
-        support_button.setObjectName("support-kofi")
-        support_button.clicked.connect(lambda: self.open_url("https://ko-fi.com/ricklemore"))
-        footer.addWidget(support_button)
         footer.addStretch()
         self.update_label = QLabel("Reviewed engine and mod versions")
         footer.addWidget(self.update_label)
@@ -155,7 +193,7 @@ class LauncherWindow(QMainWindow):
 
     def title(self, layout, eyebrow, heading, description):
         kicker = QLabel(eyebrow.upper())
-        kicker.setStyleSheet("color:#efad40; font-weight:bold;")
+        kicker.setObjectName("eyebrow")
         layout.addWidget(kicker)
         headline = QLabel(heading)
         headline.setFont(QFont("DejaVu Sans", 28, QFont.Weight.Black))
@@ -175,26 +213,21 @@ class LauncherWindow(QMainWindow):
 
     def make_choose(self):
         layout = self.page()
-        self.title(layout, "Your mission", "Choose your battlefield.", "Play the original Generals or expand your arsenal with Zero Hour.")
-        cards = QHBoxLayout()
-        self.game_buttons = {}
-        for id, title, description in [("vanilla", "ZERO HOUR", "Campaigns, skirmish, Generals Challenge and mods."), ("base", "GENERALS", "The 2003 classic. USA, China and the GLA.")]:
-            button = QPushButton(f"{title}\n\n{description}")
-            button.setMinimumHeight(130)
-            button.clicked.connect(lambda checked=False, game=id: self.choose_game(game))
-            self.game_buttons[id] = button
-            cards.addWidget(button)
-        layout.addLayout(cards)
-        note = QLabel("Own the selected game on Steam. Ultimate Collection includes both; Remastered does not. Linux preview targets x86_64 Ubuntu/Debian desktops with Vulkan support.")
-        note.setWordWrap(True)
-        layout.addWidget(note)
+        self.choose_title, self.choose_summary = self.title(layout, "Native collection", "", "")
+        self.choose_engine = QLabel("")
+        self.choose_engine.setMargin(24)
+        self.choose_engine.setWordWrap(True)
+        layout.addWidget(self.choose_engine)
+        self.choose_note = QLabel("")
+        self.choose_note.setWordWrap(True)
+        layout.addWidget(self.choose_note)
         self.continue_button = self.primary("CONTINUE →", self.continue_setup)
         layout.addWidget(self.continue_button)
         layout.addStretch()
 
     def make_prepare(self):
         layout = self.page()
-        self.title(layout, "Step 2", "We’ll handle the setup.", "Native engines through Flatpak. No Windows VM or paid compatibility layer.")
+        self.title(layout, "Step 2", "We’ll handle the setup.", "We install your selected native engine and Steam downloader. No Windows VM or paid compatibility layer.")
         self.engine_row = QLabel("")
         self.steam_row = QLabel("")
         for row in (self.engine_row, self.steam_row):
@@ -239,7 +272,8 @@ class LauncherWindow(QMainWindow):
         self.fullscreen.setChecked(self.settings.value("fullscreen", True, type=bool))
         self.fullscreen.toggled.connect(lambda value: self.settings.setValue("fullscreen", value))
         choices.addWidget(self.fullscreen)
-        choices.addWidget(QLabel("Graphics"))
+        self.graphics_label = QLabel("Graphics")
+        choices.addWidget(self.graphics_label)
         self.graphics = QComboBox()
         self.graphics.addItems(["Balanced", "Maximum"])
         self.graphics.setCurrentIndex(self.settings.value("maximumGraphics", 0, type=int))
@@ -279,11 +313,17 @@ class LauncherWindow(QMainWindow):
         self.mod_link.clicked.connect(lambda: self.open_url(self.state.mod["homepage"]) if self.state.mod else None)
         mods.addWidget(self.mod_link)
         layout.addWidget(self.mod_section)
-        layout.addWidget(QLabel("Experimental mod support. Windowed mode uses 1280×720; Balanced is recommended."))
+        self.play_note = QLabel("")
+        self.play_note.setWordWrap(True)
+        layout.addWidget(self.play_note)
         layout.addStretch()
 
     def choose_game(self, game):
+        if self.state.busy or self.state.game_running or self.state.values.get("install") == "busy": return
+        if game not in self.game_buttons: return
         self.state.selected_game = game
+        self.step = 0
+        self.notice.setText("")
         self.refresh_view()
 
     def choose_profile(self, profile):
@@ -302,6 +342,16 @@ class LauncherWindow(QMainWindow):
                 return
 
     def refresh_view(self):
+        accent = "#" + self.state.game["accent"].lower()
+        self.setStyleSheet(STYLE.replace("#efad40", accent).replace("#101619", QColor(accent).darker(850).name()))
+        self.notice.setStyleSheet(f"color:{accent};")
+        self.steam_help_title.setStyleSheet(f"color:{accent}; font-weight:bold;")
+        self.choose_title.setText(self.state.game["title"].upper())
+        self.choose_summary.setText(self.state.game["summary"])
+        self.choose_engine.setText(f'{self.state.game["emblem"]}  ·  POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else "Native GeneralsX using your owned Steam assets."))
+        tint = QColor(accent)
+        self.choose_engine.setStyleSheet(f"background:rgba({tint.red()},{tint.green()},{tint.blue()},20); border:1px solid {accent};")
+        self.choose_note.setText("Own Red Alert and C&C on Steam. OpenRA needs C&C’s desert tileset; setup downloads both owned games." if self.state.selected_game == "ra" else "Own this game through Steam’s Ultimate Collection. Remastered assets are not used in this setup.")
         if not self.state.busy and not self.state.game_running:
             while self.step > 0 and not self.state.can_enter(self.step):
                 self.step -= 1
@@ -315,20 +365,27 @@ class LauncherWindow(QMainWindow):
         for game, button in self.game_buttons.items():
             button.setObjectName("selected" if game == self.state.selected_game else "")
             button.style().unpolish(button); button.style().polish(button)
-            button.setEnabled(not self.state.busy and not self.state.game_running)
+            button.setEnabled(not self.state.busy and not self.state.game_running and self.state.values.get("install") != "busy")
+            color = "#" + next(item["accent"] for item in self.state.games if item["id"] == game)
+            border = f"border:1px solid {color};" if game == self.state.selected_game else "border:1px solid #354044;"
+            button.setStyleSheet(f"QPushButton {{ text-align:left; font-weight:bold; color:{color}; {border} }} QLabel {{ border:none; background:transparent; color:{color}; }}")
         self.continue_button.setEnabled(self.state.can_enter(1))
         self.prepare_button.setEnabled(self.state.can_enter(1))
-        self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + "Native GeneralsX engine")
+        self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + "Native " + self.state.game["engine"] + " engine")
         self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + "Valve Steam downloader and Linux support")
         self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and self.state.values.get("install") != "busy")
         self.steam_help_title.setText(self.state.steam_guidance["title"])
         self.steam_help_detail.setText(self.state.steam_guidance["detail"])
         self.play_title.setText(self.state.title)
-        self.play_summary.setText(self.state.mod["summary"] if self.state.mod else "Your original game is ready to deploy.")
+        self.play_summary.setText(self.state.mod["summary"] if self.state.mod else ("OpenRA is ready. Modernized gameplay using your owned Steam assets." if self.state.classic else "Your original game is ready to deploy."))
         self.play_button.setText("GAME RUNNING" if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
         self.play_button.setEnabled(self.state.can_enter(3))
         self.fullscreen.setEnabled(not self.state.busy and not self.state.game_running)
-        self.graphics.setEnabled(not self.state.busy and not self.state.game_running)
+        self.graphics.setEnabled(not self.state.classic and not self.state.busy and not self.state.game_running)
+        self.graphics.setVisible(not self.state.classic)
+        self.graphics_label.setVisible(not self.state.classic)
+        self.graphics.setToolTip("OpenRA uses its own in-game graphics settings." if self.state.classic else "")
+        self.play_note.setText("OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
         self.mod_section.setVisible(self.state.selected_game == "vanilla")
         for profile, button in self.profile_buttons.items():
             button.setObjectName("selected" if profile == self.state.selected_profile else "")
@@ -493,7 +550,7 @@ class LauncherWindow(QMainWindow):
             width, height = (size.width(), size.height()) if self.fullscreen.isChecked() and size else (1280, 720)
             game.start("/bin/bash", [str(self.backend), "launch", profile, "-fullscreen" if self.fullscreen.isChecked() else "-win", "-xres", str(width), "-yres", str(height)])
         process.finished.connect(graphics_done)
-        process.start("/bin/bash", [str(self.backend), "graphics", "base" if profile == "base" else "vanilla", quality])
+        process.start("/bin/bash", [str(self.backend), "graphics", profile if profile in ("base", "cnc", "ra") else "vanilla", quality])
         self.refresh_view()
 
     def fetch_image(self, mod):
@@ -552,7 +609,7 @@ def main():
         raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
     if "--self-check" in sys.argv:
         state = LauncherState(RESOURCES)
-        for name in ("backend.sh", "platform-linux.sh", "steam-status.sh"):
+        for name in ("backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh"):
             subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
         if len(state.mods) != 5 or len(state.policy["steps"]) != 4:
             raise SystemExit("Packaged catalog or setup policy is incomplete.")

@@ -6,6 +6,7 @@ struct LauncherView: View {
     @State private var step = 0
     @State private var showDetails = false
     @State private var playAfterModInstall = false
+    private var accent: Color { model.game.color }
     private let steps = ["Choose game", "Prepare Mac", "Steam download", "Play"]
 
     var body: some View {
@@ -13,25 +14,31 @@ struct LauncherView: View {
             CommandBackground()
             VStack(spacing: 0) {
                 header
-                stepper
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        screen
-                        if let recovery = model.recovery { recoveryPanel(recovery) }
-                        if model.busy { loadingPanel }
-                        if showDetails && !model.output.isEmpty {
-                            Text(model.output).font(.system(size: 11, design: .monospaced))
-                                .textSelection(.enabled).padding(16).frame(maxWidth: .infinity, alignment: .leading)
-                                .background(CommandTheme.panel)
+                HStack(spacing: 0) {
+                    gameSidebar
+                    VStack(spacing: 0) {
+                        stepper
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 24) {
+                                screen
+                                if let recovery = model.recovery { recoveryPanel(recovery) }
+                                if model.busy { loadingPanel }
+                                if showDetails && !model.output.isEmpty {
+                                    Text(model.output).font(.system(size: 11, design: .monospaced))
+                                        .textSelection(.enabled).padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(CommandTheme.panel)
+                                }
+                            }.padding(.horizontal, 36).padding(.vertical, 28)
                         }
-                    }.padding(.horizontal, 36).padding(.vertical, 28)
+                    }
                 }
                 footer
             }
         }
-        .frame(width: 1000, height: 740)
+        .frame(width: 1200, height: 790)
+        .environment(\.gameAccent, accent)
         .preferredColorScheme(.dark)
-        .tint(CommandTheme.amber)
+        .tint(accent)
         .task { model.refresh() }
         .onChange(of: model.gameAssetsReady) { _, ready in
             if ready && model.canEnterStep(3) { step = 3 }
@@ -42,7 +49,7 @@ struct LauncherView: View {
             else { validateCurrentStep() }
         }
         .onChange(of: model.steam) { _, _ in advanceAfterPreparation() }
-        .onChange(of: model.selectedGame) { _, _ in model.refresh(); validateCurrentStep() }
+        .onChange(of: model.selectedGame) { _, _ in step = 0; model.recovery = nil; model.refresh() }
         .onChange(of: model.busy) { _, busy in if !busy { advanceAfterPreparation() } }
         .task(id: step) {
             if step == 2 {
@@ -63,9 +70,9 @@ struct LauncherView: View {
     private var header: some View {
         HStack {
             HStack(spacing: 12) {
-                Image(systemName: "shield.lefthalf.filled").font(.system(size: 28)).foregroundStyle(CommandTheme.amber)
+                Image(systemName: "shield.lefthalf.filled").font(.system(size: 28)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("GENERALS").font(.system(size: 23, weight: .black)).tracking(4)
+                    Text("COMMAND & CONQUER").font(.system(size: 23, weight: .black)).tracking(4)
                     Text("NATIVE MAC COMMAND CENTER").font(.system(size: 9, weight: .semibold)).tracking(2).foregroundStyle(CommandTheme.muted)
                 }
             }
@@ -85,12 +92,12 @@ struct LauncherView: View {
                 } label: {
                     HStack(spacing: 9) {
                         ZStack {
-                            Circle().stroke(index <= step ? CommandTheme.amber : CommandTheme.line, lineWidth: 1).frame(width: 26, height: 26)
+                            Circle().stroke(index <= step ? accent : CommandTheme.line, lineWidth: 1).frame(width: 26, height: 26)
                             if index != step && model.stepComplete(index) { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)) }
                             else { Text("\(index + 1)").font(.system(size: 11, weight: .bold)) }
                         }
                         Text(steps[index].uppercased()).font(.system(size: 10, weight: .bold)).tracking(1)
-                    }.foregroundStyle(index <= step ? CommandTheme.amber : CommandTheme.muted)
+                    }.foregroundStyle(index <= step ? accent : CommandTheme.muted)
                 }.buttonStyle(.plain).disabled(!model.canEnterStep(index))
                     .help(model.stepHelp(index)).accessibilityIdentifier("step-\(index)")
                 if index < 3 { Rectangle().fill(CommandTheme.line).frame(height: 1).padding(.horizontal, 18) }
@@ -107,18 +114,58 @@ struct LauncherView: View {
         }
     }
 
+    private var gameSidebar: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("YOUR COLLECTION").font(.system(size: 10, weight: .bold)).tracking(2).foregroundStyle(CommandTheme.muted)
+                .padding(.bottom, 10)
+            ForEach(GameInfo.catalog) { game in
+                Button { model.selectedGame = game.id } label: {
+                    HStack(spacing: 12) {
+                        Text(game.emblem).font(.system(size: 17, weight: .black))
+                            .frame(width: 46, height: 46)
+                            .foregroundStyle(game.color)
+                            .background(game.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(game.title).font(.system(size: 13, weight: .bold))
+                            Text(game.engine).font(.system(size: 10)).foregroundStyle(CommandTheme.muted)
+                        }
+                        Spacer(minLength: 0)
+                    }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(model.selectedGame == game.id ? game.color.opacity(0.10) : Color.clear)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(model.selectedGame == game.id ? game.color : .clear, lineWidth: 1))
+                }.buttonStyle(.plain).disabled(model.busy || model.gameRunning || model.externalInstallRunning)
+                    .accessibilityIdentifier("game-\(game.id)")
+            }
+            Spacer()
+            Text("NATIVE ENGINES").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(accent)
+            Text("More games will join the collection as their engine support is ready.")
+                .font(.system(size: 11)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
+            Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
+                .font(.system(size: 11)).accessibilityIdentifier("github-issues")
+            Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
+                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.black)
+                    .padding(.horizontal, 18).padding(.vertical, 12)
+                    .background(accent, in: RoundedRectangle(cornerRadius: 8))
+            }.accessibilityIdentifier("support-kofi")
+        }.padding(20).frame(width: 230).background(Color.black.opacity(0.25))
+    }
+
     private var chooseGame: some View {
         VStack(alignment: .leading, spacing: 24) {
-            BriefingTitle(eyebrow: "Your mission", title: "Choose your battlefield.", subtitle: "Play the original Generals or expand your arsenal with Zero Hour.")
-            HStack(spacing: 16) {
-                gameCard(id: "vanilla", title: "ZERO HOUR", badge: "EXPANSION + MODS", symbol: "flame.fill", description: "Campaigns, skirmish, Generals Challenge and community mods.")
-                gameCard(id: "base", title: "GENERALS", badge: "THE ORIGINAL", symbol: "star.circle.fill", description: "The 2003 classic. USA, China and the GLA, running natively on your Mac.")
-            }
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "info.circle").foregroundStyle(CommandTheme.amber)
-                Text("You need to own your selected game on Steam. The Ultimate Collection includes both games; Remastered Collection does not.")
-                    .font(.system(size: 13)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
-            }
+            BriefingTitle(eyebrow: model.game.subtitle, title: model.game.title.uppercased(), subtitle: model.game.summary)
+            HStack(spacing: 22) {
+                Text(model.game.emblem).font(.system(size: 48, weight: .black)).foregroundStyle(accent)
+                    .frame(width: 110, height: 110).background(accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 9) {
+                    Text("POWERED BY \(model.game.engine.uppercased())").font(.system(size: 12, weight: .bold)).tracking(1.5).foregroundStyle(accent)
+                    Text(model.game.isClassic ? "A native OpenRA experience using your owned Steam assets. Rules, balance and missions can differ from the original releases." : "A native engine for your owned Steam game. No Windows VM or paid compatibility software.")
+                        .font(.system(size: 14)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
+                }
+            }.padding(24).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
+            Text(model.selectedGame == "ra" ? "Own Red Alert and Command & Conquer on Steam. OpenRA also needs C&C’s desert tileset; setup downloads both owned games." : "Own this game on Steam through The Ultimate Collection. The Remastered Collection is not the asset source for this setup.")
+                .font(.system(size: 13)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
             HStack {
                 Button("CONTINUE →") {
                     if model.canEnterStep(3) { step = 3 }
@@ -128,32 +175,15 @@ struct LauncherView: View {
                 Link("Find it on Steam", destination: steamStore).font(.system(size: 12)).padding(.leading, 12)
             }
             if !model.systemSupported {
-                Text("This launcher needs an Apple Silicon Mac running macOS 15 or later.").foregroundStyle(CommandTheme.amber)
+                Text("This launcher needs an Apple Silicon Mac running macOS 15 or later.").foregroundStyle(accent)
             }
         }
-    }
-
-    private func gameCard(id: String, title: String, badge: String, symbol: String, description: String) -> some View {
-        Button { model.selectedGame = id } label: {
-            VStack(alignment: .leading, spacing: 15) {
-                HStack {
-                    Image(systemName: symbol).font(.system(size: 34)).foregroundStyle(CommandTheme.amber)
-                    Spacer()
-                    Image(systemName: model.selectedGame == id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.selectedGame == id ? CommandTheme.amber : CommandTheme.muted)
-                }
-                Text(badge).font(.system(size: 9, weight: .bold)).tracking(2).foregroundStyle(CommandTheme.amber)
-                Text(title).font(.system(size: 29, weight: .black)).tracking(1)
-                Text(description).font(.system(size: 13)).foregroundStyle(CommandTheme.muted)
-                    .fixedSize(horizontal: false, vertical: true).frame(minHeight: 40, alignment: .top)
-            }.padding(24).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
-                .overlay(RoundedRectangle(cornerRadius: 5).stroke(model.selectedGame == id ? CommandTheme.amber : CommandTheme.line, lineWidth: 1))
-        }.buttonStyle(.plain).accessibilityIdentifier("game-\(id)")
     }
 
     private var prepareMac: some View {
         VStack(alignment: .leading, spacing: 22) {
             BriefingTitle(eyebrow: "Step 2", title: "We’ll handle the setup.", subtitle: "No Homebrew, Windows install or paid compatibility software needed.")
-            ReadinessRow(title: "Native game engine", detail: "A verified Apple Silicon build of GeneralsX.", ready: model.gameEngineReady)
+            ReadinessRow(title: "Native game engine", detail: "A verified Apple Silicon build of \(model.game.engine).", ready: model.gameEngineReady)
             ReadinessRow(title: "Steam downloader", detail: "Valve’s tool downloads the game you own.", ready: model.steam)
             if !model.busy {
                 Button(model.gameEngineReady && model.steam ? "CONTINUE TO STEAM →" : "PREPARE MY MAC →") {
@@ -182,7 +212,7 @@ struct LauncherView: View {
             }
             VStack(alignment: .leading, spacing: 9) {
                 Label(model.steamGuidance.title, systemImage: model.steamDownloadStatus == "complete" ? "checkmark.circle.fill" : "person.badge.key.fill")
-                    .font(.system(size: 14, weight: .semibold)).foregroundStyle(CommandTheme.amber)
+                    .font(.system(size: 14, weight: .semibold)).foregroundStyle(accent)
                 Text(model.steamGuidance.detail).font(.system(size: 12)).foregroundStyle(CommandTheme.muted)
                     .fixedSize(horizontal: false, vertical: true)
                 Link("Recover your Steam account or password", destination: URL(string: "https://help.steampowered.com/en/wizard/HelpWithLogin")!)
@@ -195,7 +225,7 @@ struct LauncherView: View {
 
     private func instruction(number: String, title: String, detail: String) -> some View {
         HStack(alignment: .top, spacing: 18) {
-            Text(number).font(.system(size: 22, weight: .black)).foregroundStyle(CommandTheme.amber).frame(width: 25)
+            Text(number).font(.system(size: 22, weight: .black)).foregroundStyle(accent).frame(width: 25)
             VStack(alignment: .leading, spacing: 5) {
                 Text(title).font(.system(size: 15, weight: .semibold))
                 Text(detail).font(.system(size: 13)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
@@ -219,14 +249,16 @@ struct LauncherView: View {
             }
             HStack(spacing: 24) {
                 Toggle("Fullscreen", isOn: $model.fullscreen).accessibilityIdentifier("fullscreen")
-                Picker("Graphics", selection: $model.maximumGraphics) {
-                    Text("Balanced").tag(false); Text("Maximum").tag(true)
-                }.pickerStyle(.menu).frame(width: 200)
+                if !model.game.isClassic {
+                    Picker("Graphics", selection: $model.maximumGraphics) {
+                        Text("Balanced").tag(false); Text("Maximum").tag(true)
+                    }.pickerStyle(.menu).frame(width: 200)
+                }
                 Spacer()
                 Button("Set up another game") { step = 0 }.buttonStyle(.plain).foregroundStyle(CommandTheme.muted)
             }.font(.system(size: 12)).disabled(model.gameRunning || model.busy)
             if model.selectedGame == "vanilla" { modLibrary }
-            Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match.")
+            Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : (model.game.isClassic ? "OpenRA uses its own graphics settings. Windowed mode starts at 1280×720; fullscreen follows your desktop." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match."))
                 .font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
         }
     }
@@ -244,14 +276,14 @@ struct LauncherView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             ZStack {
                                 CommandTheme.panel
-                                Image(systemName: "flame.fill").font(.system(size: 36)).foregroundStyle(CommandTheme.amber)
+                                Image(systemName: "flame.fill").font(.system(size: 36)).foregroundStyle(accent)
                             }.frame(width: 140, height: 100)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("Zero Hour").font(.system(size: 12, weight: .bold)).frame(height: 30, alignment: .topLeading)
-                                Text("ORIGINAL GAME").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(CommandTheme.amber)
+                                Text("ORIGINAL GAME").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(accent)
                             }.padding(12).frame(width: 140, alignment: .leading)
                         }.background(CommandTheme.panel).clipShape(RoundedRectangle(cornerRadius: 4))
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == "vanilla" ? CommandTheme.amber : CommandTheme.line, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == "vanilla" ? accent : CommandTheme.line, lineWidth: 1))
                     }.buttonStyle(.plain).accessibilityIdentifier("mod-vanilla")
                     ForEach(model.catalog) { mod in
                         Button { model.selectedMod = mod.id } label: {
@@ -260,10 +292,10 @@ struct LauncherView: View {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(mod.title).font(.system(size: 12, weight: .bold)).frame(height: 30, alignment: .topLeading)
                                     Text(model.installedMods.contains(mod.id) ? "INSTALLED" : "AVAILABLE")
-                                        .font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(CommandTheme.amber)
+                                        .font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(accent)
                                 }.padding(12).frame(width: 140, alignment: .leading)
                             }.background(CommandTheme.panel).clipShape(RoundedRectangle(cornerRadius: 4))
-                                .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == mod.id ? CommandTheme.amber : CommandTheme.line, lineWidth: 1))
+                                .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == mod.id ? accent : CommandTheme.line, lineWidth: 1))
                         }.buttonStyle(.plain).accessibilityIdentifier("mod-\(mod.id)")
                     }
                 }.padding(1)
@@ -297,7 +329,7 @@ struct LauncherView: View {
 
     private func recoveryPanel(_ advice: RecoveryAdvice) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(advice.title, systemImage: "exclamationmark.triangle").font(.system(size: 14, weight: .bold)).foregroundStyle(CommandTheme.amber)
+            Label(advice.title, systemImage: "exclamationmark.triangle").font(.system(size: 14, weight: .bold)).foregroundStyle(accent)
             Text(advice.message).font(.system(size: 12)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
             Button("Show details") { showDetails = true }.buttonStyle(.plain).font(.system(size: 12))
         }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
@@ -314,15 +346,6 @@ struct LauncherView: View {
                 Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
             }.menuStyle(.borderlessButton).frame(width: 70).disabled(model.busy || model.gameRunning)
             Button(showDetails ? "Hide details" : "Details") { showDetails.toggle() }.buttonStyle(.plain)
-            Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
-                .font(.system(size: 11)).accessibilityIdentifier("github-issues")
-            Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
-                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Color.black)
-                    .padding(.horizontal, 18).padding(.vertical, 12)
-                    .background(CommandTheme.amber, in: RoundedRectangle(cornerRadius: 8))
-            }.accessibilityIdentifier("support-kofi")
             Spacer()
             Text(model.updateStatus).lineLimit(1).font(.system(size: 10)).foregroundStyle(CommandTheme.muted)
             if let url = model.updateURL { Link("Download update", destination: url).font(.system(size: 11)) }
@@ -330,7 +353,7 @@ struct LauncherView: View {
         }.padding(.horizontal, 36).padding(.vertical, 18).background(Color.black.opacity(0.25))
     }
 
-    private var steamStore: URL { URL(string: "https://store.steampowered.com/app/\(model.selectedGame == "base" ? "2229870" : "2732960")/")! }
+    private var steamStore: URL { URL(string: "https://store.steampowered.com/app/\(model.game.steamID)/")! }
 
     private func advanceAfterPreparation() {
         if model.canEnterStep(3) { step = 3 }

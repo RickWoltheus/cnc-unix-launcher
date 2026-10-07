@@ -63,6 +63,19 @@ struct ModelChecks {
         precondition(RecoveryAdvice.forMessage("ERROR No subscription").title == "Steam could not find your game")
         precondition(RecoveryAdvice.forMessage("Checksum mismatch").title == "The download did not match")
         precondition(RecoveryAdvice.forMessage("VK_ERROR_INCOMPATIBLE_DRIVER").title == "The graphics runtime needs repair")
+        precondition(GameInfo.catalog.count == 4)
+        for id in ["cnc", "ra"] {
+            model.selectedGame = id
+            precondition(model.activeProfile == id)
+            precondition(model.selectedModInfo == nil)
+            precondition(!model.activeNeedsInstall)
+            precondition(!model.canEnterStep(2))
+            model.classicEngines.insert(id)
+            precondition(model.canEnterStep(2))
+            precondition(!model.canEnterStep(3))
+            model.classicAssets.insert(id)
+            precondition(model.canEnterStep(3))
+        }
         print("Model selection and recovery checks passed. No windows, sign-in or game launches.")
     }
 }

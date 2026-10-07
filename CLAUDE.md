@@ -8,6 +8,10 @@ cannot support a behavior, document the exception in `docs/linux.md`.
 
 Keep installation and repair behavior in `scripts/backend.sh`; OS-specific
 commands belong in `scripts/platform-macos.sh` or `scripts/platform-linux.sh`.
+Read game metadata/themes from `manifests/games.tsv`. Keep OpenRA import and
+launch behavior in `scripts/classic.sh`; its Steam asset mappings and required
+files come from the pinned upstream release, with attribution in manifests.
+Never use OpenRA content-download mirrors as a fallback for Steam ownership.
 Reuse the shared manifests, graphics presets, setup policy and Steam guidance
 resources. Add shared business rules there rather than copying them into a view.
 Do not replace SwiftUI or introduce a cross-platform UI rewrite as routine work.

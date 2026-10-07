@@ -33,6 +33,19 @@ class StateChecks(unittest.TestCase):
         self.state.values["steam_session_vanilla"] = "active"
         self.assertFalse(self.state.can_enter(3))
 
+    def test_classic_game_readiness_is_independent(self):
+        for game in ("cnc", "ra"):
+            self.state.selected_game = game
+            self.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=idle")
+            self.assertEqual(self.state.profile, game)
+            self.assertIsNone(self.state.mod)
+            self.assertFalse(self.state.can_enter(2))
+            self.state.values[game + "_engine"] = "ready"
+            self.assertTrue(self.state.can_enter(2))
+            self.assertFalse(self.state.can_enter(3))
+            self.state.values[game + "_assets"] = "ready"
+            self.assertTrue(self.state.can_enter(3))
+
     def test_profile_selection(self):
         self.assertEqual(self.state.profile, "vanilla")
         for mod in self.state.mods:
@@ -103,6 +116,21 @@ class WidgetChecks(unittest.TestCase):
         self.assertEqual(calls, ["rotr", "vanilla"])
         self.window.choose_profile("shockwave")
         self.assertEqual(self.window.play_button.text(), "INSTALL & PLAY →")
+
+    def test_sidebar_selects_classic_theme_and_profile(self):
+        self.window.state.update("platform=ready\nsteam=ready\ncnc_engine=ready\ncnc_assets=ready\ninstall=idle")
+        self.window.game_buttons["cnc"].click()
+        self.assertEqual(self.window.state.profile, "cnc")
+        self.assertIn("#b4cb59", self.window.styleSheet())
+        self.window.continue_button.click()
+        self.assertEqual(self.window.step, 3)
+        self.assertTrue(self.window.play_button.isEnabled())
+        self.assertFalse(self.window.graphics.isEnabled())
+        self.assertTrue(self.window.mod_section.isHidden())
+        self.window.game_buttons["ra"].click()
+        self.assertEqual(self.window.step, 0)
+        self.assertFalse(self.window.play_button.isEnabled())
+        self.assertIn("#f06455", self.window.styleSheet())
 
     def test_download_and_game_running_disable_controls(self):
         self.window.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=busy\nsteam_session_vanilla=active\nsteam_download_vanilla=waiting-password")

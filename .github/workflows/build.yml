@@ -33,6 +33,8 @@ jobs:
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test python3 tests/linux-ui.py
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/backend.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-status.sh
+      - name: Check classic engines with synthetic assets and dummy launches
+        run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/classic-linux.sh
       - name: Build standalone Linux archive
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash linux/build.sh
       - name: Validate packaged resources and virtual desktop window

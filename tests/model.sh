@@ -17,6 +17,6 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 PLIST
 xcrun swiftc -parse-as-library "$REPO/Sources/LauncherModel.swift" \
   "$REPO/Sources/RecoveryAdvice.swift" "$REPO/Sources/SteamGuidance.swift" "$REPO/tests/ModelChecks.swift" \
-  "$REPO/Sources/SetupPolicy.swift" \
+  "$REPO/Sources/SetupPolicy.swift" "$REPO/Sources/GameInfo.swift" "$REPO/Sources/Theme.swift" \
   -o "$APP/Contents/MacOS/ModelChecks"
 "$APP/Contents/MacOS/ModelChecks"

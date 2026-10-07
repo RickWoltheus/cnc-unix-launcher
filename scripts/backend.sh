@@ -36,6 +36,10 @@ verify() {
   [[ "$digest" == "$2" ]]
 }
 source "$RESOURCES/scripts/platform-$PLATFORM.sh"
+source "$RESOURCES/scripts/classic.sh"
+if classic_profile "$PROFILE"; then
+  GAME="$ROOT/$(classic_directory "$PROFILE")"; ENGINE="$(classic_engine_path "$PROFILE")"
+fi
 installed_name() {
   if [[ "$1" == *.gib ]]; then printf '%s.big' "${1%.gib}"; else printf '%s' "$1"; fi
 }
@@ -50,6 +54,7 @@ download() {
 }
 assets_ready() {
   local folder="$1" game="${2:-vanilla}" file appid=2732960
+  if classic_profile "$game"; then classic_raw_ready "$folder" "$game" && classic_content_ready "$game"; return; fi
   local archives=(INIZH.big TexturesZH.big W3DZH.big MapsZH.big)
   if [[ "$game" == base ]]; then appid=2229870; archives=(INI.big Textures.big W3D.big Maps.big); fi
   [[ -f "$folder/steamapps/appmanifest_$appid.acf" ]] || return 1
@@ -82,7 +87,11 @@ if [[ "$ACTION" == status ]]; then
   assets_ready "$GAME" && echo 'assets=ready' || echo 'assets=missing'
   engine_ready "$ROOT/engine-base/GeneralsX.app" && echo 'base_engine=ready' || echo 'base_engine=missing'
   assets_ready "$ROOT/Generals" base && echo 'base_assets=ready' || echo 'base_assets=missing'
-  for game in vanilla base; do
+  for game in cnc ra; do
+    classic_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
+    assets_ready "$ROOT/$(classic_directory "$game")" "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
+  done
+  for game in vanilla base cnc ra; do
     state=idle
     if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
     case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
@@ -101,8 +110,12 @@ fi
 
 if [[ "$ACTION" == launch ]]; then
   [[ ! -d "$ROOT/.install-lock" ]] || fail 'An installation or Steam download is still running. Wait for it to finish before playing.'
+  if classic_profile "$PROFILE"; then
+    if pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
+    classic_launch "$@"
+  fi
   [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || select_mod "$PROFILE"
-  if pgrep -x 'GeneralsX(ZH)?' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
+  if pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
   if ! engine_ready "$ENGINE"; then
     repair_profile=vanilla
     [[ "$PROFILE" != base ]] || repair_profile=base
@@ -130,7 +143,7 @@ if [[ "$ACTION" == launch ]]; then
 fi
 
 platform_supported || fail "$(platform_requirement_message)"
-if pgrep -x 'GeneralsX(ZH)?' >/dev/null 2>&1; then fail 'Quit the game before installing, downloading assets, or changing settings.'; fi
+if pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'Quit the game before installing, downloading assets, or changing settings.'; fi
 mkdir -p "$ROOT" "$CACHE"
 LOCK="$ROOT/.install-lock"
 if ! mkdir "$LOCK" 2>/dev/null; then
@@ -145,6 +158,7 @@ printf '%s\n' "$$" > "$LOCK/pid"
 printf '%s:%s\n' "$ACTION" "$PROFILE" > "$LOCK/kind"
 WORK="$(mktemp -d "$ROOT/.staging.XXXXXX")"
 cleanup() {
+  if [[ -n "${mounted_classic:-}" ]]; then hdiutil detach "$mounted_classic" >/dev/null 2>&1 || true; fi
   if [[ "$ACTION" == steam-login && "${steam_finished:-0}" != 1 ]]; then
     current="$(cat "$ROOT/steam-$PROFILE.status" 2>/dev/null || true)"
     case "$current" in wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) printf 'incomplete\n' > "$ROOT/steam-$PROFILE.status" ;; esac
@@ -156,6 +170,7 @@ trap 'exit 130' INT TERM
 
 case "$ACTION" in
   graphics)
+    if classic_profile "$PROFILE"; then echo 'OpenRA uses its own graphics settings. Display mode is applied at launch.'; exit 0; fi
     if pgrep -x GeneralsXZH >/dev/null 2>&1; then fail 'Quit Zero Hour before changing graphics settings.'; fi
     leaf=GeneralsZH
     [[ "$PROFILE" != base ]] || leaf=Generals
@@ -178,15 +193,19 @@ case "$ACTION" in
     echo 'Graphics preset saved; previous options backed up.'
     ;;
   engine)
-    engine_install
+    if classic_profile "$PROFILE"; then classic_install; else engine_install; fi
     ;;
   steam)
     steam_install
     ;;
   steam-login)
-    [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || fail 'Choose Generals or Zero Hour for Steam downloads.'
+    [[ "$PROFILE" == vanilla || "$PROFILE" == base || "$PROFILE" == cnc || "$PROFILE" == ra ]] || fail 'Choose a game for Steam downloads.'
     appid=2732960; title='Zero Hour'
     if [[ "$PROFILE" == base ]]; then appid=2229870; title=Generals; fi
+    if classic_profile "$PROFILE"; then
+      appid="$(awk -F '\t' -v id="$PROFILE" '$1==id {print $5}' "$RESOURCES/manifests/games.tsv")"
+      title="$(classic_app_title "$PROFILE")"
+    fi
     printf 'waiting\n' > "$ROOT/steam-$PROFILE.status"
     steam_ready || fail 'Prepare the Steam downloader and platform dependencies first.'
     prepare_steam_login
@@ -202,15 +221,24 @@ case "$ACTION" in
     /bin/bash "$RESOURCES/scripts/steam-status.sh" "$ROOT/steam-$PROFILE.status" < "$WORK/steam-status.pipe" &
     status_reader=$!
     steam_result=0
-    "$STEAM_COMMAND" +@sSteamCmdForcePlatformType windows \
-      +force_install_dir "$GAME" +login "$steam_account" +app_update "$appid" validate +quit \
+    steam_arguments=(+@sSteamCmdForcePlatformType windows +force_install_dir "$GAME" +login "$steam_account" +app_update "$appid" validate)
+    if [[ "$PROFILE" == ra ]]; then
+      echo 'OpenRA Red Alert also needs the C&C desert tileset. Steam will download your owned C&C copy.'
+      steam_arguments+=(+force_install_dir "$ROOT/TiberianDawn" +app_update 2229830 validate)
+    fi
+    "$STEAM_COMMAND" "${steam_arguments[@]}" +quit \
       2>&1 | tee "$WORK/steam-status.pipe" || steam_result=$?
     wait "$status_reader" || true
     [[ "$steam_result" == 0 ]] || fail 'Steam sign-in stopped. Check the launcher for the next step.'
+    if classic_profile "$PROFILE"; then classic_import; fi
     assets_ready "$GAME" "$PROFILE" || fail "Steam files are incomplete. No subscription means this account lacks the $title license. Retry after checking ownership."
     steam_finished=1
     printf 'complete\n' > "$ROOT/steam-$PROFILE.status"
     echo "$title assets verified. Return to the launcher and click Refresh."
+    ;;
+  import-classic)
+    classic_profile "$PROFILE" || fail 'Choose C&C or Red Alert for this import.'
+    classic_import
     ;;
   mod)
     select_mod "$PROFILE"

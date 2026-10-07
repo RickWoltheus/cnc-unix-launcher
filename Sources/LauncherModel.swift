@@ -17,6 +17,8 @@ final class LauncherModel: ObservableObject {
     @Published var assets = false
     @Published var baseEngine = false
     @Published var baseAssets = false
+    @Published var classicEngines: Set<String> = []
+    @Published var classicAssets: Set<String> = []
     @Published var selectedGame = "vanilla"
     @Published var selectedMod = "vanilla"
     @Published var installedMods: Set<String> = []
@@ -60,15 +62,16 @@ final class LauncherModel: ObservableObject {
         }
     }
 
-    var gameEngineReady: Bool { selectedGame == "base" ? baseEngine : engine }
+    var game: GameInfo { GameInfo.catalog.first { $0.id == selectedGame } ?? GameInfo.catalog.last! }
+    var gameEngineReady: Bool { game.isClassic ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
     var gameAssetsReady: Bool {
-        let ready = selectedGame == "base" ? baseAssets : assets
+        let ready = game.isClassic ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets)
         return ready && !steamSessionRunning && !externalInstallRunning && ["idle", "complete"].contains(steamDownloadStatus)
     }
-    var selectedModInfo: ModInfo? { selectedGame == "base" ? nil : catalog.first { $0.id == selectedMod } }
-    var activeProfile: String { selectedGame == "base" ? "base" : selectedMod }
-    var activeTitle: String { selectedGame == "base" ? "GENERALS" : (selectedModInfo?.title.uppercased() ?? "ZERO HOUR") }
-    var activeNeedsInstall: Bool { selectedGame != "base" && selectedModInfo != nil && !installedMods.contains(selectedMod) }
+    var selectedModInfo: ModInfo? { selectedGame != "vanilla" ? nil : catalog.first { $0.id == selectedMod } }
+    var activeProfile: String { selectedGame == "vanilla" ? selectedMod : selectedGame }
+    var activeTitle: String { selectedModInfo?.title.uppercased() ?? game.title.uppercased() }
+    var activeNeedsInstall: Bool { selectedGame == "vanilla" && selectedModInfo != nil && !installedMods.contains(selectedMod) }
     var steamGuidance: SteamGuidance { SteamGuidance.forStatus(steamDownloadStatus) }
 
     nonisolated static var supportedPlatform: Bool {
@@ -88,7 +91,7 @@ final class LauncherModel: ObservableObject {
         SetupPolicy.shared.isComplete(index, facts: setupFacts)
     }
     private var setupFacts: [String: Bool] {
-        ["platform": systemSupported, "selected": ["vanilla", "base"].contains(selectedGame),
+        ["platform": systemSupported, "selected": GameInfo.catalog.contains { $0.id == selectedGame },
          "engine": gameEngineReady, "steam": steam, "assets": gameAssetsReady]
     }
 
@@ -118,6 +121,8 @@ final class LauncherModel: ObservableObject {
                 assets = states.contains("assets=ready")
                 baseEngine = states.contains("base_engine=ready")
                 baseAssets = states.contains("base_assets=ready")
+                classicEngines = Set(["cnc", "ra"].filter { states.contains("\($0)_engine=ready") })
+                classicAssets = Set(["cnc", "ra"].filter { states.contains("\($0)_assets=ready") })
                 installedMods = Set(catalog.filter { states.contains("\($0.id)=ready") }.map(\.id))
                 steamDownloadStatus = states.first(where: { $0.hasPrefix("steam_download_\(selectedGame)=") })?.components(separatedBy: "=").last ?? "idle"
                 steamSessionRunning = states.contains("steam_session_\(selectedGame)=active")
@@ -210,9 +215,10 @@ final class LauncherModel: ObservableObject {
         recovery = nil
         do {
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            let command = root.appendingPathComponent("Download Steam \(selectedGame == "base" ? "Generals" : "Zero Hour").command")
+            let command = root.appendingPathComponent("Download Steam \(game.title).command")
             let content = """
             #!/bin/bash
+            export GX_INSTALL_ROOT=\(Self.shellQuote(root.path))
             /bin/bash \(Self.shellQuote(backend.path)) steam-login \(Self.shellQuote(selectedGame))
             result=$?
             printf '\\nReturn to GeneralsX Launcher and click Refresh.\\n'
@@ -251,7 +257,7 @@ final class LauncherModel: ObservableObject {
         Task {
             defer { busy = false }
             do {
-                let game = profile == "base" ? "base" : "vanilla"
+                let game = profile == "base" || profile == "cnc" || profile == "ra" ? profile : "vanilla"
                 let quality = maximumGraphics ? "maximum" : "balanced"
                 _ = try await Task.detached { try Self.run(script, arguments: ["graphics", game, quality]) }.value
                 let process = Process()

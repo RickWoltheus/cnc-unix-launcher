@@ -1,0 +1,7 @@
+cnc/conquer.mix
+cnc/desert.mix
+cnc/sounds.mix
+cnc/speech.mix
+cnc/temperat.mix
+cnc/tempicnh.mix
+cnc/winter.mix

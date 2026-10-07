@@ -139,3 +139,33 @@ Installing that library list in the disposable container made the preflight
 pass. The standard build container also passed preflight, packaged self-check,
 seven UI/state tests and the virtual X11 launcher smoke test. These checks did
 not sign in to Steam or start a game.
+
+## Classic engines and sidebar — 2026-10-07
+
+Added C&C/Tiberian Dawn and Red Alert using OpenRA release-20250330. Vanilla
+Conquer's documented Ultimate Collection limitation ruled it out for this
+Steam-only integration. Both native UIs read `manifests/games.tsv`, display a
+sidebar with original text emblems, change themes by selection and keep game
+readiness independent. Generals and Zero Hour retain their existing engine,
+asset paths, settings and Zero Hour mod selection.
+
+- Actual official Mac DMG and both Linux AppImages downloaded and SHA-256 pinned.
+  Mac engine installation copied the ARM64 runtime; Linux AppImage extraction
+  required no FUSE mount. No engine window was opened.
+- `tests/classic.sh /tmp/gx-classic-mac` passed using actual OpenRA Utility with
+  synthetic MIX containers: nested expansion/music/video extraction, required
+  content readiness, hash verification, display argument routing, failed-import
+  preservation and malformed copied/extracted archive rejection.
+- The same tests passed in an x86_64 OrbStack container using the actual Linux
+  OpenRA utilities. Steam login/download arguments were tested with a fake client;
+  successful RA setup requested both owned Steam titles, and a no-subscription
+  failure retained the shared `no-license` status. No real authentication occurred.
+- Swift model selection/gates and Linux's nine model/widget tests passed. Linux
+  previews captured all four themes offscreen. Packaged self-check, startup
+  dependency preflight and virtual X11 launcher window checks passed.
+- Mac app compiled, passed metadata validation and ad-hoc signature verification.
+
+These checks validate integration mechanics, not original campaign completeness,
+owned Steam data compatibility or GPU gameplay. C&C/Red Alert interactive testing
+remains pending explicit authorization. OpenRA has modernized gameplay and its
+own multiplayer protocol; these integrations are not original Windows clients.

@@ -11,6 +11,8 @@ curl -fL --retry 2 --max-time 60 -sS \
   'http://gen.insave.ovh:9000/rotr/rotr-individual-files/%21Rotr_Blckr.gib' -o "$SANDBOX/sample.gib"
 [[ "$(shasum -a 256 "$SANDBOX/sample.gib" | awk '{print $1}')" == "$EXPECTED" ]]
 mkdir -p "$SANDBOX/fixture/scripts" "$SANDBOX/fixture/manifests"
+cp "$REPO/scripts/classic.sh" "$SANDBOX/fixture/scripts/"
+cp "$REPO"/manifests/openra-*-required.txt "$SANDBOX/fixture/manifests/"
 cp "$REPO/scripts/backend.sh" "$SANDBOX/fixture/scripts/backend.sh"
 cp "$REPO"/scripts/platform-*.sh "$SANDBOX/fixture/scripts/"
 cp "$REPO/manifests/mods.tsv" "$SANDBOX/fixture/manifests/mods.tsv"

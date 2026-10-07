@@ -1,8 +1,9 @@
 # GeneralsX Launcher
 
-Native macOS and Linux launchers for Generals and Zero Hour. They install
-GeneralsX, download your owned files through Steam, and install five curated
-Zero Hour mods. macOS uses SwiftUI; Linux has a separate Qt/PySide6 interface
+Native macOS and Linux launchers for Command & Conquer, Red Alert, Generals and
+Zero Hour. They install OpenRA or GeneralsX, download your owned files through
+Steam, and install five curated Zero Hour mods. A game sidebar changes the
+theme and setup state for the selected title. macOS uses SwiftUI; Linux has a separate Qt/PySide6 interface
 with the same guided flow.
 
 Enjoy the launcher? [Support its development on Ko-fi](https://ko-fi.com/ricklemore).
@@ -28,8 +29,8 @@ requires Apple's free Rosetta; the game engine runs natively as ARM64.
 
 **Linux preview:** x86_64 Ubuntu 24.04+ / Debian 12+ desktops with Vulkan-capable drivers
 and glibc 2.36 or newer. Intel Macs, macOS 14 and ARM Linux are not supported by these packages.
-The Linux archive bundles Python and Qt; the game engines use upstream Flatpak
-bundles. Prepare Linux guides installation of Flatpak and SteamCMD's 32-bit
+The Linux archive bundles Python and Qt. Generals engines use upstream Flatpak
+bundles; OpenRA uses extracted AppImages with its runtime included. Prepare Linux guides installation of Flatpak and SteamCMD's 32-bit
 dependencies in a local terminal. See [Linux setup and validation](docs/linux.md).
 Linux headless/offscreen checks have passed; real desktop, sign-in, Flatpak
 sandbox and GPU/gameplay tests remain pending.
@@ -48,7 +49,8 @@ When a verified release is available:
    xattr -dr com.apple.quarantine "/Applications/GeneralsX Launcher.app"
    ```
 
-4. Choose **Generals** or **Zero Hour** and click **Continue**.
+4. Choose a game in the sidebar and click **Continue**. C&C and Red Alert use
+   OpenRA with modernized gameplay; Generals and Zero Hour use GeneralsX.
 5. Click **Prepare my Mac**. The launcher installs the native engine and Steam downloader.
 6. Click **Sign in to Steam**. SteamCMD opens in Terminal for your password and
    Steam Guard. Let it finish; the launcher checks automatically and moves to Play.
@@ -56,7 +58,7 @@ When a verified release is available:
    button always launches your highlighted selection. For a new mod it becomes
    **Install & Play**, with a download confirmation first.
 
-The app pins GeneralsX 1.0.2 and the mod versions below. Installing the engine
+The app pins GeneralsX 1.0.2, OpenRA release-20250330 and the mod versions below. Installing the engine
 again repairs it; it does not silently upgrade to an untested upstream version.
 SteamCMD updates itself using Valve's normal bootstrap.
 
@@ -91,6 +93,14 @@ The mod cards load promotional thumbnails from URLs in the publisher-linked
 GenLauncher catalog. Images are fetched at runtime, with placeholders offline;
 they are not bundled in this repository or release. Each mod links to its page
 for artwork credit and more information.
+
+## Classic games
+
+C&C and Red Alert use owned English Ultimate Collection assets through OpenRA.
+OpenRA changes rules, balance and missions; it is not the original Windows game.
+Red Alert setup also downloads your owned C&C copy for the required desert tileset.
+These integrations passed synthetic import checks; real Steam asset/gameplay tests
+remain pending. See [classic game setup](docs/classic-games.md).
 
 ## Mods and updates
 
@@ -223,7 +233,9 @@ resources are shared; platform adapters contain the OS-specific commands.
 
 ## Credits and license
 
-- [GeneralsX](https://github.com/fbraz3/GeneralsX) provides the native engine.
+- [GeneralsX](https://github.com/fbraz3/GeneralsX) provides the Generals engines.
+- [OpenRA](https://www.openra.net/) provides the native C&C and Red Alert engines.
+  Its Steam import mappings retain GPL-3.0-or-later attribution in `manifests/`.
 - [Valve SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) downloads
   owned game files.
 - [SWR Productions / Rise of the Reds](https://www.moddb.com/mods/rise-of-the-reds)

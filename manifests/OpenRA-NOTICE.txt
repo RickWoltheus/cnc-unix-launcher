@@ -1,0 +1,7 @@
+The openra-*-import.tsv and openra-*-required.txt mappings are derived from
+OpenRA release-20250330 Steam installer definitions and ModContent TestFiles:
+https://github.com/OpenRA/OpenRA/tree/release-20250330/mods/cnc-content
+https://github.com/OpenRA/OpenRA/tree/release-20250330/mods/ra-content
+Copyright the OpenRA Developers and Contributors. GPL-3.0-or-later.
+A copy of the GPL is included as OpenRA-COPYING.txt.
+These files describe import operations; they contain no game assets.

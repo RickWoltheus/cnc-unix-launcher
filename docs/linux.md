@@ -7,10 +7,12 @@ The Linux view mirrors the four-step flow and one selected-profile Play action.
 ## Supported target
 
 The first target is x86_64 Ubuntu 24.04+ / Debian 12+ desktops (glibc 2.36 or newer) with Vulkan-capable GPU
-drivers. The upstream GeneralsX engines are the pinned 1.0.2 Flatpak bundles.
+drivers. GeneralsX uses pinned 1.0.2 Flatpak bundles; C&C and Red Alert use pinned OpenRA
+release-20250330 AppImages extracted during setup, with no FUSE dependency.
 ARM Linux and Steam Deck-specific controller integration are not supported.
 The launcher itself is distributed as a standalone archive, outside Flatpak;
-the game engines run inside Flatpak with explicit access to the installation folder.
+Generals engines run inside Flatpak with explicit access to the installation folder.
+OpenRA runs from its extracted runtime with its own managed support folder.
 
 ## Install
 
