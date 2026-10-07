@@ -14,6 +14,8 @@ jobs:
         run: bash tests/model.sh
       - name: Check Steam sign-in guidance
         run: bash tests/steam-status.sh
+      - name: Check separate Steam guide without visible windows
+        run: bash tests/steam-guide.sh
       - name: Build Apple Silicon app
         run: bash scripts/build.sh
       - name: Verify app signature

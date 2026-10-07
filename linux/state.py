@@ -11,12 +11,14 @@ class LauncherState:
     selected_profile: str = "vanilla"
     busy: bool = False
     game_running: bool = False
+    steam_starting: bool = False
     values: dict = field(default_factory=dict)
 
     def __post_init__(self):
         with (self.resources / "manifests/games.tsv").open() as stream:
             self.games = [dict(zip(("id", "title", "subtitle", "engine", "steam_id", "directory", "accent", "emblem", "summary"), row)) for row in csv.reader(stream, delimiter="\t")]
         self.policy = json.loads((self.resources / "resources/setup-policy.json").read_text())
+        self.guide_copy = json.loads((self.resources / "resources/steam-guide.json").read_text())
         self.guidance = json.loads((self.resources / "resources/steam-guidance.json").read_text())
         self.recovery = json.loads((self.resources / "resources/recovery-guidance.json").read_text())
         with (self.resources / "manifests/mods.tsv").open() as stream:
@@ -53,7 +55,7 @@ class LauncherState:
     @property
     def assets_ready(self):
         key = self.selected_game + "_assets" if self.classic else ("base_assets" if self.selected_game == "base" else "assets")
-        return self.values.get(key) == "ready" and self.values.get("install") != "busy" and not self.steam_active and self.steam_status in ("idle", "complete")
+        return self.values.get(key) == "ready" and not self.steam_starting and self.values.get("install") != "busy" and not self.steam_active and self.steam_status in ("idle", "complete")
 
     @property
     def facts(self):

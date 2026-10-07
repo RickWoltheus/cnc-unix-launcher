@@ -1,0 +1,16 @@
+{
+  "title": "Steam setup guide",
+  "securityTitle": "Why a Terminal window opens",
+  "securityDetail": "Valve’s official SteamCMD runs locally in Terminal. Enter your password and Steam Guard there, never in this launcher. We do not store passwords or codes; this guide receives only status labels.",
+  "visibilityDetail": "Keep this guide beside Terminal. It updates without taking keyboard focus. Closing the guide does not stop Steam.",
+  "stages": [
+    "Steam account",
+    "Steam Guard",
+    "Game files"
+  ],
+  "showLabel": "Show Steam guide",
+  "retryLabel": "Retry sign-in",
+  "continueLabel": "Continue to Play",
+  "helpLabel": "Steam account help",
+  "terminalLabel": "Return to Terminal"
+}

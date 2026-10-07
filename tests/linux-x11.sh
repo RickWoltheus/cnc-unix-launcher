@@ -12,3 +12,4 @@ for attempt in $(seq 1 25); do
 done
 [[ -S /tmp/.X11-unix/X98 ]] || { echo 'Virtual display did not become ready.' >&2; exit 1; }
 DISPLAY=:98 QT_QPA_PLATFORM=xcb timeout 30s "$REPO/dist/linux/GeneralsXLauncher/GeneralsXLauncher" --ui-smoke-test
+DISPLAY=:98 QT_QPA_PLATFORM=xcb timeout 30s "$REPO/dist/linux/GeneralsXLauncher/GeneralsXLauncher" --steam-guide-smoke-test

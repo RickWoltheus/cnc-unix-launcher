@@ -94,8 +94,8 @@ if [[ "$ACTION" == status ]]; then
   for game in vanilla base cnc ra; do
     state=idle
     if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
-    case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
-    case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading)
+    case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|validating|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
+    case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|validating)
       if [[ "$install" != busy || "$(cat "$ROOT/.install-lock/kind" 2>/dev/null || true)" != "steam-login:$game" ]]; then state=incomplete; fi ;;
     esac
     echo "steam_download_$game=$state"
@@ -216,7 +216,7 @@ case "$ACTION" in
     read -r -p 'Steam account username: ' steam_account
     [[ -n "$steam_account" && "$steam_account" != -* && "$steam_account" != +* ]] || fail 'Enter a Steam account username.'
     mkdir -p "$GAME"
-    printf 'downloading\n' > "$ROOT/steam-$PROFILE.status"
+    printf 'updating-steam\n' > "$ROOT/steam-$PROFILE.status"
     mkfifo "$WORK/steam-status.pipe"
     /bin/bash "$RESOURCES/scripts/steam-status.sh" "$ROOT/steam-$PROFILE.status" < "$WORK/steam-status.pipe" &
     status_reader=$!
@@ -230,6 +230,12 @@ case "$ACTION" in
       2>&1 | tee "$WORK/steam-status.pipe" || steam_result=$?
     wait "$status_reader" || true
     [[ "$steam_result" == 0 ]] || fail 'Steam sign-in stopped. Check the launcher for the next step.'
+    reported_state="$(cat "$ROOT/steam-$PROFILE.status")"
+    case "$reported_state" in
+      wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error)
+        fail 'Steam reported a sign-in or ownership error. Check the Steam guide before retrying.' ;;
+    esac
+    printf 'validating\n' > "$ROOT/steam-$PROFILE.status"
     if classic_profile "$PROFILE"; then classic_import; fi
     assets_ready "$GAME" "$PROFILE" || fail "Steam files are incomplete. No subscription means this account lacks the $title license. Retry after checking ownership."
     steam_finished=1

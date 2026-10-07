@@ -1,66 +1,104 @@
 {
   "waiting": {
     "title": "Enter your Steam account name",
-    "detail": "Use the account login name in the Steam window. This can be different from your public profile name or email address."
+    "detail": "Use the account login name in the SteamCMD Terminal window. This can be different from your public profile name or email address.",
+    "stage": 0,
+    "error": false
   },
   "installing-rosetta": {
     "title": "Approve Apple’s Rosetta setup",
-    "detail": "Valve’s downloader needs Apple’s free Rosetta. Review its agreement in the Steam window. The game itself will still run natively."
+    "detail": "Valve’s downloader needs Apple’s free Rosetta. Review its agreement in the SteamCMD Terminal window. The game itself will still run natively.",
+    "stage": 0,
+    "error": false
   },
   "updating-steam": {
     "title": "Steam is getting ready",
-    "detail": "Valve’s downloader is updating itself. Keep its window open; sign-in will follow automatically."
+    "detail": "Valve’s downloader is updating itself. Keep its window open; sign-in will follow automatically.",
+    "stage": 0,
+    "error": false
   },
   "waiting-password": {
     "title": "Enter your Steam password",
-    "detail": "Type it in the Steam window. Password characters may stay invisible while you type; that is normal. Press Return once."
+    "detail": "Type it in the SteamCMD Terminal window. Password characters may stay invisible while you type; that is normal. Press Return once.",
+    "stage": 0,
+    "error": false
   },
   "awaiting-guard": {
     "title": "Complete Steam Guard",
-    "detail": "Approve the sign-in in your Steam mobile app, or enter the newest email/authenticator code in the Steam window. Never enter the code here."
+    "detail": "Approve the sign-in in your Steam mobile app, or enter the newest email/authenticator code in the SteamCMD Terminal window. Never enter the code here.",
+    "stage": 1,
+    "error": false
   },
   "wrong-password": {
     "title": "Steam rejected the password",
-    "detail": "Check the account login name and password. If Steam is still asking, retry in its window; otherwise start sign-in again. Use Steam’s account help if needed."
+    "detail": "Check the account login name and password. If Steam is still asking, retry in its window; otherwise start sign-in again. Use Steam’s account help if needed.",
+    "stage": 0,
+    "error": true
   },
   "wrong-account": {
     "title": "Steam could not find that account",
-    "detail": "Use your Steam account login name, not your display name. Steam’s account help can recover it."
+    "detail": "Use your Steam account login name, not your display name. Steam’s account help can recover it.",
+    "stage": 0,
+    "error": true
   },
   "wrong-code": {
     "title": "Steam Guard needs a new code",
-    "detail": "Use the newest code or approval request. Old email/authenticator codes can expire. Retry in the Steam window if it is still open."
+    "detail": "Use the newest code or approval request. Old email/authenticator codes can expire. Retry in the SteamCMD Terminal window if it is still open.",
+    "stage": 1,
+    "error": true
   },
   "expired-code": {
     "title": "Steam Guard needs a new code",
-    "detail": "Use the newest code or approval request. Old email/authenticator codes can expire. Retry in the Steam window if it is still open."
+    "detail": "Use the newest code or approval request. Old email/authenticator codes can expire. Retry in the SteamCMD Terminal window if it is still open.",
+    "stage": 1,
+    "error": true
   },
   "rate-limited": {
     "title": "Steam needs a short break",
-    "detail": "Too many sign-in attempts were made. Wait a few minutes before trying again; repeated retries can extend the limit."
+    "detail": "Too many sign-in attempts were made. Wait a few minutes before trying again; repeated retries can extend the limit.",
+    "stage": 0,
+    "error": true
   },
   "no-license": {
     "title": "This Steam account does not own the game",
-    "detail": "Sign in with the account that owns Generals or Zero Hour. Ultimate Collection includes them; Remastered Collection does not. Family-shared access may not work with SteamCMD."
+    "detail": "Sign in with the account that owns the selected game. This setup uses Ultimate Collection assets, not Remastered. Family-shared access may not work with SteamCMD.",
+    "stage": 2,
+    "error": true
   },
   "network-error": {
     "title": "Steam could not connect",
-    "detail": "Check your connection and Steam’s service status, then try again. Already downloaded files are kept."
+    "detail": "Check your connection and Steam’s service status, then try again. Already downloaded files are kept.",
+    "stage": 0,
+    "error": true
   },
   "downloading": {
     "title": "Steam is downloading and checking your game",
-    "detail": "Keep the Steam window open. This can take several minutes. We will unlock Play only after its files validate."
+    "detail": "Keep the SteamCMD Terminal window open. This can take several minutes. We will unlock Play only after its files validate.",
+    "stage": 2,
+    "error": false
   },
   "incomplete": {
     "title": "The Steam step did not finish",
-    "detail": "Reopen sign-in to resume and validate the download. If you saw “No subscription”, check ownership and the Steam account first."
+    "detail": "Reopen sign-in to resume and validate the download. If you saw “No subscription”, check ownership and the Steam account first.",
+    "stage": 2,
+    "error": true
   },
   "complete": {
     "title": "Your game files passed validation",
-    "detail": "You can continue to Play."
+    "detail": "You can continue to Play. When Steam is finished, press Return in its terminal to close that window.",
+    "stage": 2,
+    "error": false
   },
   "idle": {
     "title": "Ready for Steam sign-in",
-    "detail": "Only Valve’s Steam window handles your password and Steam Guard. The launcher will guide you as it progresses."
+    "detail": "Use Sign in to Steam in the launcher to open Valve’s local console. Enter your credentials there; this guide follows the status without storing passwords or Steam Guard codes.",
+    "stage": 0,
+    "error": false
+  },
+  "validating": {
+    "title": "Checking your downloaded files",
+    "detail": "Steam finished downloading. The launcher is checking the files and importing classic-game content when needed. Play stays locked until this finishes.",
+    "stage": 2,
+    "error": false
   }
 }

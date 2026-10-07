@@ -2,6 +2,7 @@
 set -uo pipefail
 STATUS_FILE="$1"
 last_state=""
+missing_license=false
 classify() {
   local line="$1" state=""
   case "$line" in
@@ -13,11 +14,13 @@ classify() {
     *"No subscription"*|*NoSubscription*) state=no-license ;;
     *"Steam Guard"*|*"Waiting for confirmation"*|*"authenticator code"*) state=awaiting-guard ;;
     *"password:"*|*"Password:"*) state=waiting-password ;;
-    *"Update state"*) state=downloading ;;
+    *"Success! App "*|*"Update state"*) state=downloading ;;
     *"Downloading update"*|*"Extracting package"*) state=updating-steam ;;
     *"Failed to connect"*|*NoConnection*|*ServiceUnavailable*) state=network-error ;;
     *) return ;;
   esac
+  [[ "$state" != no-license ]] || missing_license=true
+  if [[ "$missing_license" == true ]]; then state=no-license; fi
   if [[ "$state" != "$last_state" ]]; then
     printf '%s\n' "$state" > "$STATUS_FILE"
     last_state="$state"

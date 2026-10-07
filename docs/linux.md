@@ -58,8 +58,11 @@ in Steam filenames on case-sensitive filesystems.
 
 For Steam prompts, return to the terminal through your desktop's taskbar.
 Unlike macOS, reliably focusing a particular terminal across X11/Wayland and
-desktop environments is not available through one standard API. The GUI still
-shows the shared sign-in guidance and blocks Play until validation completes.
+desktop environments is not available through one standard API. A separate, modeless Steam setup guide requests an always-on-top window so
+status and recovery instructions remain visible beside the console. Stacking
+depends on the window manager, especially on Wayland. The guide never takes
+passwords or Steam Guard codes, and blocks Play until validation completes.
+Closing it leaves the terminal session running; reopen it from Help.
 
 Updates remain manual. Check updates finds newer Linux archives; Download update
 opens the release page. Game/mod upgrades come from reviewed launcher manifests.

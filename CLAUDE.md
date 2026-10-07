@@ -12,6 +12,9 @@ Read game metadata/themes from `manifests/games.tsv`. Keep OpenRA import and
 launch behavior in `scripts/classic.sh`; its Steam asset mappings and required
 files come from the pinned upstream release, with attribution in manifests.
 Never use OpenRA content-download mirrors as a fallback for Steam ownership.
+Keep Steam credentials in the separate local console. Both UIs must provide a
+modeless guide from shared Steam copy/stages; status updates must not steal typing
+focus. The guide receives sanitized labels, never raw Steam output or secret inputs.
 Reuse the shared manifests, graphics presets, setup policy and Steam guidance
 resources. Add shared business rules there rather than copying them into a view.
 Do not replace SwiftUI or introduce a cross-platform UI rewrite as routine work.

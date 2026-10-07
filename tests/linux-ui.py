@@ -8,7 +8,8 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "linux"))
 from state import LauncherState
 from app import LauncherWindow
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLineEdit
+from PySide6.QtCore import Qt
 
 
 class StateChecks(unittest.TestCase):
@@ -131,6 +132,47 @@ class WidgetChecks(unittest.TestCase):
         self.assertEqual(self.window.step, 0)
         self.assertFalse(self.window.play_button.isEnabled())
         self.assertIn("#f06455", self.window.styleSheet())
+
+    def test_steam_guide_updates_without_starting_terminal(self):
+        self.window.state.update("platform=ready\nengine=ready\nsteam=ready\ninstall=busy\nsteam_session_vanilla=active\nsteam_download_vanilla=waiting-password")
+        self.window.show_steam_guide()
+        guide = self.window.steam_guide
+        self.assertTrue(guide.isVisible())
+        self.assertFalse(guide.isModal())
+        self.assertTrue(guide.windowFlags() & Qt.WindowType.WindowStaysOnTopHint)
+        self.assertEqual(guide.findChildren(QLineEdit), [])
+        self.assertEqual(guide.status_title.text(), "Enter your Steam password")
+        self.window.state.values["steam_download_vanilla"] = "awaiting-guard"
+        self.window.refresh_view()
+        self.assertEqual(guide.status_title.text(), "Complete Steam Guard")
+        self.window.state.values["steam_download_vanilla"] = "wrong-password"
+        self.window.refresh_view()
+        self.assertFalse(guide.retry_button.isEnabled())
+        self.window.state.values.pop("steam_session_vanilla")
+        self.window.state.values["install"] = "idle"
+        self.window.refresh_view()
+        self.assertTrue(guide.retry_button.isEnabled())
+        self.window.state.values["assets"] = "ready"
+        self.window.state.values["steam_download_vanilla"] = "validating"
+        self.window.refresh_view()
+        self.assertFalse(guide.continue_button.isEnabled())
+        self.window.state.values["steam_download_vanilla"] = "complete"
+        self.window.refresh_view()
+        self.assertTrue(guide.continue_button.isEnabled())
+        guide.continue_button.click()
+        self.assertEqual(self.window.step, 3)
+        self.assertFalse(guide.isVisible())
+
+    def test_steam_handoff_blocks_duplicate_signin(self):
+        self.window.state.update("platform=ready\nengine=ready\nsteam=ready\ninstall=idle")
+        calls = []
+        self.window.open_terminal = lambda title, arguments: calls.append(arguments) or True
+        self.window.signin()
+        self.window.signin()
+        self.assertEqual(calls, [["steam-login", "vanilla"]])
+        self.assertFalse(self.window.signin_button.isEnabled())
+        self.window.steam_guide.close()
+        self.assertTrue(self.window.state.steam_starting)
 
     def test_download_and_game_running_disable_controls(self):
         self.window.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=busy\nsteam_session_vanilla=active\nsteam_download_vanilla=waiting-password")

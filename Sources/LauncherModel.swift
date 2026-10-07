@@ -27,6 +27,9 @@ final class LauncherModel: ObservableObject {
     @Published var recovery: RecoveryAdvice?
     @Published var steamDownloadStatus = "idle"
     @Published var steamSessionRunning = false
+    @Published var steamStarting = false
+    @Published var steamLaunchError: String?
+    private var steamStartDeadline: Date?
     @Published var externalInstallRunning = false
     @Published var status = "Ready to set up Zero Hour"
     @Published var output = ""
@@ -66,13 +69,13 @@ final class LauncherModel: ObservableObject {
     var gameEngineReady: Bool { game.isClassic ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
     var gameAssetsReady: Bool {
         let ready = game.isClassic ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets)
-        return ready && !steamSessionRunning && !externalInstallRunning && ["idle", "complete"].contains(steamDownloadStatus)
+        return ready && !steamStarting && !steamSessionRunning && !externalInstallRunning && ["idle", "complete"].contains(steamDownloadStatus)
     }
     var selectedModInfo: ModInfo? { selectedGame != "vanilla" ? nil : catalog.first { $0.id == selectedMod } }
     var activeProfile: String { selectedGame == "vanilla" ? selectedMod : selectedGame }
     var activeTitle: String { selectedModInfo?.title.uppercased() ?? game.title.uppercased() }
     var activeNeedsInstall: Bool { selectedGame == "vanilla" && selectedModInfo != nil && !installedMods.contains(selectedMod) }
-    var steamGuidance: SteamGuidance { SteamGuidance.forStatus(steamDownloadStatus) }
+    var steamGuidance: SteamGuidance { SteamGuidance.forStatus(steamStarting ? "waiting" : steamDownloadStatus) }
 
     nonisolated static var supportedPlatform: Bool {
         #if arch(arm64)
@@ -126,6 +129,10 @@ final class LauncherModel: ObservableObject {
                 installedMods = Set(catalog.filter { states.contains("\($0.id)=ready") }.map(\.id))
                 steamDownloadStatus = states.first(where: { $0.hasPrefix("steam_download_\(selectedGame)=") })?.components(separatedBy: "=").last ?? "idle"
                 steamSessionRunning = states.contains("steam_session_\(selectedGame)=active")
+                if steamSessionRunning || (steamStartDeadline.map { Date() >= $0 } ?? false) {
+                    steamStarting = false
+                    steamStartDeadline = nil
+                }
                 externalInstallRunning = states.contains("install=busy")
                 if steamDownloadStatus == "incomplete" && !gameAssetsReady {
                     recovery = RecoveryAdvice.forMessage("Steam files are incomplete")
@@ -211,8 +218,9 @@ final class LauncherModel: ObservableObject {
     }
 
     func downloadAssets() {
-        guard canEnterStep(2) && !steamSessionRunning && !externalInstallRunning else { return }
+        guard canEnterStep(2) && !steamSessionRunning && !externalInstallRunning && !steamStarting else { return }
         recovery = nil
+        steamLaunchError = nil
         do {
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             let command = root.appendingPathComponent("Download Steam \(game.title).command")
@@ -228,8 +236,13 @@ final class LauncherModel: ObservableObject {
             try content.write(to: command, atomically: true, encoding: .utf8)
             try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: command.path)
             guard NSWorkspace.shared.open(command) else { throw NSError(domain: "GeneralsXLauncher", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not open the Steam sign-in window."]) }
-            status = "Sign in in Terminal. Click Refresh after Steam finishes."
+            steamStarting = true
+            steamStartDeadline = Date().addingTimeInterval(15)
+            steamDownloadStatus = "waiting"
+            status = "Sign in in Terminal. The Steam guide stays visible while you type."
         } catch {
+            steamStarting = false
+            steamLaunchError = error.localizedDescription
             status = error.localizedDescription
         }
     }

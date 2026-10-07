@@ -4,6 +4,7 @@ import SwiftUI
 struct LauncherView: View {
     @StateObject private var model = LauncherModel()
     @State private var step = 0
+    @State private var steamGuide = SteamGuideWindow()
     @State private var showDetails = false
     @State private var playAfterModInstall = false
     private var accent: Color { model.game.color }
@@ -40,6 +41,7 @@ struct LauncherView: View {
         .preferredColorScheme(.dark)
         .tint(accent)
         .task { model.refresh() }
+        .onDisappear { steamGuide.close() }
         .onChange(of: model.gameAssetsReady) { _, ready in
             if ready && model.canEnterStep(3) { step = 3 }
             else { validateCurrentStep() }
@@ -129,7 +131,7 @@ struct LauncherView: View {
                             }.padding(10).frame(maxWidth: .infinity)
                                 .background(model.selectedGame == game.id ? game.color.opacity(0.10) : Color.clear)
                                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(model.selectedGame == game.id ? game.color : .clear, lineWidth: 1))
-                        }.buttonStyle(.plain).disabled(model.busy || model.gameRunning || model.externalInstallRunning)
+                        }.buttonStyle(.plain).disabled(model.busy || model.gameRunning || model.externalInstallRunning || model.steamStarting)
                             .accessibilityIdentifier("game-\(game.id)")
                     }
                 }.padding(1)
@@ -196,8 +198,9 @@ struct LauncherView: View {
                 instruction(number: "3", title: "Come back and play", detail: "This launcher checks automatically and moves to Play when your files are ready.")
             }.padding(24).background(CommandTheme.panel).clipShape(RoundedRectangle(cornerRadius: 5))
             HStack {
-                Button(model.steamSessionRunning ? "STEAM IS OPEN" : "SIGN IN TO STEAM →") { model.downloadAssets() }
-                    .buttonStyle(CommandButton()).disabled(!model.canEnterStep(2) || model.steamSessionRunning || model.externalInstallRunning).accessibilityIdentifier("download-game")
+                Button(model.steamSessionRunning || model.steamStarting ? "STEAM IS OPEN" : "SIGN IN TO STEAM →") { showSteamGuide(); model.downloadAssets() }
+                    .buttonStyle(CommandButton()).disabled(!model.canEnterStep(2) || model.steamSessionRunning || model.externalInstallRunning || model.steamStarting).accessibilityIdentifier("download-game")
+                Button(SteamGuideCopy.shared.showLabel) { showSteamGuide() }.buttonStyle(.plain).padding(.leading, 10)
                 Button("Check my download") { model.refresh() }.buttonStyle(.plain).padding(.leading, 15)
                 if model.steamSessionRunning {
                     Button("Return to Steam window") { model.returnToSteamWindow() }.buttonStyle(.plain).padding(.leading, 10)
@@ -211,7 +214,7 @@ struct LauncherView: View {
                 Link("Recover your Steam account or password", destination: URL(string: "https://help.steampowered.com/en/wizard/HelpWithLogin")!)
                     .font(.system(size: 11))
             }.padding(18).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
-            Text("Your password never enters this launcher. If Steam cannot find the game, check the account and that you own Ultimate Collection rather than Remastered.")
+            Text(SteamGuideCopy.shared.securityDetail)
                 .font(.system(size: 12)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -333,6 +336,7 @@ struct LauncherView: View {
             Menu("Help") {
                 Button("Repair game engine") { model.prepare() }
                 Button("Check Steam files") { step = 2 }
+                Button(SteamGuideCopy.shared.showLabel) { showSteamGuide() }
                 Button("Repair selected mod") { playAfterModInstall = false; model.showModConsent = true }.disabled(model.selectedModInfo == nil || model.selectedGame == "base")
                 Button("Open installation folder") { NSWorkspace.shared.open(model.root) }
                 Link("Game ownership on Steam", destination: steamStore)
@@ -344,6 +348,16 @@ struct LauncherView: View {
             if let url = model.updateURL { Link("Download update", destination: url).font(.system(size: 11)) }
             Button("Check updates") { model.checkUpdates() }.buttonStyle(.plain).font(.system(size: 11)).accessibilityIdentifier("check-updates")
         }.padding(.horizontal, 36).padding(.vertical, 18).background(Color.black.opacity(0.25))
+    }
+
+    private func showSteamGuide() {
+        steamGuide.show(model: model) {
+            guard model.canEnterStep(3) else { return }
+            step = 3
+            steamGuide.close()
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.mainWindow?.makeKeyAndOrderFront(nil)
+        }
     }
 
     private var steamStore: URL { URL(string: "https://store.steampowered.com/app/\(model.game.steamID)/")! }

@@ -6,12 +6,14 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, QSettings, QTimer, QUrl, Qt
 from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressBar, QPushButton, QScrollArea, QStackedWidget, QTextEdit, QVBoxLayout, QWidget
 from state import LauncherState
+from steam_guide import SteamGuideWindow
 
 VERSION = "0.1.0"
 RELEASES = "https://api.github.com/repos/RickWoltheus/generalsx-mac-launcher/releases?per_page=10"
@@ -54,6 +56,9 @@ class LauncherWindow(QMainWindow):
         self.status_worker = None
         self.play_after_install = False
         self.waiting_dependencies = False
+        self.steam_start_deadline = None
+        self.steam_launch_error = None
+        self.steam_guide = None
         self.output = ""
         self.image_labels = {}
         self.update_url = None
@@ -159,7 +164,7 @@ class LauncherWindow(QMainWindow):
         layout.addWidget(self.details)
         footer = QHBoxLayout()
         help_menu = QComboBox()
-        help_menu.addItems(["Help…", "Repair game engine", "Check Steam files", "Repair selected mod", "Open installation folder", "Steam account help"])
+        help_menu.addItems(["Help…", "Repair game engine", "Check Steam files", "Repair selected mod", "Open installation folder", "Steam account help", "Show Steam guide"])
         help_menu.activated.connect(self.help_action)
         self.help_menu = help_menu
         footer.addWidget(help_menu)
@@ -265,6 +270,12 @@ class LauncherWindow(QMainWindow):
             layout.addWidget(label)
         self.signin_button = self.primary("SIGN IN TO STEAM →", self.signin)
         layout.addWidget(self.signin_button)
+        guide_button = QPushButton(self.state.guide_copy["showLabel"])
+        guide_button.clicked.connect(self.show_steam_guide)
+        layout.addWidget(guide_button)
+        security_note = QLabel(self.state.guide_copy["securityDetail"])
+        security_note.setWordWrap(True)
+        layout.addWidget(security_note)
         self.steam_help_title = QLabel("")
         self.steam_help_title.setStyleSheet("color:#efad40; font-weight:bold;")
         layout.addWidget(self.steam_help_title)
@@ -333,7 +344,7 @@ class LauncherWindow(QMainWindow):
         layout.addStretch()
 
     def choose_game(self, game):
-        if self.state.busy or self.state.game_running or self.state.values.get("install") == "busy": return
+        if self.state.busy or self.state.game_running or self.state.steam_starting or self.state.values.get("install") == "busy": return
         if game not in self.game_buttons: return
         self.state.selected_game = game
         self.step = 0
@@ -356,6 +367,9 @@ class LauncherWindow(QMainWindow):
                 return
 
     def refresh_view(self):
+        if self.state.steam_active or (self.steam_start_deadline is not None and time.monotonic() >= self.steam_start_deadline):
+            self.state.steam_starting = False
+            self.steam_start_deadline = None
         accent = "#" + self.state.game["accent"].lower()
         self.setStyleSheet(STYLE.replace("#efad40", accent).replace("#101619", QColor(accent).darker(850).name()))
         self.notice.setStyleSheet(f"color:{accent};")
@@ -384,7 +398,7 @@ class LauncherWindow(QMainWindow):
         for game, button in self.game_buttons.items():
             button.setObjectName("selected" if game == self.state.selected_game else "")
             button.style().unpolish(button); button.style().polish(button)
-            button.setEnabled(not self.state.busy and not self.state.game_running and self.state.values.get("install") != "busy")
+            button.setEnabled(not self.state.busy and not self.state.game_running and not self.state.steam_starting and self.state.values.get("install") != "busy")
             color = "#" + next(item["accent"] for item in self.state.games if item["id"] == game)
             border = f"border:1px solid {color};" if game == self.state.selected_game else "border:1px solid #354044;"
             button.setStyleSheet(f"QPushButton {{ text-align:left; font-weight:bold; color:{color}; {border} }} QLabel {{ border:none; background:transparent; color:{color}; }}")
@@ -392,7 +406,7 @@ class LauncherWindow(QMainWindow):
         self.prepare_button.setEnabled(self.state.can_enter(1))
         self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + "Native " + self.state.game["engine"] + " engine")
         self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + "Valve Steam downloader and Linux support")
-        self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and self.state.values.get("install") != "busy")
+        self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and not self.state.steam_starting and self.state.values.get("install") != "busy")
         self.steam_help_title.setText(self.state.steam_guidance["title"])
         self.steam_help_detail.setText(self.state.steam_guidance["detail"])
         self.play_title.setText(self.state.title)
@@ -410,6 +424,8 @@ class LauncherWindow(QMainWindow):
             button.setObjectName("selected" if profile == self.state.selected_profile else "")
             button.style().unpolish(button); button.style().polish(button)
             button.setEnabled(not self.state.busy and not self.state.game_running)
+        if self.steam_guide is not None:
+            self.steam_guide.refresh()
         mod = self.state.mod
         self.mod_caption.setText(f'{mod["version"]} · Experimental support' if mod else "Original Zero Hour · No mod active")
         self.mod_link.setVisible(mod is not None)
@@ -509,9 +525,27 @@ class LauncherWindow(QMainWindow):
         else:
             self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
 
+    def show_steam_guide(self):
+        if self.steam_guide is None:
+            self.steam_guide = SteamGuideWindow(self)
+            screen = self.screen().availableGeometry()
+            self.steam_guide.move(screen.right() - self.steam_guide.width() - 16, screen.top() + 24)
+        self.steam_guide.refresh()
+        self.steam_guide.show()
+        self.steam_guide.raise_()
+
     def signin(self):
-        if self.state.can_enter(2) and not self.state.steam_active:
-            self.open_terminal("Steam sign-in", ["steam-login", self.state.selected_game])
+        if not self.state.can_enter(2) or self.state.steam_active or self.state.steam_starting or self.state.values.get("install") == "busy":
+            return
+        self.steam_launch_error = None
+        self.state.steam_starting = True
+        self.show_steam_guide()
+        if self.open_terminal("Steam sign-in", ["steam-login", self.state.selected_game]):
+            self.steam_start_deadline = time.monotonic() + 15
+        else:
+            self.state.steam_starting = False
+            self.steam_launch_error = self.notice.text()
+        self.refresh_view()
 
     def open_terminal(self, title, arguments):
         ROOT.mkdir(parents=True, exist_ok=True)
@@ -521,11 +555,15 @@ class LauncherWindow(QMainWindow):
         script.chmod(0o700)
         for program, prefix in [("x-terminal-emulator", ["-e"]), ("gnome-terminal", ["--"]), ("konsole", ["-e"]), ("xfce4-terminal", ["-x"]), ("xterm", ["-e"])]:
             if shutil.which(program):
-                subprocess.Popen([program, *prefix, "/bin/bash", str(script)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                try:
+                    subprocess.Popen([program, *prefix, "/bin/bash", str(script)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                except OSError:
+                    continue
                 self.notice.setText("Complete " + title.lower() + " in the terminal. Never enter your password in this launcher.")
-                return
+                return True
         self.waiting_dependencies = False
         self.notice.setText("No supported terminal was found. Install your desktop terminal, then retry.")
+        return False
 
     def play(self):
         if not self.state.can_enter(3): return
@@ -631,6 +669,7 @@ class LauncherWindow(QMainWindow):
         elif index == 3 and self.state.mod: self.run_actions([("mod", self.state.profile)])
         elif index == 4: QDesktopServices.openUrl(QUrl.fromLocalFile(str(ROOT)))
         elif index == 5: self.open_url("https://help.steampowered.com/en/wizard/HelpWithLogin")
+        elif index == 6: self.show_steam_guide()
 
     @staticmethod
     def open_url(url):
@@ -641,6 +680,8 @@ class LauncherWindow(QMainWindow):
             QMessageBox.information(self, "Keep the launcher open", "Finish the installation or quit your game normally before closing the launcher.")
             event.ignore()
         else:
+            if self.steam_guide is not None:
+                self.steam_guide.close()
             event.accept()
 
 
@@ -657,9 +698,29 @@ def main():
         return 0
     application = QApplication(sys.argv)
     application.setApplicationName("GeneralsX Launcher")
-    if "--ui-smoke-test" in sys.argv:
+    if "--ui-smoke-test" in sys.argv or "--steam-guide-smoke-test" in sys.argv:
         window = LauncherWindow(auto_poll=False, load_media=False)
         window.show()
+        if "--steam-guide-smoke-test" in sys.argv:
+            window.state.update("platform=ready\nengine=ready\nsteam=ready\ninstall=busy\nsteam_session_vanilla=active\nsteam_download_vanilla=waiting-password")
+            window.show_steam_guide()
+            console = QMainWindow()
+            console.setWindowTitle("Synthetic console — no Steam process")
+            console.setCentralWidget(QLabel("A normal window used to check guide visibility and keyboard focus."))
+            console.show()
+            console.activateWindow()
+            application.processEvents()
+            window.state.values["steam_download_vanilla"] = "awaiting-guard"
+            window.refresh_view()
+            application.processEvents()
+            if not window.steam_guide.isVisible() or window.steam_guide.status_title.text() != window.state.guidance["awaiting-guard"]["title"]:
+                raise SystemExit("The separate Steam guide did not stay visible and update.")
+            if application.activeWindow() is not console:
+                raise SystemExit("Guide updates stole focus from the synthetic console.")
+            QTimer.singleShot(200, application.quit)
+            result = application.exec()
+            print("Packaged Steam guide stayed visible and updated beside a focused synthetic console; no Steam, network or games started.")
+            return result
         application.processEvents()
         if window.step_buttons[2].isEnabled() or window.step_buttons[3].isEnabled():
             raise SystemExit("Unvalidated steps were enabled in the packaged UI.")

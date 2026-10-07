@@ -179,3 +179,29 @@ was inspected offscreen using all four fetched logos; its nine existing UI/state
 checks, packaged self-check and virtual X11 launcher smoke test passed. The Mac
 app rebuilt and its ad-hoc signature verified. Only the launcher was reopened;
 no game or Steam sign-in was started.
+
+## Separate Steam setup guide — 2026-10-07
+
+Both launchers now open a modeless companion guide before the local SteamCMD
+terminal. It shows shared account/Steam Guard/file guidance, errors and a separate
+validation phase, while keeping all password/code entry in Valve's console.
+Closing the guide hides only the guide. Continue to Play stays disabled until
+asset validation finishes; retry is blocked while a Steam session is active.
+
+- Mac app and model checks passed. `tests/steam-guide.sh` constructed the actual
+  native panel without showing it and checked floating/nonactivating behavior,
+  visibility on app deactivation and validation/startup gates. AppKit initialization
+  aborted inside the sandbox; the same check passed outside it.
+- Eleven Linux state/widget checks passed with fake statuses, including live guide
+  updates, no credential fields, safe retry, completion and duplicate-start blocking.
+- The packaged Linux guide was displayed on virtual X11 beside a focused synthetic
+  console. Guide updates retained console focus and the guide stayed visible.
+- Installer checks with cached engine/mod files and fake Steam responses passed.
+  A no-subscription response with exit code zero remains an ownership error;
+  validation no longer overwrites it. A later success for another required Steam
+  title cannot erase a missing-license error in the same session.
+- Shared parser tests still retain only a status enum, including recovery after a
+  corrected Steam Guard response. No real Steam authentication or game was started.
+
+Linux stacking remains a window-manager request; real Wayland/X11 desktop behavior
+needs interactive validation. The Mac binary is still ad-hoc signed, not notarized.

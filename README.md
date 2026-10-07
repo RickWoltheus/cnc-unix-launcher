@@ -52,8 +52,11 @@ When a verified release is available:
 4. Choose a game in the sidebar and click **Continue**. C&C and Red Alert use
    OpenRA with modernized gameplay; Generals and Zero Hour use GeneralsX.
 5. Click **Prepare my Mac**. The launcher installs the native engine and Steam downloader.
-6. Click **Sign in to Steam**. SteamCMD opens in Terminal for your password and
-   Steam Guard. Let it finish; the launcher checks automatically and moves to Play.
+6. Click **Sign in to Steam**. A separate **Steam setup guide** opens beside
+   Terminal and follows the password, Steam Guard, download and validation steps.
+   Enter credentials only in Valve’s local console. The guide does not store
+   passwords/codes or display raw Steam output. Let validation finish, then continue
+   to Play. Use **Help → Show Steam guide** to reopen it; closing it does not stop Steam.
 7. Select **Zero Hour** or a mod in **Choose what to play**. The one big **Play**
    button always launches your highlighted selection. For a new mod it becomes
    **Install & Play**, with a download confirmation first.
