@@ -4,7 +4,7 @@ FLATPAK="${GX_FLATPAK:-flatpak}"
 platform_supported() { [[ "$(uname -m)" == x86_64 ]]; }
 platform_requirement_message() { echo 'Linux preview requires an x86_64 Linux desktop with Vulkan support.'; }
 dependencies_ready() {
-  command -v "$FLATPAK" >/dev/null && command -v curl >/dev/null && command -v file >/dev/null &&
+  command -v "$FLATPAK" >/dev/null && command -v curl >/dev/null && command -v file >/dev/null && command -v zip >/dev/null &&
     [[ -e /lib/ld-linux.so.2 || -e /lib32/ld-linux.so.2 || -e /lib/i386-linux-gnu/ld-linux.so.2 ]]
 }
 steam_ready() { [[ -x "$STEAM_COMMAND" ]] && dependencies_ready; }
@@ -66,9 +66,9 @@ install_linux_tools() {
     *ubuntu*|*debian*|*linuxmint*|*pop*)
       printf 'Install Flatpak, download tools and 32-bit support for Valve SteamCMD.\n'
       sudo apt-get update
-      sudo apt-get install -y flatpak curl file lib32gcc-s1 lib32stdc++6
+      sudo apt-get install -y flatpak curl file zip lib32gcc-s1 lib32stdc++6
       ;;
-    *) fail 'Automatic dependency setup supports Ubuntu/Debian-based desktops. Install Flatpak, curl, file and 32-bit glibc/libstdc++ through your distribution, then retry.' ;;
+    *) fail 'Automatic dependency setup supports Ubuntu/Debian-based desktops. Install Flatpak, curl, file, zip and 32-bit glibc/libstdc++ through your distribution, then retry.' ;;
   esac
   dependencies_ready || fail 'Linux dependencies are still incomplete.'
   echo 'Linux dependencies installed. Return to the launcher.'

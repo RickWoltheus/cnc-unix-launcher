@@ -16,10 +16,10 @@ OpenRA runs from its extracted runtime with its own managed support folder.
 
 ## Install
 
-Extract `GeneralsX-Launcher-linux-x86_64.tar.gz`, then run:
+Extract `CnC-Unix-Launcher-linux-x86_64.tar.gz`, then run:
 
 ```sh
-bash ./GeneralsXLauncher/start-launcher.sh
+bash ./CnCUnixLauncher/start-launcher.sh
 ```
 
 The startup script checks glibc and Qt's host desktop libraries, then offers an

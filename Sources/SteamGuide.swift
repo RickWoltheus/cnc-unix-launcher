@@ -60,7 +60,7 @@ struct SteamGuideView: View {
                 Image(systemName: "lock.shield.fill").foregroundStyle(model.game.color)
                 Text(copy.title).font(.system(size: 20, weight: .bold))
             }
-            Text(model.game.title).font(.system(size: 12)).foregroundStyle(CommandTheme.muted)
+            Text(model.steamTitle).font(.system(size: 12)).foregroundStyle(CommandTheme.muted)
             VStack(alignment: .leading, spacing: 8) {
                 Text(copy.securityTitle).font(.system(size: 13, weight: .semibold))
                 Text(copy.securityDetail).font(.system(size: 12)).fixedSize(horizontal: false, vertical: true)

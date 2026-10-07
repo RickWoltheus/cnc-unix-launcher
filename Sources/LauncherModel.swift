@@ -8,6 +8,9 @@ struct ModInfo: Identifiable {
     let imageURL: URL?
     let homepage: URL?
     let summary: String
+    var games: [String] = ["vanilla"]
+    var native = false
+    var source = "vanilla"
 }
 
 @MainActor
@@ -22,6 +25,10 @@ final class LauncherModel: ObservableObject {
     @Published var selectedGame = "vanilla"
     @Published var selectedMod = "vanilla"
     @Published var installedMods: Set<String> = []
+    @Published var nativeEngines: Set<String> = []
+    @Published var steamTarget: String?
+    @Published var requestNativeSteam = false
+    private var pendingNativePlay = false
     @Published var busy = false
     @Published var gameRunning = false
     @Published var recovery: RecoveryAdvice?
@@ -56,25 +63,38 @@ final class LauncherModel: ObservableObject {
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
             if fields.count == 4 { media[fields[0]] = fields }
         }
-        catalog = text.split(separator: "\n").compactMap { line in
+        let zhMods: [ModInfo] = text.split(separator: "\n").compactMap { line in
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false)
             guard fields.count >= 3 else { return nil }
             let artwork = media[String(fields[0])] ?? ["", "", "", "An optional Zero Hour mod."]
             return ModInfo(id: String(fields[0]), title: String(fields[1]), version: String(fields[2]),
                            imageURL: URL(string: artwork[1]), homepage: URL(string: artwork[2]), summary: artwork[3])
         }
+        let nativeURL = Bundle.main.resourceURL!.appendingPathComponent("manifests/native-mods.tsv")
+        let nativeText = (try? String(contentsOf: nativeURL, encoding: .utf8)) ?? ""
+        let nativeMods: [ModInfo] = nativeText.split(separator: "\n").compactMap { line in
+            let row = line.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
+            guard row.count == 10 else { return nil }
+            return ModInfo(id: row[0], title: row[1], version: row[3], imageURL: URL(string: row[8]), homepage: URL(string: row[7]),
+                           summary: row[9], games: row[2].split(separator: ",").map(String.init), native: true, source: row[6])
+        }
+        catalog = zhMods + nativeMods
+
     }
 
     var game: GameInfo { GameInfo.catalog.first { $0.id == selectedGame } ?? GameInfo.catalog.last! }
-    var gameEngineReady: Bool { game.isClassic ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
+    var availableMods: [ModInfo] { catalog.filter { $0.games.contains(selectedGame) } }
+    var steamProfile: String { steamTarget ?? selectedGame }
+    var steamTitle: String { catalog.first { $0.id == steamProfile }?.title ?? game.title }
+    var gameEngineReady: Bool { if let target = steamTarget { return nativeEngines.contains(target) }; return game.isClassic ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
     var gameAssetsReady: Bool {
-        let ready = game.isClassic ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets)
+        let ready = steamTarget.map { installedMods.contains($0) } ?? (game.isClassic ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets))
         return ready && !steamStarting && !steamSessionRunning && !externalInstallRunning && ["idle", "complete"].contains(steamDownloadStatus)
     }
-    var selectedModInfo: ModInfo? { selectedGame != "vanilla" ? nil : catalog.first { $0.id == selectedMod } }
-    var activeProfile: String { selectedGame == "vanilla" ? selectedMod : selectedGame }
+    var selectedModInfo: ModInfo? { availableMods.first { $0.id == selectedMod } }
+    var activeProfile: String { selectedModInfo?.id ?? selectedGame }
     var activeTitle: String { selectedModInfo?.title.uppercased() ?? game.title.uppercased() }
-    var activeNeedsInstall: Bool { selectedGame == "vanilla" && selectedModInfo != nil && !installedMods.contains(selectedMod) }
+    var activeNeedsInstall: Bool { selectedModInfo != nil && !installedMods.contains(selectedMod) }
     var steamGuidance: SteamGuidance { SteamGuidance.forStatus(steamStarting ? "waiting" : steamDownloadStatus) }
 
     nonisolated static var supportedPlatform: Bool {
@@ -126,9 +146,10 @@ final class LauncherModel: ObservableObject {
                 baseAssets = states.contains("base_assets=ready")
                 classicEngines = Set(["cnc", "ra"].filter { states.contains("\($0)_engine=ready") })
                 classicAssets = Set(["cnc", "ra"].filter { states.contains("\($0)_assets=ready") })
+                nativeEngines = Set(catalog.filter { $0.native && states.contains("native_engine_\($0.id)=ready") }.map(\.id))
                 installedMods = Set(catalog.filter { states.contains("\($0.id)=ready") }.map(\.id))
-                steamDownloadStatus = states.first(where: { $0.hasPrefix("steam_download_\(selectedGame)=") })?.components(separatedBy: "=").last ?? "idle"
-                steamSessionRunning = states.contains("steam_session_\(selectedGame)=active")
+                steamDownloadStatus = states.first(where: { $0.hasPrefix("steam_download_\(steamProfile)=") })?.components(separatedBy: "=").last ?? "idle"
+                steamSessionRunning = states.contains("steam_session_\(steamProfile)=active")
                 if steamSessionRunning || (steamStartDeadline.map { Date() >= $0 } ?? false) {
                     steamStarting = false
                     steamStartDeadline = nil
@@ -136,6 +157,10 @@ final class LauncherModel: ObservableObject {
                 externalInstallRunning = states.contains("install=busy")
                 if steamDownloadStatus == "incomplete" && !gameAssetsReady {
                     recovery = RecoveryAdvice.forMessage("Steam files are incomplete")
+                }
+                if pendingNativePlay, let profile = steamTarget, installedMods.contains(profile), canEnterStep(3) {
+                    pendingNativePlay = false
+                    play(profile)
                 }
             } catch {
                 status = error.localizedDescription
@@ -147,19 +172,19 @@ final class LauncherModel: ObservableObject {
         updateStatus = "Checking launcher releases…"
         Task {
             do {
-                let endpoint = URL(string: "https://api.github.com/repos/RickWoltheus/generalsx-mac-launcher/releases?per_page=10")!
+                let endpoint = ProductInfo.shared.releasesAPI
                 let (data, response) = try await URLSession.shared.data(from: endpoint)
                 guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
                 if http.statusCode == 404 { updateStatus = "No public launcher release is available yet."; return }
                 guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
                 let releases = try JSONDecoder().decode([LauncherRelease].self, from: data)
-                let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
-                guard let latest = releases.first(where: { !$0.draft && $0.assets.contains { $0.name == "GeneralsX-Launcher-macOS-arm64.zip" } }) else {
+                let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ProductInfo.shared.version
+                guard let latest = releases.first(where: { !$0.draft && $0.assets.contains { $0.name == ProductInfo.shared.macArchive } }) else {
                     updateStatus = "No downloadable launcher release is available yet."; return
                 }
                 let version = latest.tag_name.hasPrefix("v") ? String(latest.tag_name.dropFirst()) : latest.tag_name
                 if version.compare(current, options: .numeric) == .orderedDescending {
-                    updateURL = URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/releases/tag/\(latest.tag_name)")
+                    updateURL = ProductInfo.shared.releaseURL(latest.tag_name)
                     updateStatus = "Launcher \(version) is available. Download the ZIP and replace this app."
                 } else {
                     updateURL = nil
@@ -178,10 +203,10 @@ final class LauncherModel: ObservableObject {
 
     func installMod(andPlay: Bool = false) {
         guard canEnterStep(3) && selectedModInfo != nil else { return }
-        perform(["mod"], success: "Mod installed. Gameplay compatibility is experimental.", profile: selectedMod, playAfterInstall: andPlay)
+        perform([selectedModInfo?.native == true ? "native-mod" : "mod"], success: "Mod installed. Gameplay compatibility is experimental.", profile: selectedMod, playAfterInstall: andPlay)
     }
 
-    private func perform(_ actions: [String], success: String, profile: String? = nil, playAfterInstall: Bool = false) {
+    private func perform(_ actions: [String], success: String, profile: String? = nil, playAfterInstall: Bool = false, extra: [String] = []) {
         guard !busy else { return }
         busy = true
         recovery = nil
@@ -190,16 +215,23 @@ final class LauncherModel: ObservableObject {
         let chosenProfile = profile ?? selectedGame
         Task {
             var completed = false
+            var needsNativeSteam = false
             defer {
                 busy = false
                 refresh()
+                if needsNativeSteam { requestNativeSteam = true }
                 if completed && playAfterInstall { play(chosenProfile) }
             }
             do {
                 for action in actions {
-                    status = action == "mod" ? "Installing your mod…" : (action == "engine" ? "Preparing the native game engine…" : "Preparing Steam sign-in…")
+                    switch action {
+                    case "mod", "native-mod": status = "Installing your selected mod…"
+                    case "engine": status = "Preparing the native game engine…"
+                    case "online-prepare": status = "Checking local online setup…"
+                    default: status = "Preparing Steam sign-in…"
+                    }
                     let text = try await Task.detached {
-                        try Self.run(script, arguments: [action, chosenProfile]) { chunk in
+                        try Self.run(script, arguments: [action, chosenProfile] + extra) { chunk in
                             Task { @MainActor in
                                 self.output = String((self.output + chunk).suffix(12000))
                             }
@@ -210,9 +242,17 @@ final class LauncherModel: ObservableObject {
                 status = success
                 completed = true
             } catch {
-                status = "Installation stopped"
                 output += "\n" + error.localizedDescription
-                recovery = RecoveryAdvice.forMessage(error.localizedDescription)
+                if error.localizedDescription.contains("NATIVE_ASSETS_REQUIRED"), catalog.contains(where: { $0.id == chosenProfile && $0.native }) {
+                    nativeEngines.insert(chosenProfile)
+                    steamTarget = chosenProfile
+                    pendingNativePlay = playAfterInstall
+                    needsNativeSteam = true
+                    status = "Native runtime prepared. Sign in to Steam for the required owned assets."
+                } else {
+                    status = "Installation stopped"
+                    recovery = RecoveryAdvice.forMessage(error.localizedDescription)
+                }
             }
         }
     }
@@ -223,13 +263,13 @@ final class LauncherModel: ObservableObject {
         steamLaunchError = nil
         do {
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            let command = root.appendingPathComponent("Download Steam \(game.title).command")
+            let command = root.appendingPathComponent("Download Steam \(steamTitle).command")
             let content = """
             #!/bin/bash
             export GX_INSTALL_ROOT=\(Self.shellQuote(root.path))
-            /bin/bash \(Self.shellQuote(backend.path)) steam-login \(Self.shellQuote(selectedGame))
+            /bin/bash \(Self.shellQuote(backend.path)) steam-login \(Self.shellQuote(steamProfile))
             result=$?
-            printf '\\nReturn to GeneralsX Launcher and click Refresh.\\n'
+            printf '\\nReturn to C&C Unix Launcher. The Steam guide checks progress automatically.\\n'
             read -r -p 'Press Return to close.'
             exit "$result"
             """
@@ -245,6 +285,20 @@ final class LauncherModel: ObservableObject {
             steamLaunchError = error.localizedDescription
             status = error.localizedDescription
         }
+    }
+
+    func selectProfile(_ id: String) {
+        guard !busy && !gameRunning && !steamSessionRunning && !externalInstallRunning && !steamStarting else { return }
+        selectedMod = id
+        steamTarget = nil
+        pendingNativePlay = false
+        refresh()
+    }
+
+    func prepareOnline(hosting: Bool) {
+        guard canEnterStep(3) && !activeNeedsInstall else { return }
+        perform(["online-prepare"], success: "Local online setup prepared. Authentication and a real match still happen in the game.",
+                profile: activeProfile, extra: [hosting ? "host" : "join"])
     }
 
     func returnToSteamWindow() {
@@ -270,7 +324,7 @@ final class LauncherModel: ObservableObject {
         Task {
             defer { busy = false }
             do {
-                let game = profile == "base" || profile == "cnc" || profile == "ra" ? profile : "vanilla"
+                let game = ["base", "cnc", "ra"].contains(profile) || catalog.contains { $0.id == profile && $0.native } ? profile : "vanilla"
                 let quality = maximumGraphics ? "maximum" : "balanced"
                 _ = try await Task.detached { try Self.run(script, arguments: ["graphics", game, quality]) }.value
                 let process = Process()

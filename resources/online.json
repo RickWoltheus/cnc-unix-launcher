@@ -1,0 +1,19 @@
+{
+  "title": "Online play",
+  "description": "The native engines already include their multiplayer clients. Prepare local files and settings here; account approval and any operating-system firewall prompt stay with you.",
+  "openra": {
+    "title": "OpenRA multiplayer",
+    "steps": ["Prepare the local profile below, then use the main Play button.", "In the game, choose Multiplayer and join a public server. No separate multiplayer client is required.", "Use the same engine release and mod version as your friends. Original Windows C&C clients cannot join OpenRA games."],
+    "hosting": "Hosting uses TCP port 1234. You can explicitly enable automatic UPnP/NAT-PMP discovery below. If your router does not support it, manual forwarding or a reachable dedicated server may be needed. Joining public servers does not require this option.",
+    "source": "https://github.com/OpenRA/OpenRA/wiki/FAQ"
+  },
+  "generals": {
+    "title": "GeneralsOnline / NGMP",
+    "steps": ["Prepare the local profile below, then use the main Play button.", "In the game, open online multiplayer and complete the provider's browser sign-in if requested. Credentials never go into this launcher.", "Your friends need a compatible GeneralsX/GeneralsOnline build and the same mod/data version. This is not a promise of compatibility with every original Windows client or mod."],
+    "hosting": "The pinned engine includes the online client. No GameSpy installer, Windows DLL injection or router changes are performed by this launcher. Joining and hosting still need a real multiplayer test on your network.",
+    "source": "https://github.com/fbraz3/GeneralsX/blob/1.0.2/README.md"
+  },
+  "prepareLabel": "Prepare local online setup",
+  "hostingLabel": "Enable automatic router discovery for OpenRA hosting",
+  "resultNote": "Local preparation is not proof of authentication, NAT reachability or a successful match. Firewall approval and browser login cannot be completed for you."
+}

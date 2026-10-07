@@ -1,4 +1,4 @@
-# GeneralsX Launcher
+# C&C Unix Launcher
 
 Native macOS and Linux launchers for Command & Conquer, Red Alert, Generals and
 Zero Hour. They install OpenRA or GeneralsX, download your owned files through
@@ -39,14 +39,14 @@ sandbox and GPU/gameplay tests remain pending.
 
 When a verified release is available:
 
-1. Download [GeneralsX-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/generalsx-mac-launcher/releases/download/v0.1.0/GeneralsX-Launcher-macOS-arm64.zip).
-2. Extract it, and move **GeneralsX Launcher.app** to Applications.
+1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.2.0/CnC-Unix-Launcher-macOS-arm64.zip).
+2. Extract it, and move **C&C Unix Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively
    remove quarantine from the app you downloaded:
 
    ```sh
-   xattr -dr com.apple.quarantine "/Applications/GeneralsX Launcher.app"
+   xattr -dr com.apple.quarantine "/Applications/C&C Unix Launcher.app"
    ```
 
 4. Choose a game in the sidebar and click **Continue**. C&C and Red Alert use
@@ -67,10 +67,10 @@ SteamCMD updates itself using Valve's normal bootstrap.
 
 ## Install and play on Linux
 
-Extract `GeneralsX-Launcher-linux-x86_64.tar.gz` and run:
+Extract `CnC-Unix-Launcher-linux-x86_64.tar.gz` and run:
 
 ```sh
-bash ./GeneralsXLauncher/start-launcher.sh
+bash ./CnCUnixLauncher/start-launcher.sh
 ```
 
 The startup script checks desktop libraries before opening the UI and offers
@@ -81,7 +81,7 @@ Vulkan drivers must be installed through the host distribution.
 
 ## Bugs and feature requests
 
-Use [GitHub Issues](https://github.com/RickWoltheus/generalsx-mac-launcher/issues)
+Use [GitHub Issues](https://github.com/RickWoltheus/cnc-unix-launcher/issues)
 or **Bugs & feature requests** in the launcher. Include your OS version, CPU/GPU,
 launcher version, selected game/mod and steps to reproduce. Share relevant error
 messages after removing personal information; never post Steam credentials or game assets.
@@ -109,6 +109,46 @@ Red Alert setup also downloads your owned C&C copy for the required desert tiles
 These integrations passed synthetic import checks; real Steam asset/gameplay tests
 remain pending. See [classic game setup](docs/classic-games.md).
 
+## Native classic mods
+
+C&C offers **Combined Arms 1.09** and **Tiberian Dawn HD playtest-20260222**;
+Red Alert offers Combined Arms. Each uses its own pinned OpenRA runtime and
+isolated profile. Select the mod and use the single Install & Play button.
+
+Combined Arms uses owned C&C and Red Alert Steam assets. Tiberian Dawn HD needs
+**Remastered Collection (Steam 1213210)** in addition to the base setup; Ultimate
+Collection does not provide its HD artwork. Allow up to 40 GB for that download.
+If source assets are missing, the launcher opens the local SteamCMD guide and
+finishes setup after validation. No EA asset mirror is used. These are curated
+options, not a measured popularity ranking. Gameplay remains experimental.
+
+Use **Request a mod** in the sidebar or game page to open a prefilled GitHub issue.
+Include the publisher's page and desired platform; never attach game assets.
+
+## Online play
+
+**Online setup** checks the selected local engine/assets/mod files. OpenRA clients
+already include public-server multiplayer; GeneralsX includes GeneralsOnline/NGMP.
+Accounts, browser approval and OS firewall prompts remain user actions. Friends
+need compatible engine and mod versions, including on Windows.
+
+OpenRA hosting can explicitly enable UPnP/NAT-PMP discovery through the setup
+window. The launcher only writes local settings; it never changes a router or
+firewall itself. Joining public servers does not require that option. Local
+preparation does not prove NAT reachability or a working multiplayer match.
+
+## Why the Mac preview is not Apple-verified
+
+This volunteer project has a **€0 budget**. Developer ID signing and notarization
+require Apple's paid Developer Program, including for apps distributed outside
+the App Store. We currently have no funds for membership, so macOS may block the
+first launch. Apple publishes [US$99 per year with local pricing](https://developer.apple.com/programs/enroll/).
+App Store distribution is optional; this launcher does not need to be in it.
+
+After a blocked launch, use **System Settings → Privacy & Security → Open Anyway**
+for C&C Unix Launcher if you trust the download. The same explanation is under
+**Why macOS warns** in the app. Ko-fi support is optional; the launcher stays free.
+
 ## Mods and updates
 
 | Mod | Pinned version |
@@ -134,7 +174,9 @@ Repeating **Download Steam game** runs Steam's own update and validation.
 
 ## Files and privacy
 
-The launcher installs into `~/Library/Application Support/GeneralsX Launcher/`:
+The rename preserves existing preferences and data. The managed installation still
+uses `~/Library/Application Support/GeneralsX Launcher/` on Mac so existing games
+are found automatically:
 
 ```text
 engine/          GeneralsX app and bundled runtime libraries
@@ -211,8 +253,8 @@ xcode-select --install
 bash scripts/build.sh
 ```
 
-Output: `dist/GeneralsX Launcher.app` and
-`dist/GeneralsX-Launcher-macOS-arm64.zip`. The app is ad-hoc signed and is not
+Output: `dist/C&C Unix Launcher.app` and
+`dist/CnC-Unix-Launcher-macOS-arm64.zip`. The app is ad-hoc signed and is not
 notarized. No Apple Developer subscription is needed to build it locally.
 
 The UI is SwiftUI; the installer uses macOS's Bash, curl, ditto, tar, and shasum.

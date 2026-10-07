@@ -19,11 +19,11 @@ jobs:
       - name: Build Apple Silicon app
         run: bash scripts/build.sh
       - name: Verify app signature
-        run: codesign --verify --deep --strict 'dist/GeneralsX Launcher.app'
+        run: codesign --verify --deep --strict 'dist/C&C Unix Launcher.app'
       - uses: actions/upload-artifact@v4
         with:
-          name: GeneralsX-Launcher-macOS-arm64
-          path: dist/GeneralsX-Launcher-macOS-arm64.zip
+          name: CnC-Unix-Launcher-macOS-arm64
+          path: dist/CnC-Unix-Launcher-macOS-arm64.zip
   linux:
     runs-on: ubuntu-24.04
     steps:
@@ -37,14 +37,16 @@ jobs:
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-status.sh
       - name: Check classic engines with synthetic assets and dummy launches
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/classic-linux.sh
+      - name: Check native mods with synthetic assets and online settings
+        run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/native-linux.sh
       - name: Build standalone Linux archive
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash linux/build.sh
       - name: Validate packaged resources and virtual desktop window
         run: |
-          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash dist/linux/GeneralsXLauncher/start-launcher.sh --check
-          docker run --rm -v "$PWD:/project" gx-launcher-linux-test dist/linux/GeneralsXLauncher/GeneralsXLauncher --self-check
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash dist/linux/CnCUnixLauncher/start-launcher.sh --check
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test dist/linux/CnCUnixLauncher/CnCUnixLauncher --self-check
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/linux-x11.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: GeneralsX-Launcher-linux-x86_64
-          path: dist/GeneralsX-Launcher-linux-x86_64.tar.gz
+          name: CnC-Unix-Launcher-linux-x86_64
+          path: dist/CnC-Unix-Launcher-linux-x86_64.tar.gz

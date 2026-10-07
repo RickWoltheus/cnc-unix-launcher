@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 import sys
 import unittest
+import tempfile
+import time
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 REPO = Path(__file__).resolve().parents[1]
@@ -47,9 +49,24 @@ class StateChecks(unittest.TestCase):
             self.state.values[game + "_assets"] = "ready"
             self.assertTrue(self.state.can_enter(3))
 
+    def test_native_mod_has_its_own_asset_gate(self):
+        self.state.selected_game = "cnc"
+        self.state.selected_profile = "tdhd"
+        self.state.update("platform=ready\ncnc_engine=ready\ncnc_assets=ready\nsteam=ready\ninstall=idle")
+        self.assertEqual(self.state.profile, "tdhd")
+        self.assertTrue(self.state.needs_install)
+        self.state.steam_target = "tdhd"
+        self.assertFalse(self.state.can_enter(2))
+        self.state.values["native_engine_tdhd"] = "ready"
+        self.assertTrue(self.state.can_enter(2))
+        self.assertFalse(self.state.can_enter(3))
+        self.state.values["tdhd"] = "ready"
+        self.assertTrue(self.state.can_enter(3))
+        self.assertEqual(self.state.steam_profile, "tdhd")
+
     def test_profile_selection(self):
         self.assertEqual(self.state.profile, "vanilla")
-        for mod in self.state.mods:
+        for mod in self.state.available_mods:
             self.state.selected_profile = mod["id"]
             self.assertEqual(self.state.profile, mod["id"])
             self.assertTrue(self.state.needs_install)
@@ -127,7 +144,7 @@ class WidgetChecks(unittest.TestCase):
         self.assertEqual(self.window.step, 3)
         self.assertTrue(self.window.play_button.isEnabled())
         self.assertFalse(self.window.graphics.isEnabled())
-        self.assertTrue(self.window.mod_section.isHidden())
+        self.assertFalse(self.window.mod_section.isHidden())
         self.window.game_buttons["ra"].click()
         self.assertEqual(self.window.step, 0)
         self.assertFalse(self.window.play_button.isEnabled())
@@ -173,6 +190,28 @@ class WidgetChecks(unittest.TestCase):
         self.assertFalse(self.window.signin_button.isEnabled())
         self.window.steam_guide.close()
         self.assertTrue(self.window.state.steam_starting)
+
+    def test_native_asset_handoff_uses_correct_steam_profile(self):
+        self.window.state.update("platform=ready\ncnc_engine=ready\ncnc_assets=ready\nsteam=ready\ninstall=idle")
+        self.window.choose_game("cnc")
+        self.window.choose_profile("tdhd")
+        self.window.step = 3
+        calls = []
+        self.window.open_terminal = lambda title, args: calls.append(args) or True
+        self.window.read_status = lambda: None
+        with tempfile.TemporaryDirectory() as temp:
+            script = Path(temp) / "backend.sh"
+            script.write_text("#!/bin/bash\necho 'NATIVE_ASSETS_REQUIRED: fixture'\nexit 1\n")
+            self.window.backend = script
+            self.window.run_actions([("native-mod", "tdhd")])
+            deadline = time.monotonic() + 5
+            while self.window.worker is not None and time.monotonic() < deadline:
+                self.application.processEvents()
+                time.sleep(0.01)
+            self.assertEqual(calls, [["steam-login", "tdhd"]])
+            self.assertEqual(self.window.state.steam_target, "tdhd")
+            self.assertTrue(self.window.steam_guide.isVisible())
+            self.assertFalse(self.window.play_button.isEnabled())
 
     def test_download_and_game_running_disable_controls(self):
         self.window.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=busy\nsteam_session_vanilla=active\nsteam_download_vanilla=waiting-password")

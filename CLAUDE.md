@@ -8,6 +8,11 @@ cannot support a behavior, document the exception in `docs/linux.md`.
 
 Keep installation and repair behavior in `scripts/backend.sh`; OS-specific
 commands belong in `scripts/platform-macos.sh` or `scripts/platform-linux.sh`.
+Read branding and release names from `manifests/product.tsv`. Preserve legacy
+data paths and bundle/preferences identifiers when renaming. Native classic mods
+use `manifests/native-mods.tsv` and pinned `native-packages.tsv`; only Steam may
+supply their original assets. Online preparation may edit local settings; router
+discovery is explicit opt-in and no account/firewall/router action is automatic.
 Read game metadata/themes from `manifests/games.tsv`. Keep OpenRA import and
 launch behavior in `scripts/classic.sh`; its Steam asset mappings and required
 files come from the pinned upstream release, with attribution in manifests.

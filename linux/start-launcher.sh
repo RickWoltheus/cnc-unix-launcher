@@ -31,4 +31,4 @@ if [[ -n "$missing" ]]; then
   esac
 fi
 [[ "${1:-}" != --check ]] || { echo 'Linux architecture, glibc and desktop libraries passed.'; exit 0; }
-exec "$PACKAGE/GeneralsXLauncher" "$@"
+exec "$PACKAGE/CnCUnixLauncher" "$@"

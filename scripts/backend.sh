@@ -37,8 +37,15 @@ verify() {
 }
 source "$RESOURCES/scripts/platform-$PLATFORM.sh"
 source "$RESOURCES/scripts/classic.sh"
+source "$RESOURCES/scripts/native-mods.sh"
+source "$RESOURCES/scripts/settings.sh"
+source "$RESOURCES/scripts/online.sh"
 if classic_profile "$PROFILE"; then
   GAME="$ROOT/$(classic_directory "$PROFILE")"; ENGINE="$(classic_engine_path "$PROFILE")"
+fi
+if native_profile "$PROFILE"; then
+  native_select "$PROFILE"; ENGINE="$NATIVE_ENGINE"
+  if [[ "$NATIVE_SOURCE" == remastered ]]; then GAME="$ROOT/Remastered"; else GAME="$ROOT/RedAlert"; fi
 fi
 installed_name() {
   if [[ "$1" == *.gib ]]; then printf '%s.big' "${1%.gib}"; else printf '%s' "$1"; fi
@@ -54,6 +61,7 @@ download() {
 }
 assets_ready() {
   local folder="$1" game="${2:-vanilla}" file appid=2732960
+  if native_profile "$game"; then native_ready "$game"; return; fi
   if classic_profile "$game"; then classic_raw_ready "$folder" "$game" && classic_content_ready "$game"; return; fi
   local archives=(INIZH.big TexturesZH.big W3DZH.big MapsZH.big)
   if [[ "$game" == base ]]; then appid=2229870; archives=(INI.big Textures.big W3D.big Maps.big); fi
@@ -91,7 +99,11 @@ if [[ "$ACTION" == status ]]; then
     classic_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
     assets_ready "$ROOT/$(classic_directory "$game")" "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
-  for game in vanilla base cnc ra; do
+  while IFS=$'\t' read -r id rest; do
+    native_engine_ready "$id" && echo "native_engine_$id=ready" || echo "native_engine_$id=missing"
+    native_ready "$id" && echo "$id=ready" || echo "$id=missing"
+  done < "$RESOURCES/manifests/native-mods.tsv"
+  for game in vanilla base cnc ra combined-arms tdhd; do
     state=idle
     if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
     case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|validating|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
@@ -110,6 +122,10 @@ fi
 
 if [[ "$ACTION" == launch ]]; then
   [[ ! -d "$ROOT/.install-lock" ]] || fail 'An installation or Steam download is still running. Wait for it to finish before playing.'
+  if native_profile "$PROFILE"; then
+    if pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'Quit the running game before switching profiles.'; fi
+    native_launch "$@"
+  fi
   if classic_profile "$PROFILE"; then
     if pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
     classic_launch "$@"
@@ -170,7 +186,7 @@ trap 'exit 130' INT TERM
 
 case "$ACTION" in
   graphics)
-    if classic_profile "$PROFILE"; then echo 'OpenRA uses its own graphics settings. Display mode is applied at launch.'; exit 0; fi
+    if classic_profile "$PROFILE" || native_profile "$PROFILE"; then echo 'OpenRA uses its own graphics settings. Display mode is applied at launch.'; exit 0; fi
     if pgrep -x GeneralsXZH >/dev/null 2>&1; then fail 'Quit Zero Hour before changing graphics settings.'; fi
     leaf=GeneralsZH
     [[ "$PROFILE" != base ]] || leaf=Generals
@@ -199,18 +215,24 @@ case "$ACTION" in
     steam_install
     ;;
   steam-login)
-    [[ "$PROFILE" == vanilla || "$PROFILE" == base || "$PROFILE" == cnc || "$PROFILE" == ra ]] || fail 'Choose a game for Steam downloads.'
+    [[ "$PROFILE" == vanilla || "$PROFILE" == base || "$PROFILE" == cnc || "$PROFILE" == ra ]] || native_profile "$PROFILE" || fail 'Choose a game for Steam downloads.'
     appid=2732960; title='Zero Hour'
     if [[ "$PROFILE" == base ]]; then appid=2229870; title=Generals; fi
     if classic_profile "$PROFILE"; then
       appid="$(awk -F '\t' -v id="$PROFILE" '$1==id {print $5}' "$RESOURCES/manifests/games.tsv")"
       title="$(classic_app_title "$PROFILE")"
     fi
+    if native_profile "$PROFILE"; then
+      native_select "$PROFILE"; title="$NATIVE_TITLE"
+      if [[ "$NATIVE_SOURCE" == remastered ]]; then appid=1213210; else appid=2229840; fi
+    fi
     printf 'waiting\n' > "$ROOT/steam-$PROFILE.status"
     steam_ready || fail 'Prepare the Steam downloader and platform dependencies first.'
     prepare_steam_login
     printf 'waiting\n' > "$ROOT/steam-$PROFILE.status"
-    printf 'Own %s on this Steam account (The Ultimate Collection, not Remastered).\n' "$title"
+    if [[ "$PROFILE" == tdhd ]]; then
+      printf 'Own Remastered Collection on this Steam account; Ultimate Collection does not supply HD art. Allow up to 40 GB for its download.\n'
+    else printf 'Own %s and its required source games on this Steam account (Ultimate Collection).\n' "$title"; fi
     printf 'Enter your password and Steam Guard only in this Terminal.\n'
     printf 'Use your Steam account login name, not your profile display name.\n'
     read -r -p 'Steam account username: ' steam_account
@@ -222,7 +244,7 @@ case "$ACTION" in
     status_reader=$!
     steam_result=0
     steam_arguments=(+@sSteamCmdForcePlatformType windows +force_install_dir "$GAME" +login "$steam_account" +app_update "$appid" validate)
-    if [[ "$PROFILE" == ra ]]; then
+    if [[ "$PROFILE" == ra || "$PROFILE" == combined-arms ]]; then
       echo 'OpenRA Red Alert also needs the C&C desert tileset. Steam will download your owned C&C copy.'
       steam_arguments+=(+force_install_dir "$ROOT/TiberianDawn" +app_update 2229830 validate)
     fi
@@ -236,11 +258,20 @@ case "$ACTION" in
         fail 'Steam reported a sign-in or ownership error. Check the Steam guide before retrying.' ;;
     esac
     printf 'validating\n' > "$ROOT/steam-$PROFILE.status"
-    if classic_profile "$PROFILE"; then classic_import; fi
+    if native_profile "$PROFILE"; then native_finish
+    elif classic_profile "$PROFILE"; then classic_import; fi
     assets_ready "$GAME" "$PROFILE" || fail "Steam files are incomplete. No subscription means this account lacks the $title license. Retry after checking ownership."
     steam_finished=1
     printf 'complete\n' > "$ROOT/steam-$PROFILE.status"
     echo "$title assets verified. Return to the launcher and click Refresh."
+    ;;
+  online-prepare)
+    prepare_online "$@"
+    ;;
+  native-mod)
+    native_profile "$PROFILE" || fail 'Choose a supported native mod.'
+    native_prepare
+    native_finish
     ;;
   import-classic)
     classic_profile "$PROFILE" || fail 'Choose C&C or Red Alert for this import.'

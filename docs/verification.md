@@ -205,3 +205,32 @@ asset validation finishes; retry is blocked while a Steam session is active.
 
 Linux stacking remains a window-manager request; real Wayland/X11 desktop behavior
 needs interactive validation. The Mac binary is still ad-hoc signed, not notarized.
+
+## C&C Unix Launcher, native mods and online preparation — 2026-10-07
+
+Renamed the product and release archives to C&C Unix Launcher 0.2.0. Branding,
+release endpoints and asset names come from `manifests/product.tsv`. Existing
+bundle/preferences identifiers and managed installation paths are preserved.
+Public links target `RickWoltheus/cnc-unix-launcher`; the repository has not been
+published. Request a mod opens a prefilled issue draft, not an automatic post.
+
+Added Combined Arms 1.09 for C&C/Red Alert and Tiberian Dawn HD playtest-20260222
+for C&C. Actual publisher ARM64 Mac runtimes and x86_64 Linux AppImages were
+installed into disposable folders. Synthetic MIX and MEG files were validated
+by their native headless utilities. Dummy launchers verified isolated profile,
+mod identity and display arguments. Fake Steam clients checked the required
+app IDs: C&C/RA for Combined Arms and Remastered Collection for TDHD. Missing
+assets use the same separate Steam guide, with a native-profile readiness gate.
+No EA data was downloaded by the agent for these tests.
+
+Local online preparation validates files. OpenRA hosting is explicit opt-in and
+updates only local AdvertiseOnline/DiscoverNatDevices settings, with a backup;
+player settings, server password and graphics settings were preserved. Router
+and firewall settings were not changed, and no game or online authentication was
+started. Browser approval remains in the engine. The hosting marker means local
+preparation only, not working NAT or a successfully joined match.
+
+Mac funding copy explains the actual **€0 project budget** and lack of
+Developer ID signing/notarization. It links Apple's published US$99 annual
+membership/local pricing and graphical first-launch instructions. No membership
+purchase, enrollment or certificate creation was attempted.

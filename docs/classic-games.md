@@ -76,3 +76,22 @@ engine releases. Locally, run it in the existing test container:
 ```sh
 docker run --rm --platform linux/amd64 -v "$PWD:/project" gx-launcher-linux-test bash tests/classic-linux.sh
 ```
+
+## Additional native mods
+
+Combined Arms 1.09 uses its own OpenRA runtime and cloned, owned RA/C&C content.
+Tiberian Dawn HD playtest-20260222 uses an isolated runtime and owned Steam
+Remastered Collection assets. The latter requires app 1213210 and potentially
+40 GB of disk space; it is a separate license from Ultimate Collection.
+
+TDHD's managed source mapping points directly at the private Remastered folder.
+A small launcher-created ZIP marker selects that source; it contains no EA data.
+No real Steam library manifest is modified. Settings and user progress remain
+outside the runtime bundle and are preserved on repair. Source MIX/MEG containers
+must pass the mod runtime's headless reader before a profile is marked complete.
+Runtime and data upgrades stay pinned and manual. Full gameplay and performance
+for both integrations remain unverified.
+
+Run `bash tests/native-linux.sh` in the Linux verification container to download
+pinned runtimes and check both mods with synthetic data, fake Steam and dummy
+launchers. It does not authenticate, change a router/firewall or start a game.

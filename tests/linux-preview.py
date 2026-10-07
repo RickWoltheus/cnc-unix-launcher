@@ -26,5 +26,11 @@ for game in window.state.games:
     window.choose_game(game["id"])
     application.processEvents()
     window.grab().save(str(root / f'dist/linux-{game["id"]}-preview.png'))
+window.state.update("platform=ready\nsteam=ready\ncnc_engine=ready\ncnc_assets=ready\nra_engine=ready\nra_assets=ready\ninstall=idle")
+for game in ("cnc", "ra"):
+    window.choose_game(game)
+    window.go_to(3)
+    application.processEvents()
+    window.grab().save(str(root / f"dist/linux-{game}-mods-preview.png"))
 window.close()
 print("Linux offscreen preview captured. No game or sign-in was started.")

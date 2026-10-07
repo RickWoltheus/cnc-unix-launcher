@@ -4,7 +4,7 @@ import Foundation
 struct ModelChecks {
     @MainActor static func main() {
         let model = LauncherModel()
-        precondition(model.catalog.count == 5)
+        precondition(model.catalog.count == 7)
         precondition(model.activeProfile == "vanilla")
         precondition(!model.activeNeedsInstall)
         precondition(model.canEnterStep(1))
@@ -15,7 +15,7 @@ struct ModelChecks {
         model.steam = true
         precondition(model.canEnterStep(2))
         precondition(!model.canEnterStep(3))
-        for mod in model.catalog {
+        for mod in model.availableMods {
             model.selectedMod = mod.id
             precondition(model.activeProfile == mod.id)
             precondition(model.activeNeedsInstall)
@@ -76,6 +76,20 @@ struct ModelChecks {
             model.classicAssets.insert(id)
             precondition(model.canEnterStep(3))
         }
+        model.selectedGame = "cnc"
+        precondition(Set(model.availableMods.map(\.id)) == ["combined-arms", "tdhd"])
+        model.selectedMod = "tdhd"
+        precondition(model.activeProfile == "tdhd")
+        precondition(model.activeNeedsInstall)
+        model.steamTarget = "tdhd"
+        precondition(!model.canEnterStep(2))
+        model.nativeEngines.insert("tdhd")
+        precondition(model.canEnterStep(2))
+        precondition(!model.canEnterStep(3))
+        model.installedMods.insert("tdhd")
+        precondition(model.canEnterStep(3))
+        precondition(ProductInfo.shared.name == "C&C Unix Launcher")
+        precondition(ProductInfo.shared.modRequestURL(game: "C&C").absoluteString.contains("template=mod-request.md"))
         print("Model selection and recovery checks passed. No windows, sign-in or game launches.")
     }
 }

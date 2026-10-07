@@ -59,7 +59,7 @@ class SteamGuideWindow(QDialog):
         status = "complete" if state.assets_ready else "waiting" if state.steam_starting else state.steam_status
         guidance = state.guidance.get(status, state.guidance["idle"])
         accent = "#" + state.game["accent"]
-        self.game_title.setText(state.game["title"])
+        self.game_title.setText(state.steam_title)
         error = self.launcher.steam_launch_error
         self.status_title.setText("Steam terminal could not open" if error else guidance["title"])
         self.status_title.setStyleSheet(f"color:{accent}; font-size:16px; font-weight:bold;")

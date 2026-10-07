@@ -1,0 +1,9 @@
+{
+  "title": "Why macOS may block the first launch",
+  "detail": "This volunteer project has a €0 budget. Apple requires paid Developer Program membership for Developer ID signing and notarization, including apps downloaded outside the App Store. We currently have no funds for that membership, so this preview has no Apple-verified developer signature or notarization. macOS may block its first launch.",
+  "priceNote": "Apple publishes the membership fee as US$99 per year, with local pricing where available. The launcher remains free; donations are optional.",
+  "openAnyway": "After a blocked launch, open System Settings → Privacy & Security → Open Anyway for C&C Unix Launcher. Confirm only if you trust the source.",
+  "appleURL": "https://developer.apple.com/programs/enroll/",
+  "helpURL": "https://support.apple.com/en-us/102445",
+  "supportURL": "https://ko-fi.com/ricklemore"
+}

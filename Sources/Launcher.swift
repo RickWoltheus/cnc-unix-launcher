@@ -6,6 +6,8 @@ struct LauncherView: View {
     @State private var step = 0
     @State private var steamGuide = SteamGuideWindow()
     @State private var showDetails = false
+    @State private var showDistribution = false
+    @State private var showOnline = false
     @State private var playAfterModInstall = false
     private var accent: Color { model.game.color }
     private let steps = ["Choose game", "Prepare Mac", "Steam download", "Play"]
@@ -42,6 +44,11 @@ struct LauncherView: View {
         .tint(accent)
         .task { model.refresh() }
         .onDisappear { steamGuide.close() }
+        .onChange(of: model.requestNativeSteam) { _, requested in
+            if requested { model.requestNativeSteam = false; step = 2; showSteamGuide(); model.downloadAssets() }
+        }
+        .sheet(isPresented: $showDistribution) { MacDistributionView() }
+        .sheet(isPresented: $showOnline) { OnlineSetupView(model: model) }
         .onChange(of: model.gameAssetsReady) { _, ready in
             if ready && model.canEnterStep(3) { step = 3 }
             else { validateCurrentStep() }
@@ -65,7 +72,7 @@ struct LauncherView: View {
             Button(playAfterModInstall ? "Install & Play" : "Install") { model.installMod(andPlay: playAfterModInstall) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This optional community mod needs up to 8 GB of space. Its data downloads come from GenLauncher’s HTTP mirror and are checked against pinned file hashes. Mod gameplay support is experimental. Your regular game stays separate.")
+            Text(model.selectedModInfo?.native == true ? "This native mod uses an isolated, pinned OpenRA runtime. Required game data comes only from your owned Steam copy. Tiberian Dawn HD requires Remastered Collection and up to 40 GB; Combined Arms requires C&C and Red Alert. Steam sign-in opens locally if those assets are missing. Gameplay remains experimental." : "This optional community mod needs up to 8 GB. Data comes from GenLauncher’s mirror and is checked against pinned hashes. Gameplay remains experimental; your regular game stays separate.")
         }
     }
 
@@ -74,7 +81,7 @@ struct LauncherView: View {
             HStack(spacing: 12) {
                 Image(systemName: "shield.lefthalf.filled").font(.system(size: 28)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("COMMAND & CONQUER").font(.system(size: 23, weight: .black)).tracking(4)
+                    Text(ProductInfo.shared.name.uppercased()).font(.system(size: 23, weight: .black)).tracking(4)
                     Text("NATIVE MAC COMMAND CENTER").font(.system(size: 9, weight: .semibold)).tracking(2).foregroundStyle(CommandTheme.muted)
                 }
             }
@@ -123,7 +130,7 @@ struct LauncherView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 10) {
                     ForEach(GameInfo.catalog) { game in
-                        Button { model.selectedGame = game.id } label: {
+                        Button { model.selectedGame = game.id; model.selectProfile(game.id) } label: {
                             VStack(spacing: 4) {
                                 GameLogo(game: game)
                                 Text(game.title).font(.system(size: 11, weight: .bold))
@@ -136,8 +143,12 @@ struct LauncherView: View {
                     }
                 }.padding(1)
             }
-            Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
+            Link("Bugs & feature requests", destination: ProductInfo.shared.issuesURL)
                 .font(.system(size: 11)).accessibilityIdentifier("github-issues")
+            Link("Request a mod", destination: ProductInfo.shared.modRequestURL(game: model.game.title))
+                .font(.system(size: 11)).accessibilityIdentifier("request-mod")
+            Button("Why macOS warns") { showDistribution = true }.buttonStyle(.plain).font(.system(size: 11))
+                .foregroundStyle(CommandTheme.muted)
             Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
                 Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
                     .font(.system(size: 14, weight: .bold))
@@ -251,11 +262,17 @@ struct LauncherView: View {
                     }.pickerStyle(.menu).frame(width: 200)
                 }
                 Spacer()
+                Button("Online setup") { showOnline = true }.buttonStyle(.plain)
                 Button("Set up another game") { step = 0 }.buttonStyle(.plain).foregroundStyle(CommandTheme.muted)
             }.font(.system(size: 12)).disabled(model.gameRunning || model.busy)
-            if model.selectedGame == "vanilla" { modLibrary }
+            if !model.availableMods.isEmpty { modLibrary }
             Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : (model.game.isClassic ? "OpenRA uses its own graphics settings. Windowed mode starts at 1280×720; fullscreen follows your desktop." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match."))
                 .font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Missing your favourite mod?").font(.system(size: 13, weight: .semibold))
+                Text("Suggest it with its official page. We’ll check native engine compatibility and asset requirements.").font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
+                Link("Request a mod on GitHub", destination: ProductInfo.shared.modRequestURL(game: model.game.title)).font(.system(size: 12))
+            }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
         }
     }
 
@@ -268,21 +285,21 @@ struct LauncherView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    Button { model.selectedMod = "vanilla" } label: {
+                    Button { model.selectProfile(model.selectedGame) } label: {
                         VStack(alignment: .leading, spacing: 0) {
                             ZStack {
                                 CommandTheme.panel
                                 GameLogo(game: model.game, width: 140, height: 100, fit: true)
                             }.frame(width: 140, height: 100)
                             VStack(alignment: .leading, spacing: 5) {
-                                Text("Zero Hour").font(.system(size: 12, weight: .bold)).frame(height: 30, alignment: .topLeading)
+                                Text(model.game.title).font(.system(size: 12, weight: .bold)).frame(height: 30, alignment: .topLeading)
                                 Text("ORIGINAL GAME").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(accent)
                             }.padding(12).frame(width: 140, alignment: .leading)
                         }.background(CommandTheme.panel).clipShape(RoundedRectangle(cornerRadius: 4))
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == "vanilla" ? accent : CommandTheme.line, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == model.selectedGame ? accent : CommandTheme.line, lineWidth: 1))
                     }.buttonStyle(.plain).accessibilityIdentifier("mod-vanilla")
-                    ForEach(model.catalog) { mod in
-                        Button { model.selectedMod = mod.id } label: {
+                    ForEach(model.availableMods) { mod in
+                        Button { model.selectProfile(mod.id) } label: {
                             VStack(alignment: .leading, spacing: 0) {
                                 ModArtwork(mod: mod).frame(width: 140, height: 100).clipped()
                                 VStack(alignment: .leading, spacing: 5) {
@@ -334,13 +351,16 @@ struct LauncherView: View {
     private var footer: some View {
         HStack {
             Menu("Help") {
+                Button("Online setup") { showOnline = true }
                 Button("Repair game engine") { model.prepare() }
                 Button("Check Steam files") { step = 2 }
                 Button(SteamGuideCopy.shared.showLabel) { showSteamGuide() }
                 Button("Repair selected mod") { playAfterModInstall = false; model.showModConsent = true }.disabled(model.selectedModInfo == nil || model.selectedGame == "base")
                 Button("Open installation folder") { NSWorkspace.shared.open(model.root) }
                 Link("Game ownership on Steam", destination: steamStore)
-                Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
+                Link("Request a mod", destination: ProductInfo.shared.modRequestURL(game: model.game.title))
+                Button("Why macOS warns") { showDistribution = true }
+                Link("Bugs & feature requests", destination: ProductInfo.shared.issuesURL)
             }.menuStyle(.borderlessButton).frame(width: 70).disabled(model.busy || model.gameRunning)
             Button(showDetails ? "Hide details" : "Details") { showDetails.toggle() }.buttonStyle(.plain)
             Spacer()
@@ -360,7 +380,10 @@ struct LauncherView: View {
         }
     }
 
-    private var steamStore: URL { URL(string: "https://store.steampowered.com/app/\(model.game.steamID)/")! }
+    private var steamStore: URL {
+        let id = model.steamTarget == "tdhd" ? "1213210" : (model.steamTarget == "combined-arms" ? "2229840" : model.game.steamID)
+        return URL(string: "https://store.steampowered.com/app/\(id)/")!
+    }
 
     private func advanceAfterPreparation() {
         if model.canEnterStep(3) { step = 3 }
