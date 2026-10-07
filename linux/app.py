@@ -78,28 +78,31 @@ class LauncherWindow(QMainWindow):
         library.setSpacing(12)
         library.addWidget(QLabel("YOUR COLLECTION"))
         self.game_buttons = {}
+        self.game_logo_labels = {}
         for game in self.state.games:
             button = QPushButton()
-            button.setMinimumHeight(84)
-            row = QHBoxLayout(button)
-            row.setContentsMargins(10, 10, 10, 10)
-            badge = QLabel(game["emblem"])
-            badge.setFixedWidth(38)
-            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            badge.setStyleSheet(f'color:#{game["accent"]}; font-size:17px; font-weight:bold;')
-            badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-            row.addWidget(badge)
-            caption = QLabel(game["title"] + "\n" + game["engine"])
+            button.setMinimumHeight(116)
+            row = QVBoxLayout(button)
+            row.setContentsMargins(10, 8, 10, 8)
+            row.setSpacing(3)
+            logo = QLabel(game["emblem"])
+            logo.setFixedSize(172, 70)
+            logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            logo.setStyleSheet(f'color:#{game["accent"]}; font-size:28px; font-weight:bold;')
+            logo.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            logo.setAccessibleName(game["title"])
+            self.game_logo_labels[game["id"]] = logo
+            row.addWidget(logo, 0, Qt.AlignmentFlag.AlignCenter)
+            caption = QLabel(game["title"] + " · " + game["engine"])
+            caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
             caption.setWordWrap(True)
+            caption.setStyleSheet("font-size:10px;")
             caption.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-            row.addWidget(caption, 1)
+            row.addWidget(caption)
             button.clicked.connect(lambda checked=False, id=game["id"]: self.choose_game(id))
             self.game_buttons[game["id"]] = button
             library.addWidget(button)
         library.addStretch()
-        future = QLabel("More games will join as their engine support is ready.")
-        future.setWordWrap(True)
-        library.addWidget(future)
         issues_button = QPushButton("Bugs && feature requests")
         issues_button.setObjectName("github-issues")
         issues_button.clicked.connect(lambda: self.open_url("https://github.com/RickWoltheus/generalsx-mac-launcher/issues"))
@@ -179,6 +182,8 @@ class LauncherWindow(QMainWindow):
             self.timer.start(2500)
             QTimer.singleShot(0, self.read_status)
         self.refresh_view()
+        if load_media:
+            self.fetch_game_logos()
 
     def page(self):
         body = QWidget()
@@ -552,6 +557,19 @@ class LauncherWindow(QMainWindow):
         process.finished.connect(graphics_done)
         process.start("/bin/bash", [str(self.backend), "graphics", profile if profile in ("base", "cnc", "ra") else "vanilla", quality])
         self.refresh_view()
+
+    def fetch_game_logos(self):
+        for game in self.state.games:
+            request = QNetworkRequest(QUrl(f'https://cdn.akamai.steamstatic.com/steam/apps/{game["steam_id"]}/logo.png'))
+            request.setTransferTimeout(15000)
+            reply = self.network.get(request)
+            def finished(response=reply, id=game["id"]):
+                data = bytes(response.readAll())
+                pixmap = QPixmap()
+                if len(data) <= 2_000_000 and pixmap.loadFromData(data):
+                    self.game_logo_labels[id].setPixmap(pixmap.scaled(172, 70, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+                response.deleteLater()
+            reply.finished.connect(finished)
 
     def fetch_image(self, mod):
         reply = self.network.get(QNetworkRequest(QUrl(mod["image"])))

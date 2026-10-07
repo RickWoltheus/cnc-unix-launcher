@@ -94,3 +94,17 @@ struct ModArtwork: View {
         }
     }
 }
+
+struct GameLogo: View {
+    let game: GameInfo
+    var body: some View {
+        AsyncImage(url: game.logoURL) { phase in
+            if let image = phase.image {
+                image.resizable().scaledToFill()
+            } else {
+                Text(game.emblem).font(.system(size: 28, weight: .black)).foregroundStyle(game.color)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }.frame(width: 166, height: 70).clipped().accessibilityLabel(game.title)
+    }
+}

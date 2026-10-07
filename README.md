@@ -94,6 +94,10 @@ GenLauncher catalog. Images are fetched at runtime, with placeholders offline;
 they are not bundled in this repository or release. Each mod links to its page
 for artwork credit and more information.
 
+Sidebar game logos load from the selected game's official Steam artwork CDN.
+The logos belong to their respective owners, are not bundled in the release,
+and fall back to text emblems when artwork is unavailable.
+
 ## Classic games
 
 C&C and Red Alert use owned English Ultimate Collection assets through OpenRA.

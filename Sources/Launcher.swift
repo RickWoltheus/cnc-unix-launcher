@@ -118,28 +118,22 @@ struct LauncherView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("YOUR COLLECTION").font(.system(size: 10, weight: .bold)).tracking(2).foregroundStyle(CommandTheme.muted)
                 .padding(.bottom, 10)
-            ForEach(GameInfo.catalog) { game in
-                Button { model.selectedGame = game.id } label: {
-                    HStack(spacing: 12) {
-                        Text(game.emblem).font(.system(size: 17, weight: .black))
-                            .frame(width: 46, height: 46)
-                            .foregroundStyle(game.color)
-                            .background(game.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(game.title).font(.system(size: 13, weight: .bold))
-                            Text(game.engine).font(.system(size: 10)).foregroundStyle(CommandTheme.muted)
-                        }
-                        Spacer(minLength: 0)
-                    }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(model.selectedGame == game.id ? game.color.opacity(0.10) : Color.clear)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(model.selectedGame == game.id ? game.color : .clear, lineWidth: 1))
-                }.buttonStyle(.plain).disabled(model.busy || model.gameRunning || model.externalInstallRunning)
-                    .accessibilityIdentifier("game-\(game.id)")
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 10) {
+                    ForEach(GameInfo.catalog) { game in
+                        Button { model.selectedGame = game.id } label: {
+                            VStack(spacing: 4) {
+                                GameLogo(game: game)
+                                Text(game.title).font(.system(size: 11, weight: .bold))
+                                Text(game.engine).font(.system(size: 9)).foregroundStyle(CommandTheme.muted)
+                            }.padding(10).frame(maxWidth: .infinity)
+                                .background(model.selectedGame == game.id ? game.color.opacity(0.10) : Color.clear)
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(model.selectedGame == game.id ? game.color : .clear, lineWidth: 1))
+                        }.buttonStyle(.plain).disabled(model.busy || model.gameRunning || model.externalInstallRunning)
+                            .accessibilityIdentifier("game-\(game.id)")
+                    }
+                }.padding(1)
             }
-            Spacer()
-            Text("NATIVE ENGINES").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(accent)
-            Text("More games will join the collection as their engine support is ready.")
-                .font(.system(size: 11)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
             Link("Bugs & feature requests", destination: URL(string: "https://github.com/RickWoltheus/generalsx-mac-launcher/issues")!)
                 .font(.system(size: 11)).accessibilityIdentifier("github-issues")
             Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {

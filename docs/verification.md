@@ -169,3 +169,13 @@ These checks validate integration mechanics, not original campaign completeness,
 owned Steam data compatibility or GPU gameplay. C&C/Red Alert interactive testing
 remains pending explicit authorization. OpenRA has modernized gameplay and its
 own multiplayer protocol; these integrations are not original Windows clients.
+
+## Sidebar logos — 2026-10-07
+
+Both frontends now load transparent game logos from Steam's artwork CDN, keyed
+by the shared game catalog's Steam IDs. Text emblems remain available offline.
+The artwork stays outside the repository and release packages. The Linux sidebar
+was inspected offscreen using all four fetched logos; its nine existing UI/state
+checks, packaged self-check and virtual X11 launcher smoke test passed. The Mac
+app rebuilt and its ad-hoc signature verified. Only the launcher was reopened;
+no game or Steam sign-in was started.
