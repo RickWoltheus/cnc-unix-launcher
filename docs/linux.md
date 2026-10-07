@@ -89,3 +89,14 @@ are bundled in the launcher release.
 Container/offscreen checks do not prove a real desktop, terminal handoff, Flatpak
 sandbox operation or GPU rendering. Those require a Linux desktop VM/machine.
 Real game launches require the user's explicit request.
+
+## Experimental original Windows games
+
+Red Alert 2, Yuri’s Revenge and Tiberian Sun / Firestorm use pinned Wine 11.0
+WoW64 and cnc-ddraw, not a native engine or Steam Proton. Prepare Linux opens
+a local terminal to install Wine’s system libraries when needed; on Ubuntu/Debian
+it installs the distribution Wine package for dependencies, then uses the separately
+pinned runtime for games. Other distributions require equivalent packages.
+
+See [compatibility setup](compatibility-games.md). CnCNet is not integrated.
+No Linux gameplay or GPU compatibility has been verified for these entries.

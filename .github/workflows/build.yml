@@ -8,6 +8,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Check community credits and donation documentation
+        run: python3 scripts/community-docs.py --check
       - name: Check backend behavior
         run: bash tests/backend.sh
       - name: Check profile selection and recovery
@@ -39,6 +41,8 @@ jobs:
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/classic-linux.sh
       - name: Check native mods with synthetic assets and online settings
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/native-linux.sh
+      - name: Check Wine runtime with synthetic data and dummy launches
+        run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/compatibility-network.sh
       - name: Build standalone Linux archive
         run: docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash linux/build.sh
       - name: Validate packaged resources and virtual desktop window

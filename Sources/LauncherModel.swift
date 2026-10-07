@@ -86,9 +86,9 @@ final class LauncherModel: ObservableObject {
     var availableMods: [ModInfo] { catalog.filter { $0.games.contains(selectedGame) } }
     var steamProfile: String { steamTarget ?? selectedGame }
     var steamTitle: String { catalog.first { $0.id == steamProfile }?.title ?? game.title }
-    var gameEngineReady: Bool { if let target = steamTarget { return nativeEngines.contains(target) }; return game.isClassic ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
+    var gameEngineReady: Bool { if let target = steamTarget { return nativeEngines.contains(target) }; return (game.isClassic || game.isCompatibility) ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
     var gameAssetsReady: Bool {
-        let ready = steamTarget.map { installedMods.contains($0) } ?? (game.isClassic ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets))
+        let ready = steamTarget.map { installedMods.contains($0) } ?? ((game.isClassic || game.isCompatibility) ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets))
         return ready && !steamStarting && !steamSessionRunning && !externalInstallRunning && ["idle", "complete"].contains(steamDownloadStatus)
     }
     var selectedModInfo: ModInfo? { availableMods.first { $0.id == selectedMod } }
@@ -144,8 +144,8 @@ final class LauncherModel: ObservableObject {
                 assets = states.contains("assets=ready")
                 baseEngine = states.contains("base_engine=ready")
                 baseAssets = states.contains("base_assets=ready")
-                classicEngines = Set(["cnc", "ra"].filter { states.contains("\($0)_engine=ready") })
-                classicAssets = Set(["cnc", "ra"].filter { states.contains("\($0)_assets=ready") })
+                classicEngines = Set(GameInfo.catalog.filter { $0.isClassic || $0.isCompatibility }.map(\.id).filter { states.contains("\($0)_engine=ready") })
+                classicAssets = Set(GameInfo.catalog.filter { $0.isClassic || $0.isCompatibility }.map(\.id).filter { states.contains("\($0)_assets=ready") })
                 nativeEngines = Set(catalog.filter { $0.native && states.contains("native_engine_\($0.id)=ready") }.map(\.id))
                 installedMods = Set(catalog.filter { states.contains("\($0.id)=ready") }.map(\.id))
                 steamDownloadStatus = states.first(where: { $0.hasPrefix("steam_download_\(steamProfile)=") })?.components(separatedBy: "=").last ?? "idle"
@@ -226,7 +226,7 @@ final class LauncherModel: ObservableObject {
                 for action in actions {
                     switch action {
                     case "mod", "native-mod": status = "Installing your selected mod…"
-                    case "engine": status = "Preparing the native game engine…"
+                    case "engine": status = "Preparing the game runtime…"
                     case "online-prepare": status = "Checking local online setup…"
                     default: status = "Preparing Steam sign-in…"
                     }
@@ -324,7 +324,7 @@ final class LauncherModel: ObservableObject {
         Task {
             defer { busy = false }
             do {
-                let game = ["base", "cnc", "ra"].contains(profile) || catalog.contains { $0.id == profile && $0.native } ? profile : "vanilla"
+                let game = GameInfo.catalog.contains { $0.id == profile } || catalog.contains { $0.id == profile && $0.native } ? profile : "vanilla"
                 let quality = maximumGraphics ? "maximum" : "balanced"
                 _ = try await Task.detached { try Self.run(script, arguments: ["graphics", game, quality]) }.value
                 let process = Process()

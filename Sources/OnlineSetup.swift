@@ -11,6 +11,7 @@ struct OnlineCopy: Decodable {
     let description: String
     let openra: Family
     let generals: Family
+    let compatibility: Family
     let prepareLabel: String
     let hostingLabel: String
     let resultNote: String
@@ -27,7 +28,7 @@ struct OnlineSetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             if let copy = OnlineCopy.shared {
-                let family = openra ? copy.openra : copy.generals
+                let family = model.game.isCompatibility ? copy.compatibility : openra ? copy.openra : copy.generals
                 Text(copy.title + " · " + model.activeTitle).font(.title2.bold())
                 Text(copy.description).font(.callout).fixedSize(horizontal: false, vertical: true)
                 Text(family.title).font(.headline).foregroundStyle(model.game.color)
@@ -37,7 +38,7 @@ struct OnlineSetupView: View {
                 Text(family.hosting).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 if openra { Toggle(copy.hostingLabel, isOn: $hosting).font(.callout) }
                 Button(copy.prepareLabel) { model.prepareOnline(hosting: openra && hosting) }
-                    .buttonStyle(.borderedProminent).disabled(!model.canEnterStep(3) || model.activeNeedsInstall)
+                    .buttonStyle(.borderedProminent).disabled(model.game.isCompatibility || !model.canEnterStep(3) || model.activeNeedsInstall)
                 Text(model.status).font(.caption).fixedSize(horizontal: false, vertical: true)
                 Text(copy.resultNote).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Link("Engine multiplayer instructions", destination: family.source).font(.caption)

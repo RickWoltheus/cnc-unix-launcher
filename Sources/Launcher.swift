@@ -7,6 +7,7 @@ struct LauncherView: View {
     @State private var steamGuide = SteamGuideWindow()
     @State private var showDetails = false
     @State private var showDistribution = false
+    @State private var showCommunity = false
     @State private var showOnline = false
     @State private var playAfterModInstall = false
     private var accent: Color { model.game.color }
@@ -48,6 +49,7 @@ struct LauncherView: View {
             if requested { model.requestNativeSteam = false; step = 2; showSteamGuide(); model.downloadAssets() }
         }
         .sheet(isPresented: $showDistribution) { MacDistributionView() }
+        .sheet(isPresented: $showCommunity) { CommunityView() }
         .sheet(isPresented: $showOnline) { OnlineSetupView(model: model) }
         .onChange(of: model.gameAssetsReady) { _, ready in
             if ready && model.canEnterStep(3) { step = 3 }
@@ -149,13 +151,15 @@ struct LauncherView: View {
                 .font(.system(size: 11)).accessibilityIdentifier("request-mod")
             Button("Why macOS warns") { showDistribution = true }.buttonStyle(.plain).font(.system(size: 11))
                 .foregroundStyle(CommandTheme.muted)
+            Button("Community & donations") { showCommunity = true }.buttonStyle(.plain).font(.system(size: 11))
+                .accessibilityIdentifier("community-donations")
             Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
                 Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Color.black)
                     .padding(.horizontal, 18).padding(.vertical, 12)
                     .background(accent, in: RoundedRectangle(cornerRadius: 8))
-            }.accessibilityIdentifier("support-kofi")
+            }.accessibilityIdentifier("support-kofi").help(CommunityInfo.shared?.tooltip ?? "Support the launcher and discover the community behind it.")
         }.padding(20).frame(width: 230).background(Color.black.opacity(0.25))
     }
 
@@ -166,7 +170,7 @@ struct LauncherView: View {
                 GameLogo(game: model.game, width: 200, height: 110)
                 VStack(alignment: .leading, spacing: 9) {
                     Text("POWERED BY \(model.game.engine.uppercased())").font(.system(size: 12, weight: .bold)).tracking(1.5).foregroundStyle(accent)
-                    Text(model.game.isClassic ? "A native OpenRA experience using your owned Steam assets. Rules, balance and missions can differ from the original releases." : "A native engine for your owned Steam game. No Windows VM or paid compatibility software.")
+                    Text(model.game.isCompatibility ? "Free Wine + cnc-ddraw runs the original Windows game. Experimental: campaign, graphics and Steam launch behavior still need gameplay testing. On Apple Silicon, Wine runs through Rosetta 2." : model.game.isClassic ? "A native OpenRA experience using your owned Steam assets. Rules, balance and missions can differ from the original releases." : "A native engine for your owned Steam game. No Windows VM or paid compatibility software.")
                         .font(.system(size: 14)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
                 }
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
@@ -189,7 +193,7 @@ struct LauncherView: View {
     private var prepareMac: some View {
         VStack(alignment: .leading, spacing: 22) {
             BriefingTitle(eyebrow: "Step 2", title: "We’ll handle the setup.", subtitle: "No Homebrew, Windows install or paid compatibility software needed.")
-            ReadinessRow(title: "Native game engine", detail: "A verified Apple Silicon build of \(model.game.engine).", ready: model.gameEngineReady)
+            ReadinessRow(title: model.game.isCompatibility ? "Wine compatibility runtime" : "Native game engine", detail: model.game.isCompatibility ? "Pinned Wine 11.0 + cnc-ddraw; Rosetta is checked before Steam sign-in." : "A verified Apple Silicon build of \(model.game.engine).", ready: model.gameEngineReady)
             ReadinessRow(title: "Steam downloader", detail: "Valve’s tool downloads the game you own.", ready: model.steam)
             if !model.busy {
                 Button(model.gameEngineReady && model.steam ? "CONTINUE TO STEAM →" : "PREPARE MY MAC →") {
@@ -256,7 +260,7 @@ struct LauncherView: View {
             }
             HStack(spacing: 24) {
                 Toggle("Fullscreen", isOn: $model.fullscreen).accessibilityIdentifier("fullscreen")
-                if !model.game.isClassic {
+                if model.game.usesGeneralsGraphics {
                     Picker("Graphics", selection: $model.maximumGraphics) {
                         Text("Balanced").tag(false); Text("Maximum").tag(true)
                     }.pickerStyle(.menu).frame(width: 200)
@@ -266,7 +270,7 @@ struct LauncherView: View {
                 Button("Set up another game") { step = 0 }.buttonStyle(.plain).foregroundStyle(CommandTheme.muted)
             }.font(.system(size: 12)).disabled(model.gameRunning || model.busy)
             if !model.availableMods.isEmpty { modLibrary }
-            Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : (model.game.isClassic ? "OpenRA uses its own graphics settings. Windowed mode starts at 1280×720; fullscreen follows your desktop." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match."))
+            Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : (model.game.isCompatibility ? "Experimental Wine support. Windowed mode uses 1280×720 upscaling; fullscreen uses borderless cnc-ddraw. Tiberian Sun includes Firestorm in its menu. CnCNet is not installed by this launcher yet." : model.game.isClassic ? "OpenRA uses its own graphics settings. Windowed mode starts at 1280×720; fullscreen follows your desktop." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match."))
                 .font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
             VStack(alignment: .leading, spacing: 6) {
                 Text("Missing your favourite mod?").font(.system(size: 13, weight: .semibold))

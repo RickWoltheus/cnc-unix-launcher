@@ -38,6 +38,8 @@ class LauncherState:
                 id, title, games, version, mod_id, app, source, homepage, image, summary = row
                 self.mods.append(dict(id=id, title=title, games=games.split(","), version=version, native=True, source=source,
                                       homepage=homepage, image=image, summary=summary))
+        self.community = json.loads((self.resources / "resources/community.json").read_text())
+        self.donations = json.loads((self.resources / "resources/donations.json").read_text())
         self.online = json.loads((self.resources / "resources/online.json").read_text())
 
     def update(self, text):
@@ -50,6 +52,10 @@ class LauncherState:
     @property
     def classic(self):
         return self.game["engine"] == "OpenRA"
+
+    @property
+    def compatibility(self):
+        return self.game["engine"] == "Wine"
 
     @property
     def available_mods(self):
@@ -65,7 +71,7 @@ class LauncherState:
 
     @property
     def engine_ready(self):
-        key = "native_engine_" + self.steam_target if self.steam_target else self.selected_game + "_engine" if self.classic else ("base_engine" if self.selected_game == "base" else "engine")
+        key = "native_engine_" + self.steam_target if self.steam_target else self.selected_game + "_engine" if self.classic or self.compatibility else ("base_engine" if self.selected_game == "base" else "engine")
         return self.values.get(key) == "ready"
 
     @property
@@ -78,8 +84,12 @@ class LauncherState:
 
     @property
     def assets_ready(self):
-        key = self.steam_target if self.steam_target else self.selected_game + "_assets" if self.classic else ("base_assets" if self.selected_game == "base" else "assets")
+        key = self.steam_target if self.steam_target else self.selected_game + "_assets" if self.classic or self.compatibility else ("base_assets" if self.selected_game == "base" else "assets")
         return self.values.get(key) == "ready" and not self.steam_starting and self.values.get("install") != "busy" and not self.steam_active and self.steam_status in ("idle", "complete")
+
+    @property
+    def tools_ready(self):
+        return self.values.get("dependencies") == "ready" and (not self.compatibility or self.values.get("wine_dependencies") == "ready")
 
     @property
     def facts(self):

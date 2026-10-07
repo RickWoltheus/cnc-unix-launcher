@@ -63,8 +63,8 @@ struct ModelChecks {
         precondition(RecoveryAdvice.forMessage("ERROR No subscription").title == "Steam could not find your game")
         precondition(RecoveryAdvice.forMessage("Checksum mismatch").title == "The download did not match")
         precondition(RecoveryAdvice.forMessage("VK_ERROR_INCOMPATIBLE_DRIVER").title == "The graphics runtime needs repair")
-        precondition(GameInfo.catalog.count == 4)
-        for id in ["cnc", "ra"] {
+        precondition(GameInfo.catalog.count == 7)
+        for id in ["cnc", "ra", "ra2", "yuri", "ts"] {
             model.selectedGame = id
             precondition(model.activeProfile == id)
             precondition(model.selectedModInfo == nil)
@@ -90,6 +90,8 @@ struct ModelChecks {
         precondition(model.canEnterStep(3))
         precondition(ProductInfo.shared.name == "C&C Unix Launcher")
         precondition(ProductInfo.shared.modRequestURL(game: "C&C").absoluteString.contains("template=mod-request.md"))
+        precondition(CommunityInfo.shared?.projects.contains { $0.name == "GeneralsX" } == true)
+        precondition(DonationLedger.shared != nil)
         print("Model selection and recovery checks passed. No windows, sign-in or game launches.")
     }
 }

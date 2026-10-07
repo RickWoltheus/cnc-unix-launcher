@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFrame, QHBoxL
 from state import LauncherState
 from steam_guide import SteamGuideWindow
 from online_setup import OnlineSetupWindow
+from community import CommunityWindow
 
 ROOT = Path(os.environ.get("GX_INSTALL_ROOT", str(Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))) / "generalsx-launcher")))
 RESOURCES = Path(sys._MEIPASS) / "share" if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
@@ -83,6 +84,15 @@ class LauncherWindow(QMainWindow):
         library.setContentsMargins(18, 28, 18, 20)
         library.setSpacing(12)
         library.addWidget(QLabel("YOUR COLLECTION"))
+        self.game_scroll = QScrollArea()
+        self.game_scroll.setWidgetResizable(True)
+        self.game_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        game_list = QWidget()
+        game_layout = QVBoxLayout(game_list)
+        game_layout.setContentsMargins(0, 0, 0, 0)
+        game_layout.setSpacing(12)
+        self.game_scroll.setWidget(game_list)
+        library.addWidget(self.game_scroll, 1)
         self.game_buttons = {}
         self.game_logo_labels = {}
         self.game_logo_pixmaps = {}
@@ -108,8 +118,8 @@ class LauncherWindow(QMainWindow):
             row.addWidget(caption)
             button.clicked.connect(lambda checked=False, id=game["id"]: self.choose_game(id))
             self.game_buttons[game["id"]] = button
-            library.addWidget(button)
-        library.addStretch()
+            game_layout.addWidget(button)
+        game_layout.addStretch()
         issues_button = QPushButton("Bugs && feature requests")
         issues_button.setObjectName("github-issues")
         issues_button.clicked.connect(lambda: self.open_url("https://github.com/" + self.state.product["repository"] + "/issues"))
@@ -118,8 +128,13 @@ class LauncherWindow(QMainWindow):
         request_button.setObjectName("request-mod")
         request_button.clicked.connect(self.request_mod)
         library.addWidget(request_button)
+        self.community_button = QPushButton("Community && donations")
+        self.community_button.setObjectName("community-donations")
+        self.community_button.clicked.connect(self.show_community)
+        library.addWidget(self.community_button)
         support_button = QPushButton("☕  Buy me a coffee")
         support_button.setObjectName("support-kofi")
+        support_button.setToolTip(self.state.community["tooltip"])
         support_button.clicked.connect(lambda: self.open_url("https://ko-fi.com/ricklemore"))
         library.addWidget(support_button)
         collection.addWidget(sidebar)
@@ -229,7 +244,7 @@ class LauncherWindow(QMainWindow):
 
     def make_choose(self):
         layout = self.page()
-        self.choose_title, self.choose_summary = self.title(layout, "Native collection", "", "")
+        self.choose_title, self.choose_summary = self.title(layout, "Your collection", "", "")
         self.choose_engine_panel = QFrame()
         panel = QHBoxLayout(self.choose_engine_panel)
         panel.setContentsMargins(24, 20, 24, 20)
@@ -251,7 +266,7 @@ class LauncherWindow(QMainWindow):
 
     def make_prepare(self):
         layout = self.page()
-        self.title(layout, "Step 2", "We’ll handle the setup.", "We install your selected native engine and Steam downloader. No Windows VM or paid compatibility layer.")
+        self.title(layout, "Step 2", "We’ll handle the setup.", "We install your selected engine or free Wine runtime and Steam downloader. No Windows VM or paid compatibility layer.")
         self.engine_row = QLabel("")
         self.steam_row = QLabel("")
         for row in (self.engine_row, self.steam_row):
@@ -398,7 +413,7 @@ class LauncherWindow(QMainWindow):
         self.steam_help_title.setStyleSheet(f"color:{accent}; font-weight:bold;")
         self.choose_title.setText(self.state.game["title"].upper())
         self.choose_summary.setText(self.state.game["summary"])
-        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else "Native GeneralsX using your owned Steam assets."))
+        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else "Experimental Wine + cnc-ddraw using owned Steam files. Gameplay, graphics and Steam launch validation pending." if self.state.compatibility else "Native GeneralsX using your owned Steam assets."))
         tint = QColor(accent)
         self.choose_engine_panel.setStyleSheet(f"QFrame {{ background:rgba({tint.red()},{tint.green()},{tint.blue()},20); border:1px solid {accent}; }} QLabel {{ background:transparent; border:none; }}")
         self.choose_logo.setText(self.state.game["emblem"])
@@ -428,7 +443,7 @@ class LauncherWindow(QMainWindow):
             button.setStyleSheet(f"QPushButton {{ text-align:left; font-weight:bold; color:{color}; {border} }} QLabel {{ border:none; background:transparent; color:{color}; }}")
         self.continue_button.setEnabled(self.state.can_enter(1))
         self.prepare_button.setEnabled(self.state.can_enter(1))
-        self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + "Native " + self.state.game["engine"] + " engine")
+        self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + ("Compatibility " if self.state.compatibility else "Native ") + self.state.game["engine"] + " engine")
         self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + "Valve Steam downloader and Linux support")
         self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and not self.state.steam_starting and self.state.values.get("install") != "busy")
         self.steam_help_title.setText(self.state.steam_guidance["title"])
@@ -438,11 +453,11 @@ class LauncherWindow(QMainWindow):
         self.play_button.setText("GAME RUNNING" if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
         self.play_button.setEnabled(self.state.can_enter(3))
         self.fullscreen.setEnabled(not self.state.busy and not self.state.game_running)
-        self.graphics.setEnabled(not self.state.classic and not self.state.busy and not self.state.game_running)
-        self.graphics.setVisible(not self.state.classic)
-        self.graphics_label.setVisible(not self.state.classic)
+        self.graphics.setEnabled(not (self.state.classic or self.state.compatibility) and not self.state.busy and not self.state.game_running)
+        self.graphics.setVisible(not (self.state.classic or self.state.compatibility))
+        self.graphics_label.setVisible(not (self.state.classic or self.state.compatibility))
         self.graphics.setToolTip("OpenRA uses its own in-game graphics settings." if self.state.classic else "")
-        self.play_note.setText("OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
+        self.play_note.setText("Experimental Wine support. Windowed 1280×720 upscaling; borderless fullscreen. Firestorm is available in Tiberian Sun’s menu. CnCNet is not installed yet." if self.state.compatibility else "OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
         self.mod_section.setVisible(bool(self.state.available_mods))
         for profile, button in self.profile_buttons.items():
             visible = profile == "original" or any(mod["id"] == profile for mod in self.state.available_mods)
@@ -480,7 +495,7 @@ class LauncherWindow(QMainWindow):
             if code == 0:
                 previous_ready = self.state.assets_ready
                 self.state.update(text)
-                if self.waiting_dependencies and self.state.values.get("dependencies") == "ready":
+                if self.waiting_dependencies and self.state.tools_ready:
                     self.waiting_dependencies = False
                     self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
                 if self.state.can_enter(3) and (not previous_ready or self.step == 2):
@@ -559,11 +574,15 @@ class LauncherWindow(QMainWindow):
 
     def prepare(self):
         if not self.state.can_enter(1): return
-        if self.state.values.get("dependencies") != "ready":
+        if not self.state.tools_ready:
             self.waiting_dependencies = True
-            self.open_terminal("Linux dependencies", ["linux-tools"])
+            self.open_terminal("Linux dependencies", ["linux-tools", self.state.selected_game])
         else:
             self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
+
+    def show_community(self):
+        dialog = CommunityWindow(self)
+        dialog.exec()
 
     def show_steam_guide(self):
         if self.steam_guide is None:
@@ -647,7 +666,7 @@ class LauncherWindow(QMainWindow):
             width, height = (size.width(), size.height()) if self.fullscreen.isChecked() and size else (1280, 720)
             game.start("/bin/bash", [str(self.backend), "launch", profile, "-fullscreen" if self.fullscreen.isChecked() else "-win", "-xres", str(width), "-yres", str(height)])
         process.finished.connect(graphics_done)
-        process.start("/bin/bash", [str(self.backend), "graphics", profile if profile in ("base", "cnc", "ra") or (self.state.mod and self.state.mod["native"]) else "vanilla", quality])
+        process.start("/bin/bash", [str(self.backend), "graphics", profile if profile in [game["id"] for game in self.state.games] or (self.state.mod and self.state.mod["native"]) else "vanilla", quality])
         self.refresh_view()
 
     def set_game_logo(self, id, pixmap):
@@ -739,7 +758,7 @@ def main():
         raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
     if "--self-check" in sys.argv:
         state = LauncherState(RESOURCES)
-        for name in ("backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh"):
+        for name in ("backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh"):
             subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
         if len(state.mods) != 7 or len(state.policy["steps"]) != 4:
             raise SystemExit("Packaged catalog or setup policy is incomplete.")

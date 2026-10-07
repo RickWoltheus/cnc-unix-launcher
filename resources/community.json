@@ -1,0 +1,209 @@
+{
+  "title": "Made possible by the community",
+  "mission": "This launcher is for people who just want to play, without having to understand command lines, engine builds or compatibility fixes.",
+  "credit": "Years of work by engine developers, mod teams and open-source maintainers make these games work on modern systems. C&C Unix Launcher brings their work together and guides you through setup. The engines, mods and compatibility tools belong to their creators.",
+  "tooltip": "Years of community work make this possible. I help make setup easier for everyday players. I plan to share part of the support I receive with upstream maintainers and record those donations publicly. Open Community & donations for credits and the ledger.",
+  "donationPolicy": "Support on Ko-fi helps me maintain this launcher. From time to time, I plan to donate part of that support to upstream maintainers. There is no fixed percentage or schedule; each donation will be recorded after it is made.",
+  "ledgerDetail": "This is a manually maintained record of onward donations, not a live Ko-fi balance. The bundled ledger reflects this release; the public ledger may be newer.",
+  "emptyLedger": "No onward donations have been recorded yet.",
+  "projects": [
+    {
+      "name": "GeneralsX",
+      "role": "fbraz3 and contributors — native Generals and Zero Hour engines",
+      "url": "https://github.com/fbraz3/GeneralsX",
+      "contributorsURL": "https://github.com/fbraz3/GeneralsX/graphs/contributors"
+    },
+    {
+      "name": "TheSuperHackers / GeneralsGameCode",
+      "role": "Upstream engine preservation and modernization",
+      "url": "https://github.com/TheSuperHackers/GeneralsGameCode",
+      "contributorsURL": "https://github.com/TheSuperHackers/GeneralsGameCode/graphs/contributors"
+    },
+    {
+      "name": "Fighter19 & feliwir",
+      "role": "Early SDL3, DXVK and OpenAL work credited by GeneralsX",
+      "url": "https://github.com/Fighter19",
+      "contributorsURL": "https://github.com/feliwir"
+    },
+    {
+      "name": "GeneralsOnline / NGMP",
+      "role": "GeneralsOnline team — multiplayer protocol, client and services integrated by GeneralsX",
+      "url": "https://github.com/GeneralsOnlineDevelopmentTeam/GameClient",
+      "contributorsURL": "https://github.com/GeneralsOnlineDevelopmentTeam/GameClient/graphs/contributors"
+    },
+    {
+      "name": "OpenRA",
+      "role": "Native C&C and Red Alert engines and Steam content import",
+      "url": "https://github.com/OpenRA/OpenRA",
+      "contributorsURL": "https://github.com/OpenRA/OpenRA/graphs/contributors"
+    },
+    {
+      "name": "Combined Arms",
+      "role": "Inq8 and contributors — OpenRA overhaul",
+      "url": "https://github.com/Inq8/CAmod",
+      "contributorsURL": "https://github.com/Inq8/CAmod/graphs/contributors"
+    },
+    {
+      "name": "Tiberian Dawn HD",
+      "role": "OpenRA contributors — Remastered artwork integration",
+      "url": "https://github.com/OpenRA/TiberianDawnHD",
+      "contributorsURL": "https://github.com/OpenRA/TiberianDawnHD/graphs/contributors"
+    },
+    {
+      "name": "Wine",
+      "role": "WineHQ contributors — Windows compatibility runtime",
+      "url": "https://www.winehq.org/",
+      "contributorsURL": "https://gitlab.winehq.org/wine/wine/-/blob/master/AUTHORS"
+    },
+    {
+      "name": "Gcenx / macOS Wine builds",
+      "role": "macOS Wine runtime packaging",
+      "url": "https://github.com/Gcenx/macOS_Wine_builds",
+      "contributorsURL": "https://github.com/Gcenx/macOS_Wine_builds/graphs/contributors"
+    },
+    {
+      "name": "Kron4ek / Wine-Builds",
+      "role": "Linux Wine WoW64 runtime packaging",
+      "url": "https://github.com/Kron4ek/Wine-Builds",
+      "contributorsURL": "https://github.com/Kron4ek/Wine-Builds/graphs/contributors"
+    },
+    {
+      "name": "cnc-ddraw",
+      "role": "FunkyFr3sh and contributors — classic DirectDraw compatibility",
+      "url": "https://github.com/FunkyFr3sh/cnc-ddraw",
+      "contributorsURL": "https://github.com/FunkyFr3sh/cnc-ddraw/graphs/contributors"
+    },
+    {
+      "name": "GenLauncher mod catalog",
+      "role": "p0ls3r and contributors — curated mod source information",
+      "url": "https://github.com/p0ls3r/GenLauncherModsData",
+      "contributorsURL": "https://github.com/p0ls3r/GenLauncherModsData/graphs/contributors"
+    },
+    {
+      "name": "Rise of the Reds",
+      "role": "Community mod creators, artists, testers and maintainers",
+      "url": "https://www.moddb.com/mods/rise-of-the-reds",
+      "contributorsURL": "https://www.moddb.com/mods/rise-of-the-reds"
+    },
+    {
+      "name": "ShockWave",
+      "role": "Community mod creators, artists, testers and maintainers",
+      "url": "https://www.moddb.com/mods/cc-shockwave",
+      "contributorsURL": "https://www.moddb.com/mods/cc-shockwave"
+    },
+    {
+      "name": "ShockWave Chaos",
+      "role": "Community mod creators, artists, testers and maintainers",
+      "url": "https://www.moddb.com/mods/cc-shockwave-chaos",
+      "contributorsURL": "https://www.moddb.com/mods/cc-shockwave-chaos"
+    },
+    {
+      "name": "Contra",
+      "role": "Community mod creators, artists, testers and maintainers",
+      "url": "https://www.moddb.com/mods/contra",
+      "contributorsURL": "https://www.moddb.com/mods/contra"
+    },
+    {
+      "name": "The End of Days",
+      "role": "Community mod creators, artists, testers and maintainers",
+      "url": "https://www.moddb.com/mods/the-end-of-days",
+      "contributorsURL": "https://www.moddb.com/mods/the-end-of-days"
+    },
+    {
+      "name": "SDL",
+      "role": "Engine windowing and input",
+      "url": "https://github.com/libsdl-org/SDL",
+      "contributorsURL": "https://github.com/libsdl-org/SDL/graphs/contributors"
+    },
+    {
+      "name": "DXVK",
+      "role": "Engine Direct3D translation",
+      "url": "https://github.com/doitsujin/dxvk",
+      "contributorsURL": "https://github.com/doitsujin/dxvk/graphs/contributors"
+    },
+    {
+      "name": "MoltenVK",
+      "role": "Vulkan on macOS",
+      "url": "https://github.com/KhronosGroup/MoltenVK",
+      "contributorsURL": "https://github.com/KhronosGroup/MoltenVK/graphs/contributors"
+    },
+    {
+      "name": "OpenAL Soft",
+      "role": "Engine audio runtime",
+      "url": "https://github.com/kcat/openal-soft",
+      "contributorsURL": "https://github.com/kcat/openal-soft/graphs/contributors"
+    },
+    {
+      "name": "miniaudio",
+      "role": "Engine audio library",
+      "url": "https://github.com/mackron/miniaudio",
+      "contributorsURL": "https://github.com/mackron/miniaudio/graphs/contributors"
+    },
+    {
+      "name": "FFmpeg",
+      "role": "Engine audio/video playback",
+      "url": "https://github.com/FFmpeg/FFmpeg",
+      "contributorsURL": "https://github.com/FFmpeg/FFmpeg/graphs/contributors"
+    },
+    {
+      "name": "Flatpak",
+      "role": "Linux Generals runtime distribution",
+      "url": "https://github.com/flatpak/flatpak",
+      "contributorsURL": "https://github.com/flatpak/flatpak/graphs/contributors"
+    },
+    {
+      "name": "Qt / PySide6 / Shiboken",
+      "role": "Linux launcher interface and Python bindings",
+      "url": "https://code.qt.io/pyside/pyside-setup.git",
+      "contributorsURL": "https://code.qt.io/pyside/pyside-setup.git"
+    },
+    {
+      "name": "Python",
+      "role": "Linux launcher runtime",
+      "url": "https://github.com/python/cpython",
+      "contributorsURL": "https://github.com/python/cpython/graphs/contributors"
+    },
+    {
+      "name": "PyInstaller",
+      "role": "Linux launcher packaging",
+      "url": "https://github.com/pyinstaller/pyinstaller",
+      "contributorsURL": "https://github.com/pyinstaller/pyinstaller/graphs/contributors"
+    },
+    {
+      "name": "Swift / SwiftUI",
+      "role": "macOS launcher language and interface",
+      "url": "https://www.swift.org/",
+      "contributorsURL": "https://www.swift.org/"
+    },
+    {
+      "name": "Valve / SteamCMD",
+      "role": "Owned Steam game downloads; proprietary Valve software",
+      "url": "https://developer.valvesoftware.com/wiki/SteamCMD",
+      "contributorsURL": "https://developer.valvesoftware.com/wiki/SteamCMD"
+    },
+    {
+      "name": "Westwood Studios / EA",
+      "role": "Original games, assets and released engine source",
+      "url": "https://www.ea.com/games/command-and-conquer",
+      "contributorsURL": "https://www.ea.com/games/command-and-conquer"
+    },
+    {
+      "name": "curl",
+      "role": "Verified runtime and package downloads",
+      "url": "https://github.com/curl/curl",
+      "contributorsURL": "https://github.com/curl/curl/graphs/contributors"
+    },
+    {
+      "name": "GNU Bash",
+      "role": "Shared installation and launch scripts",
+      "url": "https://www.gnu.org/software/bash/",
+      "contributorsURL": "https://www.gnu.org/software/bash/"
+    },
+    {
+      "name": "Apple / Rosetta 2 / macOS frameworks",
+      "role": "Apple Silicon compatibility for SteamCMD and Wine; SwiftUI/AppKit and macOS system tooling",
+      "url": "https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment",
+      "contributorsURL": "https://developer.apple.com/"
+    }
+  ]
+}

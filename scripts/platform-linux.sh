@@ -5,7 +5,8 @@ platform_supported() { [[ "$(uname -m)" == x86_64 ]]; }
 platform_requirement_message() { echo 'Linux preview requires an x86_64 Linux desktop with Vulkan support.'; }
 dependencies_ready() {
   command -v "$FLATPAK" >/dev/null && command -v curl >/dev/null && command -v file >/dev/null && command -v zip >/dev/null &&
-    [[ -e /lib/ld-linux.so.2 || -e /lib32/ld-linux.so.2 || -e /lib/i386-linux-gnu/ld-linux.so.2 ]]
+    [[ -e /lib/ld-linux.so.2 || -e /lib32/ld-linux.so.2 || -e /lib/i386-linux-gnu/ld-linux.so.2 ]] &&
+    { ! compatibility_profile "$PROFILE" || compatibility_dependencies_ready; }
 }
 steam_ready() { [[ -x "$STEAM_COMMAND" ]] && dependencies_ready; }
 app_id() { if [[ "$1" == */GeneralsX.app ]]; then echo com.fbraz3.GeneralsX; else echo com.fbraz3.GeneralsXZH; fi; }
@@ -66,7 +67,8 @@ install_linux_tools() {
     *ubuntu*|*debian*|*linuxmint*|*pop*)
       printf 'Install Flatpak, download tools and 32-bit support for Valve SteamCMD.\n'
       sudo apt-get update
-      sudo apt-get install -y flatpak curl file zip lib32gcc-s1 lib32stdc++6
+      sudo apt-get install -y flatpak curl file zip unzip xz-utils lib32gcc-s1 lib32stdc++6
+      if compatibility_profile "$PROFILE"; then sudo apt-get install -y wine wine64 libwine libgl1 libvulkan1; fi
       ;;
     *) fail 'Automatic dependency setup supports Ubuntu/Debian-based desktops. Install Flatpak, curl, file, zip and 32-bit glibc/libstdc++ through your distribution, then retry.' ;;
   esac

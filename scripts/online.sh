@@ -1,6 +1,7 @@
 #!/bin/bash
 prepare_online() {
   local family=generals support
+  if compatibility_profile "$PROFILE"; then fail "CnCNet installation and online setup are not supported for Wine profiles yet. Campaign/skirmish support is experimental."; fi
   if native_profile "$PROFILE"; then
     native_ready "$PROFILE" || fail 'Install and validate the selected native mod first.'
     support="$NATIVE_SUPPORT"; family=openra

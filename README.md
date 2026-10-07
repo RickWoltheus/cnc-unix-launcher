@@ -1,13 +1,22 @@
 # C&C Unix Launcher
 
-Native macOS and Linux launchers for Command & Conquer, Red Alert, Generals and
-Zero Hour. They install OpenRA or GeneralsX, download your owned files through
-Steam, and install five curated Zero Hour mods. A game sidebar changes the
+macOS and Linux launchers for Command & Conquer, Red Alert, Generals and
+Zero Hour, plus experimental Wine support for Red Alert 2, Yuri’s Revenge and
+Tiberian Sun / Firestorm. They install OpenRA, GeneralsX or free Wine + cnc-ddraw,
+download your owned files through Steam, and install curated community mods. A game sidebar changes the
 theme and setup state for the selected title. macOS uses SwiftUI; Linux has a separate Qt/PySide6 interface
 with the same guided flow.
 
-Enjoy the launcher? [Support its development on Ko-fi](https://ko-fi.com/ricklemore).
-Support is optional; the launcher stays free and open source.
+This project is for people who just want to play without sorting out engine builds,
+command lines or compatibility fixes. Years of work by engine developers, mod
+teams and open-source maintainers make that possible; this launcher makes their
+work easier to install and use.
+
+[Support the launcher on Ko-fi](https://ko-fi.com/ricklemore). From time to time,
+I plan to donate part of that support to upstream maintainers. There is no fixed
+percentage or schedule. The [community credits and donation ledger](docs/community.md)
+link the projects and their contributors and record onward donations after they
+are made. Support is optional; the launcher stays free and open source.
 
 **Development preview. Headless installer checks pass; full gameplay and fresh
 Steam sign-in testing remain pending.** The app builds for ARM64 and its ad-hoc signature
@@ -25,7 +34,8 @@ See [verification.md](docs/verification.md) for the evidence and remaining check
   the local SteamCMD Terminal window.
 
 End users do not need Homebrew, Xcode, a compiler, CrossOver, or a VM. SteamCMD
-requires Apple's free Rosetta; the game engine runs natively as ARM64.
+requires Apple's free Rosetta. OpenRA and GeneralsX run natively as ARM64;
+Wine games also use Rosetta and are not native ports.
 
 **Linux preview:** x86_64 Ubuntu 24.04+ / Debian 12+ desktops with Vulkan-capable drivers
 and glibc 2.36 or newer. Intel Macs, macOS 14 and ARM Linux are not supported by these packages.
@@ -51,7 +61,9 @@ When a verified release is available:
 
 4. Choose a game in the sidebar and click **Continue**. C&C and Red Alert use
    OpenRA with modernized gameplay; Generals and Zero Hour use GeneralsX.
-5. Click **Prepare my Mac**. The launcher installs the native engine and Steam downloader.
+   Red Alert 2, Yuri’s Revenge and Tiberian Sun / Firestorm use experimental Wine
+   compatibility profiles; see [their setup and limitations](docs/compatibility-games.md).
+5. Click **Prepare my Mac**. The launcher installs the selected engine or Wine runtime and Steam downloader.
 6. Click **Sign in to Steam**. A separate **Steam setup guide** opens beside
    Terminal and follows the password, Steam Guard, download and validation steps.
    Enter credentials only in Valve’s local console. The guide does not store
@@ -282,16 +294,13 @@ resources are shared; platform adapters contain the OS-specific commands.
 
 ## Credits and license
 
-- [GeneralsX](https://github.com/fbraz3/GeneralsX) provides the Generals engines.
-- [OpenRA](https://www.openra.net/) provides the native C&C and Red Alert engines.
-  Its Steam import mappings retain GPL-3.0-or-later attribution in `manifests/`.
-- [Valve SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) downloads
-  owned game files.
-- [SWR Productions / Rise of the Reds](https://www.moddb.com/mods/rise-of-the-reds)
-  provides the mod.
-- [GenLauncher catalog](https://github.com/p0ls3r/GenLauncherModsData) provides
-  the mod's download source.
+See the [community credits and donation ledger](docs/community.md) for the engine,
+mod, compatibility and tooling projects, their contributor/team pages, the
+launcher’s contributors and manually recorded onward donations. The same credits
+and ledger are available from **Community & donations** in both launchers; the
+coffee button’s tooltip explains their work and this launcher’s role.
 
-This launcher's original code is MIT-licensed. Downloaded software and data
-retain their respective licenses. This is a community project, not an official
-EA, Valve, SWR Productions, or GeneralsX product.
+This launcher's original code is MIT-licensed. Downloaded software and game data
+retain their respective licenses. This is an independent community launcher,
+not an official EA, Valve, engine or mod-team product. No upstream maintainer’s
+endorsement is implied.

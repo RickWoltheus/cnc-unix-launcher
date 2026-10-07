@@ -12,6 +12,8 @@ struct GameInfo: Identifiable {
     let summary: String
 
     var logoURL: URL { URL(string: "https://cdn.akamai.steamstatic.com/steam/apps/\(steamID)/logo.png")! }
+    var isCompatibility: Bool { engine == "Wine" }
+    var usesGeneralsGraphics: Bool { engine == "GeneralsX" }
     var isClassic: Bool { engine == "OpenRA" }
     var color: Color {
         let value = UInt32(hex, radix: 16) ?? 0xEFAD40

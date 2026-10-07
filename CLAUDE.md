@@ -6,6 +6,14 @@ validation, selected-profile behavior and update handling. When changing user
 behavior, update both frontends and their tests in the same change. If a platform
 cannot support a behavior, document the exception in `docs/linux.md`.
 
+Keep community credits and funding copy in `resources/community.json` and the
+manually maintained onward-donation ledger in `resources/donations.json`. Add
+credits when introducing a runtime or mod, linking its contributor/team page.
+Never invent donations, receipts, totals or fixed sharing percentages. Regenerate
+`docs/community.md` with `scripts/community-docs.py --write` after reviewing the
+preview; `--check` verifies it. Bundled UI records are dated release snapshots;
+the public-document link provides newer records.
+
 Keep installation and repair behavior in `scripts/backend.sh`; OS-specific
 commands belong in `scripts/platform-macos.sh` or `scripts/platform-linux.sh`.
 Read branding and release names from `manifests/product.tsv`. Preserve legacy
@@ -16,6 +24,12 @@ discovery is explicit opt-in and no account/firewall/router action is automatic.
 Read game metadata/themes from `manifests/games.tsv`. Keep OpenRA import and
 launch behavior in `scripts/classic.sh`; its Steam asset mappings and required
 files come from the pinned upstream release, with attribution in manifests.
+Wine profiles use `scripts/compatibility.sh` and pinned packages in manifests.
+Keep original Steam downloads separate from per-profile working copies and Wine
+prefixes. These profiles stay experimental until authorized gameplay checks pass;
+CnCNet preparation is disabled until implemented. Do not replace owned executables
+with downloaded EA binaries. Runtime installation must not initialize a prefix or
+open Wine configuration windows. Dummy launches skip Wine entirely.
 Never use OpenRA content-download mirrors as a fallback for Steam ownership.
 Keep Steam credentials in the separate local console. Both UIs must provide a
 modeless guide from shared Steam copy/stages; status updates must not steal typing

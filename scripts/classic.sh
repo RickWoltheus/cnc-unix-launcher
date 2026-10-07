@@ -16,15 +16,13 @@ classic_engine_ready() {
     [[ -x "$location/OpenRA" && -x "$location/OpenRA.Utility" && -s "$location/libhostfxr.so" && -s "$location/mods/$1/mod.yaml" ]]
   fi
 }
-classic_find() { find "$1" -maxdepth 1 -type f -iname "$2" -print | head -n 1; }
 classic_raw_ready() {
   local folder="$1" id="$2" appid=2229830 filename
   [[ "$id" != ra ]] || appid=2229840
-  [[ -f "$folder/steamapps/appmanifest_$appid.acf" ]] || return 1
-  [[ "$(awk '$1 == "\"StateFlags\"" {gsub(/"/, "", $2); print $2}' "$folder/steamapps/appmanifest_$appid.acf")" == 4 ]] || return 1
+  steam_manifest_ready "$folder" "$appid" || return 1
   local files='conquer.mix desert.mix general.mix sounds.mix temperat.mix winter.mix speech.mix tempicnh.mix transit.mix'
   [[ "$id" != ra ]] || files='redalert.mix main1.mix main2.mix main3.mix main4.mix expand2.mix hires1.mix lores1.mix'
-  for filename in $files; do [[ -s "$(classic_find "$folder" "$filename")" ]] || return 1; done
+  for filename in $files; do [[ -s "$(find_game_file "$folder" "$filename")" ]] || return 1; done
 }
 classic_content_ready() {
   local id="$1" file
@@ -107,13 +105,13 @@ classic_import() {
     if [[ "$op" == delete ]]; then rm -f "$WORK/content/$src"; continue; fi
     mkdir -p "$(dirname "$WORK/content/$dest")"
     if [[ "$op" == copy ]]; then
-      sourcefile="$(classic_find "$GAME" "$src")"
+      sourcefile="$(find_game_file "$GAME" "$src")"
       [[ -n "$sourcefile" ]] || { echo "Optional content absent: $src"; continue; }
       copy_file "$sourcefile" "$WORK/content/$dest"
       continue
     fi
     if [[ "$archive" == @content/* ]]; then path="$WORK/content/${archive#@content/}"
-    else path="$(classic_find "$GAME" "$archive")"; fi
+    else path="$(find_game_file "$GAME" "$archive")"; fi
     [[ -s "$path" ]] || { echo "Optional content absent: $archive"; continue; }
     if [[ "$path" != "$previous" ]]; then
       group=$((group+1)); previous="$path"
@@ -131,7 +129,7 @@ classic_import() {
   done < "$RESOURCES/manifests/openra-$id-import.tsv"
   if [[ "$id" == ra ]]; then
     classic_raw_ready "$ROOT/TiberianDawn" cnc || fail 'Red Alert also needs your complete C&C Steam installation. Retry the Steam download.'
-    sourcefile="$(classic_find "$ROOT/TiberianDawn" DESERT.MIX)"
+    sourcefile="$(find_game_file "$ROOT/TiberianDawn" DESERT.MIX)"
     [[ -s "$sourcefile" ]] || fail 'Red Alert needs the C&C desert tileset. Download Command & Conquer through Steam as well.'
     mkdir -p "$WORK/content/ra/v2/cnc"; copy_file "$sourcefile" "$WORK/content/ra/v2/cnc/desert.mix"
   fi

@@ -234,3 +234,45 @@ Mac funding copy explains the actual **€0 project budget** and lack of
 Developer ID signing/notarization. It links Apple's published US$99 annual
 membership/local pricing and graphical first-launch instructions. No membership
 purchase, enrollment or certificate creation was attempted.
+
+## Experimental Wine profiles and community funding — 2026-10-07
+
+Added Red Alert 2, Yuri’s Revenge and Tiberian Sun / Firestorm entries to both
+frontends. These use Wine, not native engines. Actual pinned Wine 11.0 packages
+for macOS and Linux and cnc-ddraw 7.1.0.0 were installed into disposable roots.
+The real Wine binaries returned `wine-11.0`; no prefix was initialized and no
+Windows game executable was run.
+
+`tests/compatibility.sh` passed on both platforms with synthetic asset files,
+fake Steam and `GX_LAUNCH_WRAPPER`: Steam IDs/Windows platform arguments,
+per-game gates, working-folder/prefix isolation, windowed/fullscreen INI merging,
+INI/SAV preservation after a simulated Steam manifest update, damaged executable
+rejection and blocking installation during a tracked Wine launch. This checks
+integration mechanics, not the contents of actual Steam depots, GPU rendering,
+audio, original campaign behavior, Firestorm selection or save/load compatibility.
+CnCNet preparation is explicitly disabled for Wine profiles.
+
+The shared case-insensitive asset lookup and Steam manifest readiness helpers
+now serve Generals, OpenRA, native mods and Wine. Existing backend/status/model
+checks passed. The actual OpenRA/native-mod utilities again passed synthetic
+archive import, corruption and progress-preservation checks with dummy launches.
+
+Community credits and funding copy are shared JSON resources. Both frontends
+show a coffee-button tooltip and community/donation window. The manual onward-
+donation ledger starts empty; no transfer, receipt, incoming balance or percentage
+was fabricated. Documentation generation checks credit coverage for every
+catalogued mod, ledger entries and that the public document matches the resources.
+The UI links each project’s contributor/team page rather than claiming an
+exhaustive hand-maintained list of individual upstream authors.
+
+Fifteen Linux state/offscreen widget checks passed, including a populated
+**in-memory fixture** donation display. No fixture donation was written to the
+actual ledger. The expanded sidebar scrolls within the 1200×790 window.
+Mac compiled and decoded the shared credits/ledger in model checks; its ad-hoc
+signature and metadata passed. Linux packaging, self-check and virtual X11
+launcher/Steam-guide checks passed. The guide used a focused synthetic console.
+No real Steam sign-in, game, multiplayer connection or donation occurred.
+
+Both archives are local development artifacts. Public repository/release
+publication remains pending; the public-document links become reachable when
+that repository is published. Existing user installations/settings were untouched.

@@ -10,7 +10,8 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "linux"))
 from state import LauncherState
 from app import LauncherWindow
-from PySide6.QtWidgets import QApplication, QLineEdit
+from community import CommunityWindow
+from PySide6.QtWidgets import QApplication, QLineEdit, QPushButton, QLabel
 from PySide6.QtCore import Qt
 
 
@@ -37,7 +38,7 @@ class StateChecks(unittest.TestCase):
         self.assertFalse(self.state.can_enter(3))
 
     def test_classic_game_readiness_is_independent(self):
-        for game in ("cnc", "ra"):
+        for game in ("cnc", "ra", "ra2", "yuri", "ts"):
             self.state.selected_game = game
             self.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=idle")
             self.assertEqual(self.state.profile, game)
@@ -48,6 +49,13 @@ class StateChecks(unittest.TestCase):
             self.assertFalse(self.state.can_enter(3))
             self.state.values[game + "_assets"] = "ready"
             self.assertTrue(self.state.can_enter(3))
+
+    def test_wine_dependency_gate(self):
+        self.state.selected_game = "ra2"
+        self.state.values["dependencies"] = "ready"
+        self.assertFalse(self.state.tools_ready)
+        self.state.values["wine_dependencies"] = "ready"
+        self.assertTrue(self.state.tools_ready)
 
     def test_native_mod_has_its_own_asset_gate(self):
         self.state.selected_game = "cnc"
@@ -134,6 +142,19 @@ class WidgetChecks(unittest.TestCase):
         self.assertEqual(calls, ["rotr", "vanilla"])
         self.window.choose_profile("shockwave")
         self.assertEqual(self.window.play_button.text(), "INSTALL & PLAY →")
+
+    def test_community_credit_and_donation_display(self):
+        button = self.window.findChild(QPushButton, "support-kofi")
+        self.assertIn("community", button.toolTip())
+        self.assertLessEqual(self.window.minimumSizeHint().height(), 790)
+        dialog = CommunityWindow(self.window)
+        self.assertIn(str(len(self.window.state.donations["donations"])) + " onward donations", dialog.count_label.text())
+        dialog.close()
+        self.window.state.donations["donations"] = [dict(id="fixture", date="2026-10-07", project="GeneralsX", amount="25.00", currency="EUR", evidenceURL=None)]
+        dialog = CommunityWindow(self.window)
+        self.assertIn("1 onward donations", dialog.count_label.text())
+        self.assertTrue(any("25.00 EUR" in label.text() for label in dialog.findChildren(QLabel)))
+        dialog.close()
 
     def test_sidebar_selects_classic_theme_and_profile(self):
         self.window.state.update("platform=ready\nsteam=ready\ncnc_engine=ready\ncnc_assets=ready\ninstall=idle")

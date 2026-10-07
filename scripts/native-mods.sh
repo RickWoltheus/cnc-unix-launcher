@@ -18,8 +18,7 @@ native_engine_ready() {
 }
 remastered_ready() {
   local folder="$ROOT/Remastered" path
-  [[ -f "$folder/steamapps/appmanifest_1213210.acf" ]] || return 1
-  [[ "$(awk '$1 == "\"StateFlags\"" {gsub(/"/, "", $2); print $2}' "$folder/steamapps/appmanifest_1213210.acf")" == 4 ]] || return 1
+  steam_manifest_ready "$folder" 1213210 || return 1
   while IFS= read -r path; do [[ -s "$folder/$path" ]] || return 1; done < "$RESOURCES/manifests/tdhd-required.txt"
 }
 native_ready() {

@@ -1,0 +1,3 @@
+macos	11.0	wine-stable-11.0_1-osx64.tar.xz	https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.0_1/wine-stable-11.0_1-osx64.tar.xz	b50dc50ec7f41d58b115a6b685d4d1315ba3c797bd3aa0f49213f2703cb82388	Wine Stable.app/Contents/Resources/wine/bin/wine
+linux	11.0	wine-11.0-amd64-wow64.tar.xz	https://github.com/Kron4ek/Wine-Builds/releases/download/11.0/wine-11.0-amd64-wow64.tar.xz	39574efa1132c3ca0d5c77dd2eddbe4a49cca0d6cc2c290ff4924493a1c40314	wine-11.0-amd64-wow64/bin/wine
+ddraw	7.1.0.0	cnc-ddraw-7.1.0.0.zip	https://github.com/FunkyFr3sh/cnc-ddraw/releases/download/v7.1.0.0/cnc-ddraw.zip	0b13ab89a64c9918189b1dadd449ef6ed3cb3b7b19cabd96d8adbd95505bb908	ddraw.dll

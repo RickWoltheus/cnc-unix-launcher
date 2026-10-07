@@ -14,7 +14,7 @@ class OnlineSetupWindow(QDialog):
         layout.setContentsMargins(26, 26, 26, 26)
         layout.setSpacing(14)
         openra = state.classic or (state.mod and state.mod["native"])
-        family = copy["openra"] if openra else copy["generals"]
+        family = copy["compatibility"] if state.compatibility else copy["openra"] if openra else copy["generals"]
         for text in [copy["description"], family["title"], *[f"{index + 1}. {step}" for index, step in enumerate(family["steps"])], family["hosting"]]:
             label = QLabel(text)
             label.setWordWrap(True)
@@ -23,7 +23,7 @@ class OnlineSetupWindow(QDialog):
         self.hosting.setVisible(bool(openra))
         layout.addWidget(self.hosting)
         button = QPushButton(copy["prepareLabel"])
-        button.setEnabled(state.can_enter(3) and not state.needs_install)
+        button.setEnabled(not state.compatibility and state.can_enter(3) and not state.needs_install)
         button.clicked.connect(self.prepare)
         layout.addWidget(button)
         note = QLabel(copy["resultNote"])
