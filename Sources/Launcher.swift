@@ -150,8 +150,7 @@ struct LauncherView: View {
         VStack(alignment: .leading, spacing: 24) {
             BriefingTitle(eyebrow: model.game.subtitle, title: model.game.title.uppercased(), subtitle: model.game.summary)
             HStack(spacing: 22) {
-                Text(model.game.emblem).font(.system(size: 48, weight: .black)).foregroundStyle(accent)
-                    .frame(width: 110, height: 110).background(accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
+                GameLogo(game: model.game, width: 200, height: 110)
                 VStack(alignment: .leading, spacing: 9) {
                     Text("POWERED BY \(model.game.engine.uppercased())").font(.system(size: 12, weight: .bold)).tracking(1.5).foregroundStyle(accent)
                     Text(model.game.isClassic ? "A native OpenRA experience using your owned Steam assets. Rules, balance and missions can differ from the original releases." : "A native engine for your owned Steam game. No Windows VM or paid compatibility software.")
@@ -270,7 +269,7 @@ struct LauncherView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             ZStack {
                                 CommandTheme.panel
-                                Image(systemName: "flame.fill").font(.system(size: 36)).foregroundStyle(accent)
+                                GameLogo(game: model.game, width: 140, height: 100, fit: true)
                             }.frame(width: 140, height: 100)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("Zero Hour").font(.system(size: 12, weight: .bold)).frame(height: 30, alignment: .topLeading)

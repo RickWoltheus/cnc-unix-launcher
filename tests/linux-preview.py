@@ -5,7 +5,6 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root / "linux"))
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from app import LauncherWindow
 application = QApplication([])
@@ -15,7 +14,7 @@ if os.environ.get("GX_LOGO_PREVIEW_ROOT"):
         pixmap = QPixmap(str(Path(os.environ["GX_LOGO_PREVIEW_ROOT"]) / (game["id"] + "-logo.png")))
         if pixmap.isNull():
             raise SystemExit("Missing preview artwork for " + game["id"])
-        window.game_logo_labels[game["id"]].setPixmap(pixmap.scaled(172, 70, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+        window.set_game_logo(game["id"], pixmap)
 window.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=idle\nrotr=ready")
 window.step = 3
 window.refresh_view()

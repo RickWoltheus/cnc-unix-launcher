@@ -97,14 +97,17 @@ struct ModArtwork: View {
 
 struct GameLogo: View {
     let game: GameInfo
+    var width: CGFloat = 166
+    var height: CGFloat = 70
+    var fit = false
     var body: some View {
         AsyncImage(url: game.logoURL) { phase in
             if let image = phase.image {
-                image.resizable().scaledToFill()
+                image.resizable().aspectRatio(contentMode: fit ? .fit : .fill)
             } else {
                 Text(game.emblem).font(.system(size: 28, weight: .black)).foregroundStyle(game.color)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-        }.frame(width: 166, height: 70).clipped().accessibilityLabel(game.title)
+        }.frame(width: width, height: height).clipped().accessibilityLabel(game.title)
     }
 }

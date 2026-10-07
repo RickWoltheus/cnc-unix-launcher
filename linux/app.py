@@ -79,6 +79,7 @@ class LauncherWindow(QMainWindow):
         library.addWidget(QLabel("YOUR COLLECTION"))
         self.game_buttons = {}
         self.game_logo_labels = {}
+        self.game_logo_pixmaps = {}
         for game in self.state.games:
             button = QPushButton()
             button.setMinimumHeight(116)
@@ -219,10 +220,18 @@ class LauncherWindow(QMainWindow):
     def make_choose(self):
         layout = self.page()
         self.choose_title, self.choose_summary = self.title(layout, "Native collection", "", "")
+        self.choose_engine_panel = QFrame()
+        panel = QHBoxLayout(self.choose_engine_panel)
+        panel.setContentsMargins(24, 20, 24, 20)
+        panel.setSpacing(24)
+        self.choose_logo = QLabel("")
+        self.choose_logo.setFixedSize(200, 110)
+        self.choose_logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        panel.addWidget(self.choose_logo)
         self.choose_engine = QLabel("")
-        self.choose_engine.setMargin(24)
         self.choose_engine.setWordWrap(True)
-        layout.addWidget(self.choose_engine)
+        panel.addWidget(self.choose_engine, 1)
+        layout.addWidget(self.choose_engine_panel)
         self.choose_note = QLabel("")
         self.choose_note.setWordWrap(True)
         layout.addWidget(self.choose_note)
@@ -353,9 +362,14 @@ class LauncherWindow(QMainWindow):
         self.steam_help_title.setStyleSheet(f"color:{accent}; font-weight:bold;")
         self.choose_title.setText(self.state.game["title"].upper())
         self.choose_summary.setText(self.state.game["summary"])
-        self.choose_engine.setText(f'{self.state.game["emblem"]}  ·  POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else "Native GeneralsX using your owned Steam assets."))
+        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else "Native GeneralsX using your owned Steam assets."))
         tint = QColor(accent)
-        self.choose_engine.setStyleSheet(f"background:rgba({tint.red()},{tint.green()},{tint.blue()},20); border:1px solid {accent};")
+        self.choose_engine_panel.setStyleSheet(f"QFrame {{ background:rgba({tint.red()},{tint.green()},{tint.blue()},20); border:1px solid {accent}; }} QLabel {{ background:transparent; border:none; }}")
+        self.choose_logo.setText(self.state.game["emblem"])
+        self.choose_logo.setStyleSheet(f"color:{accent}; font-size:28px; font-weight:bold;")
+        pixmap = self.game_logo_pixmaps.get(self.state.selected_game)
+        if pixmap is not None:
+            self.choose_logo.setPixmap(pixmap.scaled(200, 110, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
         self.choose_note.setText("Own Red Alert and C&C on Steam. OpenRA needs C&C’s desert tileset; setup downloads both owned games." if self.state.selected_game == "ra" else "Own this game through Steam’s Ultimate Collection. Remastered assets are not used in this setup.")
         if not self.state.busy and not self.state.game_running:
             while self.step > 0 and not self.state.can_enter(self.step):
@@ -558,6 +572,14 @@ class LauncherWindow(QMainWindow):
         process.start("/bin/bash", [str(self.backend), "graphics", profile if profile in ("base", "cnc", "ra") else "vanilla", quality])
         self.refresh_view()
 
+    def set_game_logo(self, id, pixmap):
+        self.game_logo_pixmaps[id] = pixmap
+        self.game_logo_labels[id].setPixmap(pixmap.scaled(172, 70, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+        if id == "vanilla" and id in self.image_labels:
+            self.image_labels[id].setPixmap(pixmap.scaled(130, 90, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        if self.state.selected_game == id:
+            self.choose_logo.setPixmap(pixmap.scaled(200, 110, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+
     def fetch_game_logos(self):
         for game in self.state.games:
             request = QNetworkRequest(QUrl(f'https://cdn.akamai.steamstatic.com/steam/apps/{game["steam_id"]}/logo.png'))
@@ -567,7 +589,7 @@ class LauncherWindow(QMainWindow):
                 data = bytes(response.readAll())
                 pixmap = QPixmap()
                 if len(data) <= 2_000_000 and pixmap.loadFromData(data):
-                    self.game_logo_labels[id].setPixmap(pixmap.scaled(172, 70, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+                    self.set_game_logo(id, pixmap)
                 response.deleteLater()
             reply.finished.connect(finished)
 
