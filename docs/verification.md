@@ -304,3 +304,31 @@ and its ad-hoc signature verified. Linux package self-check and virtual launcher
 Steam-guide checks passed. The new backend reported `wine_session=idle` against
 the user's already-closed session while its old helpers were still present.
 No game was launched or keyboard/mouse input sent during this fix.
+
+## Red Alert 2 manual-test build — 2026-10-07
+
+The user authorized live game testing, then asked to take over those checks.
+Before that handoff, direct launches failed with stale Wine-prefix services;
+stopping only the RA2 prefix's server allowed a windowed game to reach its menu.
+The running process was detected correctly. Captures also showed the legacy menu
+occupying only part of the requested window, with input not matching its visible
+coordinates. The screenshot's speed 6 corresponds to saved GameSpeed=0.
+
+Added prefix-scoped cleanup before launch and after game exit. Cleanup is bounded,
+blocks another launch while stopping, and treats no existing Wine server as an
+already-clean state. Fake-server lifecycle tests cover the cleanup calls, prefix
+isolation, stopping gates and the no-server exit code on Mac and Linux.
+
+RA2/Yuri profiles apply one-time safe defaults to their working copy: GameSpeed=2
+(displayed as speed 4), stretched movies, and a Mac-only menu/activation adjustment.
+Original Steam files stay unchanged; INIs have backups. The marker lives outside
+the game copy so later Steam refreshes do not overwrite the player's new choices.
+Mac Wine fullscreen dimensions now use logical coordinates; native engine
+resolution handling stays unchanged.
+
+Mac synthetic installer checks validated default values and backups; Swift model
+checks passed. Sixteen Linux UI/state checks, fake-process/fake-server regressions,
+packaging and packaged self-check passed. Both local archives rebuilt.
+These checks validate configuration and lifecycle mechanics. **The menu adjustment,
+keyboard/mouse behavior, movie skipping and speed in a real match await the user's
+manual test.** No further live game interaction occurred after that request.

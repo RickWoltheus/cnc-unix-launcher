@@ -13,6 +13,7 @@ cleanup() {
 }
 trap cleanup EXIT
 source "$REPO/scripts/compatibility.sh"
+PLATFORM=linux; [[ "$(uname -s)" != Darwin ]] || PLATFORM=macos
 sleep 30 & helper_pid=$!
 printf '%s\n' "$helper_pid" > "$ROOT/.compatibility-running"
 if compatibility_running; then
@@ -42,6 +43,18 @@ compatibility_running || { echo 'FAIL: Wine Windows-style executable path was no
 kill "$game_pid"; wait "$game_pid" 2>/dev/null || true; game_pid=
 fi
 kill "$helper_pid"; wait "$helper_pid" 2>/dev/null || true; helper_pid=
+# A fake prefix-scoped server records cleanup without running Wine.
+server="$(dirname "$(compatibility_wine)")/wineserver"
+mkdir -p "$(dirname "$server")" "$ROOT/compatibility/ra2/prefix"
+export GX_LIFECYCLE_FIXTURE_ROOT="$ROOT"
+cat > "$server" <<'SERVER'
+#!/bin/bash
+printf '%s\t%s\n' "$WINEPREFIX" "$1" >> "$GX_LIFECYCLE_FIXTURE_ROOT/prefix-reset.log"
+SERVER
+chmod +x "$server"
+compatibility_reset_prefix ra2
+grep -q "$ROOT/compatibility/ra2/prefix" "$ROOT/prefix-reset.log"
+rm "$ROOT/prefix-reset.log"
 # The tracked game exits while its Wine-like helper remains waiting.
 cat > "$ROOT/helper.sh" <<'FIXTURE'
 #!/bin/bash
@@ -54,6 +67,15 @@ printf '%s\nra2\nstarting\n' "$$" > "$ROOT/.compatibility-running"
 compatibility_wait_for_game "$helper_pid" ra2
 helper_pid=
 [[ ! -f "$ROOT/.compatibility-running" ]]
+[[ -f "$ROOT/prefix-reset.log" ]] || { echo "FAIL: closed game left stale prefix services." >&2; exit 1; }
+grep -q "$ROOT/compatibility/ra2/prefix" "$ROOT/prefix-reset.log"
+grep -q -- '-k' "$ROOT/prefix-reset.log"
+# Wine uses exit 1 when no prefix server exists; that is already clean.
+cat > "$server" <<'SERVER'
+#!/bin/bash
+exit 1
+SERVER
+compatibility_reset_prefix ra2
 # A wrapper that exits before starting a game must preserve its failure code.
 /bin/bash -c 'exit 7' & helper_pid=$!
 result=0

@@ -172,7 +172,7 @@ final class LauncherModel: ObservableObject {
     }
 
     func applyWineSession(_ session: String?) {
-        if session == "running" || session == "starting" {
+        if session == "running" || session == "starting" || session == "stopping" {
             wineSessionObserved = true
             gameRunning = true
         } else if session == "idle" && wineSessionObserved {
@@ -331,8 +331,9 @@ final class LauncherModel: ObservableObject {
         recovery = nil
         let script = backend
         let screen = NSScreen.main
-        let width = fullscreen ? Int((screen?.frame.width ?? 1440) * (screen?.backingScaleFactor ?? 2)) : 1280
-        let height = fullscreen ? Int((screen?.frame.height ?? 900) * (screen?.backingScaleFactor ?? 2)) : 720
+        let scale: CGFloat = game.isCompatibility ? 1 : (screen?.backingScaleFactor ?? 2)
+        let width = fullscreen ? Int((screen?.frame.width ?? 1440) * scale) : 1280
+        let height = fullscreen ? Int((screen?.frame.height ?? 900) * scale) : 720
         let arguments = ["launch", profile, fullscreen ? "-fullscreen" : "-win",
                          "-xres", String(width), "-yres", String(height)]
         Task {

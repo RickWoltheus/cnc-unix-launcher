@@ -92,6 +92,8 @@ struct ModelChecks {
         precondition(ProductInfo.shared.modRequestURL(game: "C&C").absoluteString.contains("template=mod-request.md"))
         model.applyWineSession("running")
         precondition(model.gameRunning)
+        model.applyWineSession("stopping")
+        precondition(model.gameRunning)
         model.applyWineSession("idle")
         precondition(!model.gameRunning)
         model.gameRunning = true

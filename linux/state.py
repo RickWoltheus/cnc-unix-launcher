@@ -46,7 +46,7 @@ class LauncherState:
     def update(self, text):
         self.values = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
         session = self.values.get("wine_session")
-        if session in ("running", "starting"):
+        if session in ("running", "starting", "stopping"):
             self.wine_session_observed = True
             self.game_running = True
         elif session == "idle" and self.wine_session_observed:

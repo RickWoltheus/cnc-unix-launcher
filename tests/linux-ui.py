@@ -55,6 +55,8 @@ class StateChecks(unittest.TestCase):
         ready = "platform=ready\nsteam=ready\nra2_engine=ready\nra2_assets=ready\ninstall=idle\n"
         self.state.update(ready + "wine_session=running")
         self.assertFalse(self.state.can_enter(3))
+        self.state.update(ready + "wine_session=stopping")
+        self.assertFalse(self.state.can_enter(3))
         self.state.update(ready + "wine_session=idle")
         self.assertTrue(self.state.can_enter(3))
         self.state.game_running = True

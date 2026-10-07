@@ -38,7 +38,7 @@ compatibility_session() {
   local pid phase marker="$ROOT/.compatibility-running"
   [[ -f "$marker" ]] || { echo idle; return; }
   pid="$(head -n 1 "$marker")"; phase="$(sed -n '3p' "$marker")"
-  if [[ "$pid" =~ ^[0-9]+$ && "$phase" == starting ]] && kill -0 "$pid" 2>/dev/null; then echo starting
+  if [[ "$pid" =~ ^[0-9]+$ && ( "$phase" == starting || "$phase" == stopping ) ]] && kill -0 "$pid" 2>/dev/null; then echo starting
   else echo idle; fi
 }
 compatibility_running() { [[ "$(compatibility_session)" != idle ]]; }
@@ -56,6 +56,26 @@ compatibility_stop_helper() {
   kill -0 "$client" 2>/dev/null && kill -KILL "$client" 2>/dev/null || true
   wait "$client" 2>/dev/null || true
 }
+compatibility_reset_prefix() {
+  local profile="$1" server prefix waiter attempt result=0
+  prefix="$ROOT/compatibility/$profile/prefix"
+  server="$(dirname "$(compatibility_wine)")/wineserver"
+  [[ -d "$prefix" && -x "$server" ]] || return 0
+  [[ -z "$(compatibility_game_pids "$profile")" ]] || return 1
+  WINEPREFIX="$prefix" "$server" -k || result=$?
+  [[ "$result" == 0 || "$result" == 1 ]] || return 1
+  WINEPREFIX="$prefix" "$server" -w & waiter=$!
+  for attempt in $(seq 1 50); do
+    kill -0 "$waiter" 2>/dev/null || {
+      result=0; wait "$waiter" || result=$?
+      [[ "$result" == 0 || "$result" == 1 ]]; return $?
+    }
+    sleep 0.1
+  done
+  compatibility_stop_helper "$waiter"
+  echo 'This game’s Wine services did not finish cleanup. Retry after closing its windows.' >&2
+  return 1
+}
 compatibility_wait_for_game() {
   local client="$1" profile="$2" seen=0 attempts=0 result=0
   while true; do
@@ -67,6 +87,8 @@ compatibility_wait_for_game() {
       if kill -0 "$client" 2>/dev/null; then
         compatibility_stop_helper "$client"
       else wait "$client" 2>/dev/null || result=$?; fi
+      printf '%s\n%s\nstopping\n' "$$" "$profile" > "$ROOT/.compatibility-running"
+      compatibility_reset_prefix "$profile" || result=1
       compatibility_clear_marker
       return "$result"
     elif ! kill -0 "$client" 2>/dev/null; then
@@ -174,6 +196,26 @@ compatibility_prepare_game() {
   if [[ -n "$ini" && "$ini" != "$COMPAT_PLAY/ddraw.ini" ]]; then mv "$ini" "$COMPAT_PLAY/ddraw.ini"; fi
   [[ -f "$COMPAT_PLAY/ddraw.ini" ]] || copy_file "$ROOT/cnc-ddraw/ddraw.ini" "$COMPAT_PLAY/ddraw.ini"
 }
+compatibility_apply_defaults() {
+  local profile="$1" ini stamp
+  stamp="$ROOT/compatibility/$profile/.safe-settings-v1"
+  [[ ! -f "$stamp" ]] || return 0
+  compatibility_select "$profile"
+  ini="$(find_game_file "$COMPAT_PLAY" "$COMPAT_INI")"
+  [[ -n "$ini" ]] || ini="$COMPAT_PLAY/$COMPAT_INI"
+  if [[ "$profile" == ra2 || "$profile" == yuri ]]; then
+    printf 'GameSpeed\t2\n' > "$WORK/speed.tsv"
+    merge_ini_settings "$ini" Options "$WORK/speed.tsv"
+    merge_ini_settings "$ini" Skirmish "$WORK/speed.tsv"
+    printf 'StretchMovies\tyes\n' > "$WORK/movie.tsv"
+    merge_ini_settings "$ini" Video "$WORK/movie.tsv"
+    if [[ "$PLATFORM" == macos ]]; then
+      printf 'tshack\tfalse\nnoactivateapp\tfalse\nnonexclusive\ttrue\n' > "$WORK/menu.tsv"
+      merge_ini_settings "$COMPAT_PLAY/ddraw.ini" "${COMPAT_EXE%.*}" "$WORK/menu.tsv"
+    fi
+  fi
+  touch "$stamp"
+}
 compatibility_launch() {
   local full=false width=1280 height=720 binary argument profile="$PROFILE"
   compatibility_running && fail 'A Wine game is already running. Quit it before switching games.'
@@ -202,6 +244,7 @@ compatibility_launch() {
   trap 'rm -rf "$WORK"; if [[ "$(head -n 1 "$LOCK/pid" 2>/dev/null)" == "$$" ]]; then rm -rf "$LOCK"; fi; compatibility_clear_marker' EXIT
   trap 'exit 130' INT TERM
   compatibility_prepare_game "$profile"
+  compatibility_apply_defaults "$profile"
   printf 'windowed\ttrue\nfullscreen\t%s\nwidth\t%s\nheight\t%s\nmaintas\ttrue\nsavesettings\t0\n' "$full" "$width" "$height" > "$WORK/display.tsv"
   merge_ini_settings "$COMPAT_PLAY/ddraw.ini" ddraw "$WORK/display.tsv"
   merge_ini_settings "$COMPAT_PLAY/ddraw.ini" "${COMPAT_EXE%.*}" "$WORK/display.tsv"
@@ -221,6 +264,7 @@ compatibility_launch() {
   if [[ -n "${GX_LAUNCH_WRAPPER:-}" ]]; then
     /bin/bash "$GX_LAUNCH_WRAPPER" "$executable" > "$ROOT/logs/$profile.log" 2>&1
   else
+    compatibility_reset_prefix "$profile" || fail 'Could not clear this game’s old Wine session.'
     if [[ ! -f "$COMPAT_PREFIX/.initialized" ]]; then
       "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'Wine prefix setup failed. Check the profile log.'
       touch "$COMPAT_PREFIX/.initialized"

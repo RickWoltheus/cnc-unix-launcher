@@ -33,6 +33,12 @@ for profile in ra2 yuri ts; do
   run status | grep "${profile}_assets=ready" >/dev/null
   run launch "$profile" -win -xres 1280 -yres 720
   play="$GX_INSTALL_ROOT/compatibility/$profile/game"
+  if [[ "$profile" == ra2 || "$profile" == yuri ]]; then
+    grep -q 'gamespeed=2' "$play/$ini"
+    grep -q 'stretchmovies=yes' "$play/$ini"
+    [[ -f "$play/$ini.before-launcher" ]]
+    if [[ "$platform" == macos ]]; then grep -q 'tshack=false' "$play/ddraw.ini"; fi
+  fi
   grep -q 'windowed=true' "$play/ddraw.ini"
   grep -q 'fullscreen=false' "$play/ddraw.ini"
   grep -q 'width=1280' "$play/ddraw.ini"

@@ -78,3 +78,23 @@ launchers are not imported automatically. Original Steam files stay untouched.
   display keys are reapplied for each Play; unrelated settings are preserved.
 - Online setup explains CnCNet’s pending status and disables its prepare button.
   No multiplayer account, router change or match test is performed.
+
+## Current manual-test defaults
+
+RA2 and Yuri's Revenge start with game-speed slider **4** (INI GameSpeed=2), rather
+than the maximum slider 6. This applies once to the working copy, with an INI
+backup; later in-game choices are preserved. Movies are set to stretch. Mac Wine
+uses logical screen dimensions and an adjusted legacy menu/activation workaround.
+The visual/input effect of this workaround remains under manual validation.
+Start windowed, check menu size and clicking, then try fullscreen.
+
+Wine services are scoped to each game's prefix. The launcher clears stale services
+before a launch and after the game exits, preserving the prefix, saves and installed
+files. It waits briefly for cleanup rather than permitting an overlapping launch.
+The first prefix setup can take longer; later launches reuse it.
+
+Apple currently documents general Rosetta availability through macOS 27 and a
+limited gaming-focused subset afterward. This is **not a guarantee** that Wine or
+Intel SteamCMD will remain supported indefinitely. Native ARM64 OpenRA/GeneralsX
+execution does not require Rosetta, but our current Mac asset downloader does.
+See [Apple's Rosetta guidance](https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment).
