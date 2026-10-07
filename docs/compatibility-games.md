@@ -98,3 +98,9 @@ limited gaming-focused subset afterward. This is **not a guarantee** that Wine o
 Intel SteamCMD will remain supported indefinitely. Native ARM64 OpenRA/GeneralsX
 execution does not require Rosetta, but our current Mac asset downloader does.
 See [Apple's Rosetta guidance](https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment).
+
+The current Mac RA2/Yuri menu candidate disables cnc-ddraw's child-window fallback
+(`fixchilds=0` in the game-specific section). The previous fallback explicitly
+placed child windows at the top-left and disabled upscaling. This change is applied
+once, separately from speed defaults; menu scaling and occasional graphical glitches
+still need manual validation. Linux keeps the upstream child-window behavior.

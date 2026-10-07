@@ -34,10 +34,13 @@ for profile in ra2 yuri ts; do
   run launch "$profile" -win -xres 1280 -yres 720
   play="$GX_INSTALL_ROOT/compatibility/$profile/game"
   if [[ "$profile" == ra2 || "$profile" == yuri ]]; then
-    grep -q 'gamespeed=2' "$play/$ini"
-    grep -q 'stretchmovies=yes' "$play/$ini"
+    grep -q 'GameSpeed=2' "$play/$ini"
+    grep -q 'StretchMovies=yes' "$play/$ini"
     [[ -f "$play/$ini.before-launcher" ]]
-    if [[ "$platform" == macos ]]; then grep -q 'tshack=false' "$play/ddraw.ini"; fi
+    if [[ "$platform" == macos ]]; then
+      grep -q 'tshack=false' "$play/ddraw.ini"
+      awk -v section="${exe%.*}" '$0=="[" section "]" {inside=1;next} /^\[/ {inside=0} inside && $0=="fixchilds=0" {found=1} END {exit !found}' "$play/ddraw.ini"
+    fi
   fi
   grep -q 'windowed=true' "$play/ddraw.ini"
   grep -q 'fullscreen=false' "$play/ddraw.ini"

@@ -332,3 +332,23 @@ packaging and packaged self-check passed. Both local archives rebuilt.
 These checks validate configuration and lifecycle mechanics. **The menu adjustment,
 keyboard/mouse behavior, movie skipping and speed in a real match await the user's
 manual test.** No further live game interaction occurred after that request.
+
+## Top-left menu follow-up — 2026-10-07
+
+The user confirmed that launch and gameplay were working, but menus still stayed
+in the top-left with black space and occasional graphical glitches. The pinned
+cnc-ddraw configuration enabled fixchilds=2; its own documented behavior disables
+upscaling when a child window is detected. The next manual-test build overrides
+that fallback with fixchilds=0 only for Mac RA2/Yuri profiles. This one-time menu
+migration is separate from speed defaults and preserves current gameplay choices.
+No live game interaction was performed for this follow-up. Actual menu scaling
+and child-control rendering remain for the user's test.
+
+Also corrected shared INI merging to preserve the canonical spelling supplied by
+updates while removing differently cased duplicates. Previously GameSpeed became
+lowercase and the game could save another GameSpeed key beside it. The new
+`tests/ini-settings.sh` failed before the fix and passed afterward, covering key
+case, duplicate replacement, unrelated values and original backup preservation.
+Mac installer fixtures verified the game-specific menu override and canonical
+speed/movie keys. Linux INI checks, sixteen UI/state checks, packaging and
+packaged self-check passed. Mac rebuilt and its ad-hoc signature verified.

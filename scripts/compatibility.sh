@@ -216,6 +216,15 @@ compatibility_apply_defaults() {
   fi
   touch "$stamp"
 }
+compatibility_menu_scaling() {
+  local profile="$1" stamp="$ROOT/compatibility/$1/.mac-menu-scaling-v1"
+  [[ "$PLATFORM" == macos && ( "$profile" == ra2 || "$profile" == yuri ) ]] || return 0
+  [[ ! -f "$stamp" ]] || return 0
+  compatibility_select "$profile"
+  printf 'fixchilds\t0\n' > "$WORK/menu-scaling.tsv"
+  merge_ini_settings "$COMPAT_PLAY/ddraw.ini" "${COMPAT_EXE%.*}" "$WORK/menu-scaling.tsv"
+  touch "$stamp"
+}
 compatibility_launch() {
   local full=false width=1280 height=720 binary argument profile="$PROFILE"
   compatibility_running && fail 'A Wine game is already running. Quit it before switching games.'
@@ -245,6 +254,7 @@ compatibility_launch() {
   trap 'exit 130' INT TERM
   compatibility_prepare_game "$profile"
   compatibility_apply_defaults "$profile"
+  compatibility_menu_scaling "$profile"
   printf 'windowed\ttrue\nfullscreen\t%s\nwidth\t%s\nheight\t%s\nmaintas\ttrue\nsavesettings\t0\n' "$full" "$width" "$height" > "$WORK/display.tsv"
   merge_ini_settings "$COMPAT_PLAY/ddraw.ini" ddraw "$WORK/display.tsv"
   merge_ini_settings "$COMPAT_PLAY/ddraw.ini" "${COMPAT_EXE%.*}" "$WORK/display.tsv"

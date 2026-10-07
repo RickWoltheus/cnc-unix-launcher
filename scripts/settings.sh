@@ -29,13 +29,13 @@ merge_ini_settings() {
     [[ -f "$destination.before-launcher" ]] || cp "$destination" "$destination.before-launcher"
   fi
   awk -v section="$section" '
-    NR==FNR {split($0,pair,"\t"); values[tolower(pair[1])]=pair[2]; next}
-    function pending() {for (key in values) if (!written[key]) {print key "=" values[key]; written[key]=1}}
+    NR==FNR {split($0,pair,"\t"); key=tolower(pair[1]); names[key]=pair[1]; values[key]=pair[2]; next}
+    function pending() {for (key in values) if (!written[key]) {print names[key] "=" values[key]; written[key]=1}}
     {sub(/\r$/, "")}
     /^\[/ {if (inside) pending(); header=$0; sub(/^\[/,"",header); sub(/\].*$/,"",header); inside=(tolower(header)==tolower(section)); if (inside) found=1}
     inside && /^[^;#[][^=]*=/ {
       key=$0; sub(/=.*/,"",key); gsub(/^[ \t]+|[ \t]+$/,"",key); key=tolower(key)
-      if (key in values) {if (!written[key]) print key "=" values[key]; written[key]=1; next}
+      if (key in values) {if (!written[key]) print names[key] "=" values[key]; written[key]=1; next}
     }
     {print}
     END {if (!found) print "\n[" section "]"; pending()}

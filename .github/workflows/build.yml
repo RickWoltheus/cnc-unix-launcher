@@ -11,7 +11,9 @@ jobs:
       - name: Check community credits and donation documentation
         run: python3 scripts/community-docs.py --check
       - name: Check backend behavior
-        run: bash tests/backend.sh
+        run: |
+          bash tests/backend.sh
+          bash tests/ini-settings.sh
       - name: Check Wine process lifecycle without games
         run: bash tests/wine-lifecycle.sh
       - name: Check profile selection and recovery
@@ -38,6 +40,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test python3 tests/linux-ui.py
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/wine-lifecycle.sh
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/ini-settings.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/backend.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-status.sh
       - name: Check classic engines with synthetic assets and dummy launches
