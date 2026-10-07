@@ -68,7 +68,7 @@ install_linux_tools() {
       printf 'Install Flatpak, download tools and 32-bit support for Valve SteamCMD.\n'
       sudo apt-get update
       sudo apt-get install -y flatpak curl file zip unzip xz-utils lib32gcc-s1 lib32stdc++6
-      if compatibility_profile "$PROFILE"; then sudo apt-get install -y wine wine64 libwine libgl1 libvulkan1; fi
+      if compatibility_profile "$PROFILE"; then sudo apt-get install -y wine wine64 libwine libgl1 libvulkan1 procps; fi
       ;;
     *) fail 'Automatic dependency setup supports Ubuntu/Debian-based desktops. Install Flatpak, curl, file, zip and 32-bit glibc/libstdc++ through your distribution, then retry.' ;;
   esac

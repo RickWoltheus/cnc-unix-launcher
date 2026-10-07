@@ -72,7 +72,7 @@ for profile in ra2 yuri ts; do
   grep -qx windows "$GX_INSTALL_ROOT/steam-arguments.txt"
   [[ "$(cat "$GX_INSTALL_ROOT/steam-$profile.status")" == complete ]]
 done
-printf '%s\n' "$$" > "$GX_INSTALL_ROOT/.compatibility-running"
+printf '%s\nra2\nstarting\n' "$$" > "$GX_INSTALL_ROOT/.compatibility-running"
 if run engine base > "$TEST_ROOT/running.log" 2>&1; then exit 1; fi
 grep -q 'Quit the game' "$TEST_ROOT/running.log"
 echo 'Wine installation, Steam routing, isolated profiles, display merge, progress preservation and blocked launch checks passed. No game or sign-in was started.'

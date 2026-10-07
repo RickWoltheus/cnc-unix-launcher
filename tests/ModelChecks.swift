@@ -90,6 +90,14 @@ struct ModelChecks {
         precondition(model.canEnterStep(3))
         precondition(ProductInfo.shared.name == "C&C Unix Launcher")
         precondition(ProductInfo.shared.modRequestURL(game: "C&C").absoluteString.contains("template=mod-request.md"))
+        model.applyWineSession("running")
+        precondition(model.gameRunning)
+        model.applyWineSession("idle")
+        precondition(!model.gameRunning)
+        model.gameRunning = true
+        model.applyWineSession("idle")
+        precondition(model.gameRunning) // A native game is not cleared by idle Wine services.
+        model.gameRunning = false
         precondition(CommunityInfo.shared?.projects.contains { $0.name == "GeneralsX" } == true)
         precondition(DonationLedger.shared != nil)
         print("Model selection and recovery checks passed. No windows, sign-in or game launches.")

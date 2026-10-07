@@ -63,11 +63,9 @@ struct LauncherView: View {
         .onChange(of: model.selectedGame) { _, _ in step = 0; model.recovery = nil; model.refresh() }
         .onChange(of: model.busy) { _, busy in if !busy { advanceAfterPreparation() } }
         .task(id: step) {
-            if step == 2 {
-                while !Task.isCancelled {
-                    model.refresh()
-                    try? await Task.sleep(for: .seconds(3))
-                }
+            while !Task.isCancelled {
+                model.refresh()
+                try? await Task.sleep(for: .seconds(3))
             }
         }
         .alert("Install \(model.selectedModInfo?.title ?? "mod")?", isPresented: $model.showModConsent) {

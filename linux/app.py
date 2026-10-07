@@ -654,6 +654,9 @@ class LauncherWindow(QMainWindow):
             self.worker = game
             game.setProcessEnvironment(self.environment())
             def closed(code, status):
+                if self.worker is not game:
+                    game.deleteLater()
+                    return
                 self.state.game_running = False
                 self.worker = None
                 game.deleteLater()

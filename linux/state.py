@@ -11,6 +11,7 @@ class LauncherState:
     selected_profile: str = "vanilla"
     busy: bool = False
     game_running: bool = False
+    wine_session_observed: bool = False
     steam_starting: bool = False
     steam_target: str | None = None
     values: dict = field(default_factory=dict)
@@ -44,6 +45,13 @@ class LauncherState:
 
     def update(self, text):
         self.values = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
+        session = self.values.get("wine_session")
+        if session in ("running", "starting"):
+            self.wine_session_observed = True
+            self.game_running = True
+        elif session == "idle" and self.wine_session_observed:
+            self.wine_session_observed = False
+            self.game_running = False
 
     @property
     def game(self):

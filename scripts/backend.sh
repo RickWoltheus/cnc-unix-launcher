@@ -95,6 +95,7 @@ if [[ "$ACTION" == status ]]; then
   install=idle
   if [[ -f "$ROOT/.install-lock/pid" ]] && kill -0 "$(cat "$ROOT/.install-lock/pid")" 2>/dev/null; then install=busy; fi
   echo "install=$install"
+  echo "wine_session=$(compatibility_session)"
   compatibility_dependencies_ready && echo "wine_dependencies=ready" || echo "wine_dependencies=missing"
   platform_supported && echo 'platform=ready' || echo 'platform=unsupported'
   dependencies_ready && echo 'dependencies=ready' || echo 'dependencies=missing'

@@ -50,6 +50,17 @@ class StateChecks(unittest.TestCase):
             self.state.values[game + "_assets"] = "ready"
             self.assertTrue(self.state.can_enter(3))
 
+    def test_wine_closure_releases_play_gate(self):
+        self.state.selected_game = "ra2"
+        ready = "platform=ready\nsteam=ready\nra2_engine=ready\nra2_assets=ready\ninstall=idle\n"
+        self.state.update(ready + "wine_session=running")
+        self.assertFalse(self.state.can_enter(3))
+        self.state.update(ready + "wine_session=idle")
+        self.assertTrue(self.state.can_enter(3))
+        self.state.game_running = True
+        self.state.update(ready + "wine_session=idle")
+        self.assertTrue(self.state.game_running)
+
     def test_wine_dependency_gate(self):
         self.state.selected_game = "ra2"
         self.state.values["dependencies"] = "ready"

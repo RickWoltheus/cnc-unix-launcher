@@ -31,6 +31,8 @@ final class LauncherModel: ObservableObject {
     private var pendingNativePlay = false
     @Published var busy = false
     @Published var gameRunning = false
+    private var wineSessionObserved = false
+    private var activeLaunchID: UUID?
     @Published var recovery: RecoveryAdvice?
     @Published var steamDownloadStatus = "idle"
     @Published var steamSessionRunning = false
@@ -155,6 +157,7 @@ final class LauncherModel: ObservableObject {
                     steamStartDeadline = nil
                 }
                 externalInstallRunning = states.contains("install=busy")
+                applyWineSession(states.first { $0.hasPrefix("wine_session=") }?.components(separatedBy: "=").last)
                 if steamDownloadStatus == "incomplete" && !gameAssetsReady {
                     recovery = RecoveryAdvice.forMessage("Steam files are incomplete")
                 }
@@ -165,6 +168,17 @@ final class LauncherModel: ObservableObject {
             } catch {
                 status = error.localizedDescription
             }
+        }
+    }
+
+    func applyWineSession(_ session: String?) {
+        if session == "running" || session == "starting" {
+            wineSessionObserved = true
+            gameRunning = true
+        } else if session == "idle" && wineSessionObserved {
+            wineSessionObserved = false
+            gameRunning = false
+            status = "Game closed."
         }
     }
 
@@ -337,9 +351,13 @@ final class LauncherModel: ObservableObject {
                 process.arguments = [script.path] + arguments
                 process.standardOutput = logHandle
                 process.standardError = logHandle
+                let launchID = UUID()
+                activeLaunchID = launchID
                 process.terminationHandler = { finished in
                     logHandle.closeFile()
                     Task { @MainActor in
+                        guard self.activeLaunchID == launchID else { return }
+                        self.activeLaunchID = nil
                         self.status = finished.terminationStatus == 0 ? "Game closed." : "Game stopped with an error. Open the installation folder and check logs/\(profile).log."
                         self.gameRunning = false
                         if finished.terminationStatus != 0 {

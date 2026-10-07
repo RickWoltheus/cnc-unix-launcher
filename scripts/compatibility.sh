@@ -17,11 +17,75 @@ compatibility_package() {
   IFS=$'\t' read -r unused COMPAT_VERSION COMPAT_ARCHIVE COMPAT_URL COMPAT_SHA COMPAT_BINARY <<< "$row"
 }
 compatibility_wine() { compatibility_package "$PLATFORM"; printf '%s/wine-runtime/%s\n' "$ROOT" "$COMPAT_BINARY"; }
-compatibility_running() {
-  [[ -f "$ROOT/.compatibility-running" ]] && kill -0 "$(cat "$ROOT/.compatibility-running")" 2>/dev/null
+compatibility_game_pids() {
+  local profile="${1:-}" id exe rest path
+  while IFS=$'\t' read -r id exe rest; do
+    [[ -z "$profile" || "$profile" == "$id" ]] || continue
+    path="$ROOT/compatibility/$id/game/$exe"
+    ps -axo pid=,stat=,args= 2>/dev/null | awk -v path="$path" '
+      $2 !~ /[ZE]/ {
+        pid=$1; sub(/^[ \t]*[0-9]+[ \t]+[^ \t]+[ \t]+/, "")
+        gsub(/\\/, "/"); command=tolower($0); path=tolower(path)
+        sub(/^"/, "", command)
+        unix=index(command,path)==1; windows=index(command,"z:" path)==1
+        end=length(path)+(windows ? 2 : 0)+1
+        if ((unix || windows) && (length(command)==end-1 || substr(command,end,1) ~ /[ \t"]/)) print pid
+      }'
+  done < "$RESOURCES/manifests/compatibility.tsv"
+}
+compatibility_session() {
+  if [[ -n "$(compatibility_game_pids)" ]]; then echo running; return; fi
+  local pid phase marker="$ROOT/.compatibility-running"
+  [[ -f "$marker" ]] || { echo idle; return; }
+  pid="$(head -n 1 "$marker")"; phase="$(sed -n '3p' "$marker")"
+  if [[ "$pid" =~ ^[0-9]+$ && "$phase" == starting ]] && kill -0 "$pid" 2>/dev/null; then echo starting
+  else echo idle; fi
+}
+compatibility_running() { [[ "$(compatibility_session)" != idle ]]; }
+compatibility_clear_marker() {
+  local marker="$ROOT/.compatibility-running"
+  if [[ "$(head -n 1 "$marker" 2>/dev/null)" == "$$" ]]; then rm -f "$marker"; fi
+}
+compatibility_stop_helper() {
+  local client="$1" attempt
+  kill "$client" 2>/dev/null || true
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    kill -0 "$client" 2>/dev/null || break
+    sleep 0.1
+  done
+  kill -0 "$client" 2>/dev/null && kill -KILL "$client" 2>/dev/null || true
+  wait "$client" 2>/dev/null || true
+}
+compatibility_wait_for_game() {
+  local client="$1" profile="$2" seen=0 attempts=0 result=0
+  while true; do
+    if [[ -n "$(compatibility_game_pids "$profile")" ]]; then
+      seen=1
+      printf '%s\n%s\nplaying\n' "$$" "$profile" > "$ROOT/.compatibility-running"
+    elif [[ "$seen" == 1 ]]; then
+      # Wine's start.exe can outlive an exited game. Stop only our launch helper.
+      if kill -0 "$client" 2>/dev/null; then
+        compatibility_stop_helper "$client"
+      else wait "$client" 2>/dev/null || result=$?; fi
+      compatibility_clear_marker
+      return "$result"
+    elif ! kill -0 "$client" 2>/dev/null; then
+      wait "$client" 2>/dev/null || result=$?
+      compatibility_clear_marker
+      return "$result"
+    fi
+    attempts=$((attempts+1))
+    if [[ "$seen" == 0 && "$attempts" -ge 120 ]]; then
+      compatibility_stop_helper "$client"
+      compatibility_clear_marker
+      echo 'Wine did not start a detectable game process. Check the profile log.' >&2
+      return 1
+    fi
+    sleep 0.5
+  done
 }
 compatibility_dependencies_ready() {
-  [[ "$PLATFORM" != linux ]] || command -v /usr/bin/wine >/dev/null
+  [[ "$PLATFORM" != linux ]] || { command -v /usr/bin/wine >/dev/null && command -v ps >/dev/null; }
 }
 compatibility_engine_ready() {
   local binary
@@ -135,7 +199,7 @@ compatibility_launch() {
   printf '%s\n' "$$" > "$LOCK/pid"
   printf 'launch:%s\n' "$profile" > "$LOCK/kind"
   WORK="$(mktemp -d "$ROOT/.staging.XXXXXX")"
-  trap 'rm -rf "$WORK" "$LOCK"; rm -f "$ROOT/.compatibility-running"' EXIT
+  trap 'rm -rf "$WORK"; if [[ "$(head -n 1 "$LOCK/pid" 2>/dev/null)" == "$$" ]]; then rm -rf "$LOCK"; fi; compatibility_clear_marker' EXIT
   trap 'exit 130' INT TERM
   compatibility_prepare_game "$profile"
   printf 'windowed\ttrue\nfullscreen\t%s\nwidth\t%s\nheight\t%s\nmaintas\ttrue\nsavesettings\t0\n' "$full" "$width" "$height" > "$WORK/display.tsv"
@@ -149,7 +213,7 @@ compatibility_launch() {
   fi
   binary="$(compatibility_wine)"
   export WINEPREFIX="$COMPAT_PREFIX" WINEARCH=win64 WINEDLLOVERRIDES='ddraw=n,b;winemenubuilder.exe=d;mscoree,mshtml=d' WINEDEBUG=-all
-  printf '%s\n' "$$" > "$ROOT/.compatibility-running"
+  printf '%s\n%s\nstarting\n' "$$" "$profile" > "$ROOT/.compatibility-running"
   rm -rf "$LOCK"
   cd "$COMPAT_PLAY"
   local executable
@@ -161,7 +225,8 @@ compatibility_launch() {
       "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'Wine prefix setup failed. Check the profile log.'
       touch "$COMPAT_PREFIX/.initialized"
     fi
-    "$binary" "$executable" >> "$ROOT/logs/$profile.log" 2>&1
+    "$binary" "$executable" >> "$ROOT/logs/$profile.log" 2>&1 &
+    compatibility_wait_for_game "$!" "$profile"
   fi
   exit $?
 }

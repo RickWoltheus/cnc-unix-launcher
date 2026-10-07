@@ -276,3 +276,31 @@ No real Steam sign-in, game, multiplayer connection or donation occurred.
 Both archives are local development artifacts. Public repository/release
 publication remains pending; the public-document links become reachable when
 that repository is published. Existing user installations/settings were untouched.
+
+## Wine game-close detection — 2026-10-07
+
+Observed the user's closed Red Alert 2 session with its game process exiting,
+while `start.exe`, the launcher shell and Wine services persisted. The old running
+marker tracked the shell alone and therefore remained active. A regression using
+POSIX sleep fixtures reproduced this incorrect helper-only running state before
+changing the implementation.
+
+The backend now identifies game executables in their exact managed profile paths,
+ignoring Wine services and exiting/zombie processes. It monitors the selected game
+and releases only its owned launch helper after closure. Startup remains tracked,
+failed launches retain their exit status, and marker cleanup checks ownership.
+No shared Wine server or unrelated application is terminated.
+
+`tests/wine-lifecycle.sh` passed on macOS and Linux: a living helper alone is idle,
+a real fixture process is active, closing it unlocks the session, lingering helpers
+are released, and startup failure code 7 is preserved. Mac also checked a Wine-style
+Windows path with spaces; the Linux emulation fixture uses its own ELF executable
+path because OrbStack prepends the emulated executable to spoofed argv values.
+All fixture executables are POSIX sleep, not Windows game binaries.
+
+Both UIs reconcile shared Wine-session status; native-game tracking is preserved.
+Swift model checks and sixteen Linux state/widget checks passed. Mac app rebuilt
+and its ad-hoc signature verified. Linux package self-check and virtual launcher/
+Steam-guide checks passed. The new backend reported `wine_session=idle` against
+the user's already-closed session while its old helpers were still present.
+No game was launched or keyboard/mouse input sent during this fix.
