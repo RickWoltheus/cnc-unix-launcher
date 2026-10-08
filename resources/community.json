@@ -2,10 +2,7 @@
   "title": "Made possible by the community",
   "mission": "This launcher is for people who just want to play, without having to understand command lines, engine builds or compatibility fixes.",
   "credit": "Years of work by engine developers, mod teams and open-source maintainers make these games work on modern systems. C&C Unix Launcher brings their work together and guides you through setup. The engines, mods and compatibility tools belong to their creators.",
-  "tooltip": "Years of community work make this possible. I help make setup easier for everyday players. I plan to share part of the support I receive with upstream maintainers and record those donations publicly. Open Community & donations for credits and the ledger.",
-  "donationPolicy": "Support on Ko-fi helps me maintain this launcher. From time to time, I plan to donate part of that support to upstream maintainers. There is no fixed percentage or schedule; each donation will be recorded after it is made.",
-  "ledgerDetail": "This is a manually maintained record of onward donations, not a live Ko-fi balance. The bundled ledger reflects this release; the public ledger may be newer.",
-  "emptyLedger": "No onward donations have been recorded yet.",
+  "tooltip": "Years of community work make this possible. This launcher makes setup easier for everyday players. Also consider donating directly to the projects and maintainers behind it; their support links are in Community & support.",
   "projects": [
     {
       "name": "GeneralsX",
@@ -204,6 +201,38 @@
       "role": "Apple Silicon compatibility for SteamCMD and Wine; SwiftUI/AppKit and macOS system tooling",
       "url": "https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment",
       "contributorsURL": "https://developer.apple.com/"
+    }
+  ],
+  "supportTitle": "Consider supporting these projects too",
+  "supportDetail": "Support on Ko-fi helps maintain this launcher. Please also consider donating directly to the open-source projects and maintainers that make it possible. The links below are published by the projects themselves.",
+  "supportLinks": [
+    {
+      "project": "GeneralsX",
+      "platform": "GitHub Sponsors (fbraz3)",
+      "url": "https://github.com/sponsors/fbraz3",
+      "sourceURL": "https://github.com/fbraz3/GeneralsX/blob/main/.github/FUNDING.yml",
+      "verifiedOn": "2026-10-08"
+    },
+    {
+      "project": "Gcenx / macOS Wine builds",
+      "platform": "Ko-fi",
+      "url": "https://ko-fi.com/gcenx",
+      "sourceURL": "https://github.com/Gcenx/macOS_Wine_builds/blob/master/.github/FUNDING.yml",
+      "verifiedOn": "2026-10-08"
+    },
+    {
+      "project": "Gcenx / macOS Wine builds",
+      "platform": "PayPal",
+      "url": "https://paypal.me/gcenx",
+      "sourceURL": "https://github.com/Gcenx/macOS_Wine_builds/blob/master/.github/FUNDING.yml",
+      "verifiedOn": "2026-10-08"
+    },
+    {
+      "project": "OpenRA",
+      "platform": "Patreon (hosting)",
+      "url": "https://www.patreon.com/orahosting",
+      "sourceURL": "https://github.com/OpenRA/OpenRA/blob/bleed/.github/FUNDING.yml",
+      "verifiedOn": "2026-10-08"
     }
   ]
 }

@@ -4,17 +4,16 @@ This launcher is for people who just want to play, without having to understand 
 
 Years of work by engine developers, mod teams and open-source maintainers make these games work on modern systems. C&C Unix Launcher brings their work together and guides you through setup. The engines, mods and compatibility tools belong to their creators.
 
-## Support and onward donations
+## Consider supporting these projects too
 
-Support on Ko-fi helps me maintain this launcher. From time to time, I plan to donate part of that support to upstream maintainers. There is no fixed percentage or schedule; each donation will be recorded after it is made.
+Support on Ko-fi helps maintain this launcher. Please also consider donating directly to the open-source projects and maintainers that make it possible. The links below are published by the projects themselves.
 
 [Support the launcher on Ko-fi](https://ko-fi.com/ricklemore).
 
-**0 onward donations recorded.** Ledger updated: 2026-10-07.
-
-This is a manually maintained record of onward donations, not a live Ko-fi balance. The bundled ledger reflects this release; the public ledger may be newer.
-
-No onward donations have been recorded yet.
+- GeneralsX — [GitHub Sponsors (fbraz3)](https://github.com/sponsors/fbraz3). [Published funding links](https://github.com/fbraz3/GeneralsX/blob/main/.github/FUNDING.yml) (checked 2026-10-08).
+- Gcenx / macOS Wine builds — [Ko-fi](https://ko-fi.com/gcenx). [Published funding links](https://github.com/Gcenx/macOS_Wine_builds/blob/master/.github/FUNDING.yml) (checked 2026-10-08).
+- Gcenx / macOS Wine builds — [PayPal](https://paypal.me/gcenx). [Published funding links](https://github.com/Gcenx/macOS_Wine_builds/blob/master/.github/FUNDING.yml) (checked 2026-10-08).
+- OpenRA — [Patreon (hosting)](https://www.patreon.com/orahosting). [Published funding links](https://github.com/OpenRA/OpenRA/blob/bleed/.github/FUNDING.yml) (checked 2026-10-08).
 
 ## Engines, mods and tools
 
@@ -58,16 +57,12 @@ Project contributor/team pages credit the people behind each project. Upstream c
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 
-## Updating the record
+## Updating credits and support links
 
-Maintain `resources/donations.json` manually. Add an entry only after a donation has actually been made: a unique `id`, `date` (YYYY-MM-DD), credited `project`, `amount` (decimal string), `currency` (three-letter code), and optional `evidenceURL` or null. Update `lastUpdated`. Public evidence must omit payment details and private donor information. This record tracks onward donations, not individual Ko-fi supporters or the account balance.
-
-Credits live in `resources/community.json`. Both launchers read the same files. Preview the resulting documentation, then update it:
+Credits and support links live in `resources/community.json`. Verify each donation URL against the project’s own published funding links; include `sourceURL` and `verifiedOn`. Both launchers read the same resources. Preview documentation, then regenerate it:
 
 ```sh
 python3 scripts/community-docs.py
 python3 scripts/community-docs.py --write
 python3 scripts/community-docs.py --check
 ```
-
-The app bundles the ledger available when its release was built. Its public-record link opens this document for newer entries.

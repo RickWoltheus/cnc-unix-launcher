@@ -18,6 +18,7 @@ cp "$REPO/scripts/steam-status.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO"/manifests/*.tsv "$APP/Contents/Resources/manifests/"
 cp "$REPO/resources/max-options.ini" "$APP/Contents/Resources/resources/"
 cp "$REPO/resources/balanced-options.ini" "$APP/Contents/Resources/resources/"
+find "$APP/Contents/Resources/resources" -maxdepth 1 -type f -name '*.json' -delete
 cp "$REPO"/resources/*.json "$APP/Contents/Resources/resources/"
 cp "$REPO/resources/Info.plist" "$APP/Contents/"
 cp "$REPO/resources/Launcher.icns" "$APP/Contents/Resources/"

@@ -6,13 +6,13 @@ validation, selected-profile behavior and update handling. When changing user
 behavior, update both frontends and their tests in the same change. If a platform
 cannot support a behavior, document the exception in `docs/linux.md`.
 
-Keep community credits and funding copy in `resources/community.json` and the
-manually maintained onward-donation ledger in `resources/donations.json`. Add
-credits when introducing a runtime or mod, linking its contributor/team page.
-Never invent donations, receipts, totals or fixed sharing percentages. Regenerate
-`docs/community.md` with `scripts/community-docs.py --write` after reviewing the
-preview; `--check` verifies it. Bundled UI records are dated release snapshots;
-the public-document link provides newer records.
+Keep community credits and direct maintainer support links in
+`resources/community.json`. Add credits when introducing a runtime or mod,
+linking its contributor/team page. Verify donation URLs against the project's
+published funding links; record their source and verification date. Do not invent
+fundraising accounts, donation records or promises to redistribute support.
+Regenerate `docs/community.md` with `scripts/community-docs.py --write` after
+reviewing the preview; `--check` verifies it. Both frontends use the same links.
 
 Keep installation and repair behavior in `scripts/backend.sh`; OS-specific
 commands belong in `scripts/platform-macos.sh` or `scripts/platform-linux.sh`.

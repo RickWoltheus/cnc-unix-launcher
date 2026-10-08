@@ -352,3 +352,21 @@ case, duplicate replacement, unrelated values and original backup preservation.
 Mac installer fixtures verified the game-specific menu override and canonical
 speed/movie keys. Linux INI checks, sixteen UI/state checks, packaging and
 packaged self-check passed. Mac rebuilt and its ad-hoc signature verified.
+
+## Direct maintainer support links — 2026-10-08
+
+Removed the manual onward-donation ledger and redistribution pledge at the user's
+request. README and both launchers instead invite direct support for maintainers:
+GeneralsX/fbraz3 through GitHub Sponsors, Gcenx through Ko-fi or PayPal, and OpenRA
+hosting through Patreon. Targets were checked against each project's published
+FUNDING.yml. The full project/contributor credits remain intact.
+
+Shared support metadata includes the published source and verification date.
+The documentation generator validates those links and credited recipients.
+Mac resource copying now removes stale generated JSON so an older ledger cannot
+remain in a rebuilt app. Both archives were checked to exclude donations.json.
+
+Swift model/resource checks, sixteen Linux state/widget checks, Mac compilation
+and ad-hoc signature verification, Linux packaging and packaged self-check passed.
+The Linux UI test clicked support buttons with browser opening intercepted and
+confirmed their destinations. No donation website, payment flow or game opened.

@@ -101,7 +101,7 @@ struct ModelChecks {
         precondition(model.gameRunning) // A native game is not cleared by idle Wine services.
         model.gameRunning = false
         precondition(CommunityInfo.shared?.projects.contains { $0.name == "GeneralsX" } == true)
-        precondition(DonationLedger.shared != nil)
+        precondition(CommunityInfo.shared?.supportLinks.contains { $0.url.absoluteString == "https://ko-fi.com/gcenx" } == true)
         print("Model selection and recovery checks passed. No windows, sign-in or game launches.")
     }
 }

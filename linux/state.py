@@ -40,7 +40,6 @@ class LauncherState:
                 self.mods.append(dict(id=id, title=title, games=games.split(","), version=version, native=True, source=source,
                                       homepage=homepage, image=image, summary=summary))
         self.community = json.loads((self.resources / "resources/community.json").read_text())
-        self.donations = json.loads((self.resources / "resources/donations.json").read_text())
         self.online = json.loads((self.resources / "resources/online.json").read_text())
 
     def update(self, text):

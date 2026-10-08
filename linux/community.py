@@ -6,7 +6,7 @@ class CommunityWindow(QDialog):
     def __init__(self, launcher):
         super().__init__(launcher)
         state = launcher.state
-        info, ledger = state.community, state.donations
+        info = state.community
         self.setWindowTitle(info["title"])
         self.resize(680, 650)
         layout = QVBoxLayout(self)
@@ -32,18 +32,12 @@ class CommunityWindow(QDialog):
 
         text(info["mission"], True)
         text(info["credit"])
-        text("Supporting the people behind it", True)
-        text(info["donationPolicy"])
+        text(info["supportTitle"], True)
+        text(info["supportDetail"])
         link("Support the launcher on Ko-fi", "https://ko-fi.com/ricklemore")
-        self.count_label = text(f'{len(ledger["donations"])} onward donations recorded · updated {ledger["lastUpdated"]}', True)
-        text(info["ledgerDetail"])
-        if not ledger["donations"]:
-            text(info["emptyLedger"])
-        for donation in ledger["donations"]:
-            text(f'{donation["date"]} · {donation["project"]} · {donation["amount"]} {donation["currency"]}')
-            if donation.get("evidenceURL"):
-                link("Public record", donation["evidenceURL"])
-        link("Latest public credits & donation ledger", "https://github.com/" + state.product["repository"] + "/blob/main/docs/community.md")
+        for support in info["supportLinks"]:
+            link(support["project"] + " · " + support["platform"], support["url"])
+        link("Full community credits", "https://github.com/" + state.product["repository"] + "/blob/main/docs/community.md")
         text("Engines, mods and tools", True)
         text("Project links include contributors or team pages. Upstream credits also acknowledge their libraries and earlier work.")
         for project in info["projects"]:

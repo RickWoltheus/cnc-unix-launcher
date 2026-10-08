@@ -149,8 +149,8 @@ struct LauncherView: View {
                 .font(.system(size: 11)).accessibilityIdentifier("request-mod")
             Button("Why macOS warns") { showDistribution = true }.buttonStyle(.plain).font(.system(size: 11))
                 .foregroundStyle(CommandTheme.muted)
-            Button("Community & donations") { showCommunity = true }.buttonStyle(.plain).font(.system(size: 11))
-                .accessibilityIdentifier("community-donations")
+            Button("Community & support") { showCommunity = true }.buttonStyle(.plain).font(.system(size: 11))
+                .accessibilityIdentifier("community-support")
             Link(destination: URL(string: "https://ko-fi.com/ricklemore")!) {
                 Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
                     .font(.system(size: 14, weight: .bold))

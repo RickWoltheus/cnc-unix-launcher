@@ -156,17 +156,20 @@ class WidgetChecks(unittest.TestCase):
         self.window.choose_profile("shockwave")
         self.assertEqual(self.window.play_button.text(), "INSTALL & PLAY →")
 
-    def test_community_credit_and_donation_display(self):
+    def test_community_maintainer_support_links(self):
         button = self.window.findChild(QPushButton, "support-kofi")
         self.assertIn("community", button.toolTip())
         self.assertLessEqual(self.window.minimumSizeHint().height(), 790)
+        opened = []
+        self.window.open_url = opened.append
         dialog = CommunityWindow(self.window)
-        self.assertIn(str(len(self.window.state.donations["donations"])) + " onward donations", dialog.count_label.text())
-        dialog.close()
-        self.window.state.donations["donations"] = [dict(id="fixture", date="2026-10-07", project="GeneralsX", amount="25.00", currency="EUR", evidenceURL=None)]
-        dialog = CommunityWindow(self.window)
-        self.assertIn("1 onward donations", dialog.count_label.text())
-        self.assertTrue(any("25.00 EUR" in label.text() for label in dialog.findChildren(QLabel)))
+        buttons = dialog.findChildren(QPushButton)
+        for support in self.window.state.community["supportLinks"]:
+            label = support["project"] + " · " + support["platform"]
+            target = next(button for button in buttons if button.text() == label)
+            target.click()
+            self.assertEqual(opened[-1], support["url"])
+        self.assertFalse(any("onward donations" in label.text() for label in dialog.findChildren(QLabel)))
         dialog.close()
 
     def test_sidebar_selects_classic_theme_and_profile(self):

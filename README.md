@@ -12,11 +12,16 @@ command lines or compatibility fixes. Years of work by engine developers, mod
 teams and open-source maintainers make that possible; this launcher makes their
 work easier to install and use.
 
-[Support the launcher on Ko-fi](https://ko-fi.com/ricklemore). From time to time,
-I plan to donate part of that support to upstream maintainers. There is no fixed
-percentage or schedule. The [community credits and donation ledger](docs/community.md)
-link the projects and their contributors and record onward donations after they
-are made. Support is optional; the launcher stays free and open source.
+[Support the launcher on Ko-fi](https://ko-fi.com/ricklemore). Also consider
+supporting the projects and maintainers that make this launcher possible:
+
+- [GeneralsX / fbraz3 — GitHub Sponsors](https://github.com/sponsors/fbraz3).
+- Gcenx’s macOS Wine builds — [Ko-fi](https://ko-fi.com/gcenx) or [PayPal](https://paypal.me/gcenx).
+- [OpenRA hosting — Patreon](https://www.patreon.com/orahosting).
+
+See the [community credits and support links](docs/community.md) for the projects,
+their contributors and the sources of these donation links. Support is optional;
+the launcher stays free and open source.
 
 **Development preview. Headless installer checks pass; full gameplay and fresh
 Steam sign-in testing remain pending.** The app builds for ARM64 and its ad-hoc signature
@@ -294,10 +299,10 @@ resources are shared; platform adapters contain the OS-specific commands.
 
 ## Credits and license
 
-See the [community credits and donation ledger](docs/community.md) for the engine,
+See the [community credits and support links](docs/community.md) for the engine,
 mod, compatibility and tooling projects, their contributor/team pages, the
-launcher’s contributors and manually recorded onward donations. The same credits
-and ledger are available from **Community & donations** in both launchers; the
+launcher’s contributors and published maintainer donation links. The same credits
+and support links are available from **Community & support** in both launchers; the
 coffee button’s tooltip explains their work and this launcher’s role.
 
 This launcher's original code is MIT-licensed. Downloaded software and game data
