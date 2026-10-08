@@ -46,6 +46,8 @@ Fresh-machine setup, live Linux gameplay and the full game/mod catalog still nee
 broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
 for the evidence and remaining checks.
 
+**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
+
 ## Screenshots
 
 **macOS — choose the original game or a curated mod, then use one Play button.**
