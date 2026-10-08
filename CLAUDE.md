@@ -14,6 +14,14 @@ fundraising accounts, donation records or promises to redistribute support.
 Regenerate `docs/community.md` with `scripts/community-docs.py --write` after
 reviewing the preview; `--check` verifies it. Both frontends use the same links.
 
+Keep download verification in `scripts/downloads.sh` and optional scan controls
+in `scripts/security.sh`. Every downloaded or cached install input must pass SHA-256
+before any scan, extraction or execution. Scanning stays local and must fail closed
+on missing/stale definitions, errors, detections or reported coverage limits.
+Propagate the scan preference to GUI tasks, launches and local terminal scripts
+on both platforms. Do not upload Steam files, credentials, logs or saves. Describe
+checksums and antivirus as checks, never as a malware-free guarantee.
+
 Keep installation and repair behavior in `scripts/backend.sh`; OS-specific
 commands belong in `scripts/platform-macos.sh` or `scripts/platform-linux.sh`.
 Read branding and release names from `manifests/product.tsv`. Preserve legacy

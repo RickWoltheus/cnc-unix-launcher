@@ -6,6 +6,8 @@ APP="$REPO/dist/$PRODUCT_NAME.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/scripts" "$APP/Contents/Resources/manifests" "$APP/Contents/Resources/resources"
 xcrun swiftc -parse-as-library -O -target arm64-apple-macos15.0 \
   "$REPO"/Sources/*.swift -o "$APP/Contents/MacOS/$EXECUTABLE"
+cp "$REPO/scripts/downloads.sh" "$APP/Contents/Resources/scripts/"
+cp "$REPO/scripts/security.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/scripts/backend.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/scripts/platform-macos.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/scripts/online.sh" "$APP/Contents/Resources/scripts/"

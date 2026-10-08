@@ -9,6 +9,7 @@ struct LauncherView: View {
     @State private var showDistribution = false
     @State private var showCommunity = false
     @State private var showOnline = false
+    @State private var showSecurity = false
     @State private var playAfterModInstall = false
     private var accent: Color { model.game.color }
     private let steps = ["Choose game", "Prepare Mac", "Steam download", "Play"]
@@ -50,6 +51,7 @@ struct LauncherView: View {
         }
         .sheet(isPresented: $showDistribution) { MacDistributionView() }
         .sheet(isPresented: $showCommunity) { CommunityView() }
+        .sheet(isPresented: $showSecurity) { SecuritySetupView(model: model) }
         .sheet(isPresented: $showOnline) { OnlineSetupView(model: model) }
         .onChange(of: model.gameAssetsReady) { _, ready in
             if ready && model.canEnterStep(3) { step = 3 }
@@ -353,6 +355,7 @@ struct LauncherView: View {
     private var footer: some View {
         HStack {
             Menu("Help") {
+                Button("Security & downloads") { showSecurity = true }
                 Button("Online setup") { showOnline = true }
                 Button("Repair game engine") { model.prepare() }
                 Button("Check Steam files") { step = 2 }

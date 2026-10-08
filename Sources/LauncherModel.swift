@@ -15,6 +15,11 @@ struct ModInfo: Identifiable {
 
 @MainActor
 final class LauncherModel: ObservableObject {
+    @Published var scanDownloads = UserDefaults.standard.bool(forKey: "scanDownloads") {
+        didSet { UserDefaults.standard.set(scanDownloads, forKey: "scanDownloads") }
+    }
+    @Published var scannerStatus = "missing"
+    @Published var scanDefinitionsStatus = "missing"
     @Published var engine = false
     @Published var steam = false
     @Published var assets = false
@@ -141,6 +146,8 @@ final class LauncherModel: ObservableObject {
                     try Self.run(script, arguments: ["status"])
                 }.value
                 let states = Set(result.split(separator: "\n").map(String.init))
+                scannerStatus = states.contains("scanner=ready") ? "ready" : "missing"
+                scanDefinitionsStatus = states.first { $0.hasPrefix("scan_definitions=") }?.components(separatedBy: "=").last ?? "missing"
                 engine = states.contains("engine=ready")
                 steam = states.contains("steam=ready")
                 assets = states.contains("assets=ready")
@@ -227,6 +234,7 @@ final class LauncherModel: ObservableObject {
         output = ""
         let script = backend
         let chosenProfile = profile ?? selectedGame
+        let scanning = scanDownloads
         Task {
             var completed = false
             var needsNativeSteam = false
@@ -245,7 +253,7 @@ final class LauncherModel: ObservableObject {
                     default: status = "Preparing Steam sign-in…"
                     }
                     let text = try await Task.detached {
-                        try Self.run(script, arguments: [action, chosenProfile] + extra) { chunk in
+                        try Self.run(script, arguments: [action, chosenProfile] + extra, scanDownloads: scanning) { chunk in
                             Task { @MainActor in
                                 self.output = String((self.output + chunk).suffix(12000))
                             }
@@ -271,6 +279,30 @@ final class LauncherModel: ObservableObject {
         }
     }
 
+    func scanCachedDownloads() {
+        perform(["security-scan-cache"], success: "Cached files scanned locally. Read the report for coverage and scanner limits.")
+    }
+
+    func openSecurityTask(_ action: String) {
+        guard ["security-tools", "security-update"].contains(action), !busy, !gameRunning, !externalInstallRunning else { return }
+        do {
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            let command = root.appendingPathComponent("Prepare optional security scanner.command")
+            let content = """
+            #!/bin/bash
+            export GX_INSTALL_ROOT=\(Self.shellQuote(root.path))
+            /bin/bash \(Self.shellQuote(backend.path)) \(Self.shellQuote(action))
+            result=$?
+            read -r -p 'Press Return to close.'
+            exit "$result"
+            """
+            try content.write(to: command, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: command.path)
+            guard NSWorkspace.shared.open(command) else { throw NSError(domain: "CnCLauncher", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not open the local scanner setup terminal."]) }
+            status = "Finish scanner setup in your local terminal, then use Refresh in Security & downloads."
+        } catch { status = error.localizedDescription }
+    }
+
     func downloadAssets() {
         guard canEnterStep(2) && !steamSessionRunning && !externalInstallRunning && !steamStarting else { return }
         recovery = nil
@@ -281,6 +313,7 @@ final class LauncherModel: ObservableObject {
             let content = """
             #!/bin/bash
             export GX_INSTALL_ROOT=\(Self.shellQuote(root.path))
+            export GX_SCAN_DOWNLOADS=\(scanDownloads ? "1" : "0")
             /bin/bash \(Self.shellQuote(backend.path)) steam-login \(Self.shellQuote(steamProfile))
             result=$?
             printf '\\nReturn to C&C Unix Launcher. The Steam guide checks progress automatically.\\n'
@@ -334,6 +367,7 @@ final class LauncherModel: ObservableObject {
         let scale: CGFloat = game.isCompatibility ? 1 : (screen?.backingScaleFactor ?? 2)
         let width = fullscreen ? Int((screen?.frame.width ?? 1440) * scale) : 1280
         let height = fullscreen ? Int((screen?.frame.height ?? 900) * scale) : 720
+        let scanning = scanDownloads
         let arguments = ["launch", profile, fullscreen ? "-fullscreen" : "-win",
                          "-xres", String(width), "-yres", String(height)]
         Task {
@@ -350,6 +384,7 @@ final class LauncherModel: ObservableObject {
                 let logHandle = try FileHandle(forWritingTo: launcherLog)
                 process.executableURL = URL(fileURLWithPath: "/bin/bash")
                 process.arguments = [script.path] + arguments
+                process.environment = ProcessInfo.processInfo.environment.merging(["GX_SCAN_DOWNLOADS": scanning ? "1" : "0"]) { _, new in new }
                 process.standardOutput = logHandle
                 process.standardError = logHandle
                 let launchID = UUID()
@@ -384,11 +419,12 @@ final class LauncherModel: ObservableObject {
         "'" + text.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
-    nonisolated private static func run(_ script: URL, arguments: [String], onOutput: (@Sendable (String) -> Void)? = nil) throws -> String {
+    nonisolated private static func run(_ script: URL, arguments: [String], scanDownloads: Bool = false, onOutput: (@Sendable (String) -> Void)? = nil) throws -> String {
         let process = Process()
         let pipe = Pipe()
         process.executableURL = URL(fileURLWithPath: "/bin/bash")
         process.arguments = [script.path] + arguments
+        process.environment = ProcessInfo.processInfo.environment.merging(["GX_SCAN_DOWNLOADS": scanDownloads ? "1" : "0"]) { _, new in new }
         process.standardOutput = pipe
         process.standardError = pipe
         try process.run()

@@ -370,3 +370,39 @@ Swift model/resource checks, sixteen Linux state/widget checks, Mac compilation
 and ad-hoc signature verification, Linux packaging and packaged self-check passed.
 The Linux UI test clicked support buttons with browser opening intercepted and
 confirmed their destinations. No donation website, payment flow or game opened.
+
+## Security review and preview packaging — 2026-10-08
+
+A user-requested security subagent performed read-only launcher and supply-chain
+reviews. No confirmed critical issue was found. Its scanner follow-up identified
+a Linux terminal script that dropped GX_SCAN_DOWNLOADS; that defect was fixed,
+covered by a headless test and reviewed again. The final review found no remaining
+confirmed release-blocking scanner issue. This is not certification of upstream
+engine/mod binaries or a malware-free guarantee.
+
+The shared download module now performs SHA verification then optional local
+ClamAV scanning before any install/extraction/execution, including cache hits.
+Synthetic tests passed for scan ordering, cache rescans, prior detection blocking,
+missing/stale definitions, scanner errors, encryption/limit alerts and skipped
+results. The optional preference propagates through GUI and terminal jobs on both
+platforms. Native Steam-guide nonactivation and credential gates still passed.
+
+A disposable non-root Debian container installed ClamAV from the distribution,
+then used the actual backend to fetch and validate official main/daily/bytecode
+signatures. The actual scan path accepted a clean synthetic file and blocked the
+harmless EICAR test before installation. No game or malicious program ran and
+nothing was installed on the user's Mac. The EICAR fixture is generated only at
+runtime so source archives do not contain its literal signature.
+
+Eighteen Linux state/offscreen widget tests, shared backend/security tests,
+hash-locked Linux packaging, packaged self-check and virtual launcher/Steam-guide
+checks passed. Mac model tests, compilation, ad-hoc signature and metadata checks
+passed. Package inventories included the security/download modules and excluded
+original game assets, mod archives, credentials and virus databases. CI actions
+are pinned to commit SHAs and Linux build wheels to recorded SHA-256 hashes.
+
+Version 0.3.0 is a local community-preview candidate. C&C 3 and other additional
+3D titles were investigated and deferred rather than exposing unvalidated entries.
+Manual Mac scanner installation/definition-terminal behavior and exhaustive
+platform/game/mod testing remain pending. Public publication requires the user's
+review of the concrete release notes; no GitHub repository or release was created.

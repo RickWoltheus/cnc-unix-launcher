@@ -1,0 +1,16 @@
+{
+  "title": "Security & downloads",
+  "detail": "Engine and mod downloads are checked against pinned SHA-256 hashes before installation. That verifies expected bytes; it is not a promise that third-party software is malware-free.",
+  "steam": "SteamCMD is Valve’s official downloader. Its bootstrap comes from Valve’s HTTPS CDN; later updates and owned game downloads are handled by Valve’s updater.",
+  "mods": "Generals mods use reviewed data-file manifests rather than downloaded mod installers. Some files come from an HTTP community mirror with pinned hashes. Other engines and native mods come from their published releases.",
+  "scanLabel": "Scan downloads locally before installation",
+  "scanDetail": "Optional ClamAV scans run after checksum verification and before installation, including cached files. Missing definitions, scanner errors, detected threats and incomplete scans stop installation. Antivirus cannot guarantee safety.",
+  "privacy": "Files stay on your computer. This option scans custom download files, not Steam credentials, saves, game folders or logs. Steam’s own updates are outside this scan step.",
+  "limits": "Large, encrypted or unsupported archives can limit coverage. Reports say ‘no known threats detected within scanner limits’, not ‘safe’. Definitions must have been checked within seven days.",
+  "installLabel": "Install optional scanner",
+  "updateLabel": "Update virus definitions",
+  "scanCacheLabel": "Scan cached downloads now",
+  "setupDetail": "ClamAV is optional. Installation and definition updates open your local terminal. On Macs without Homebrew, installation opens ClamAV’s official download page. Definitions may need several hundred MB; scanning can take a while.",
+  "scannerURL": "https://www.clamav.net/downloads",
+  "docsURL": "https://docs.clamav.net/manual/Usage/Scanning.html"
+}

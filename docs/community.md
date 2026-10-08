@@ -54,6 +54,7 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [curl](https://github.com/curl/curl) | Verified runtime and package downloads | [Contributors / team](https://github.com/curl/curl/graphs/contributors) |
 | [GNU Bash](https://www.gnu.org/software/bash/) | Shared installation and launch scripts | [Contributors / team](https://www.gnu.org/software/bash/) |
 | [Apple / Rosetta 2 / macOS frameworks](https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment) | Apple Silicon compatibility for SteamCMD and Wine; SwiftUI/AppKit and macOS system tooling | [Contributors / team](https://developer.apple.com/) |
+| [ClamAV](https://github.com/Cisco-Talos/clamav) | Optional local antivirus scanner and signed virus definitions | [Contributors / team](https://github.com/Cisco-Talos/clamav/graphs/contributors) |
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 

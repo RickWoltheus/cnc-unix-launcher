@@ -2,6 +2,28 @@
   "rules": [
     {
       "containsAny": [
+        "security_setup"
+      ],
+      "title": "Optional scanner needs setup",
+      "message": "Open Help \u2192 Security & downloads. Install ClamAV and update its definitions, or turn optional scanning off before retrying."
+    },
+    {
+      "containsAny": [
+        "security_detection"
+      ],
+      "title": "Download blocked by a threat report",
+      "message": "Installation stopped before this download was executed. Open the installation folder\u2019s security reports and review the finding; antivirus can produce false positives."
+    },
+    {
+      "containsAny": [
+        "security_incomplete",
+        "security_scan_error"
+      ],
+      "title": "The scan did not finish",
+      "message": "The download was not installed. Check Security & downloads and its local reports for scanner errors or coverage limits. A partial scan is not a clean result."
+    },
+    {
+      "containsAny": [
         "no subscription",
         "license"
       ],

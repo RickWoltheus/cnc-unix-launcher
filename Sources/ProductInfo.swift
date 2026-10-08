@@ -13,7 +13,7 @@ struct ProductInfo {
         let row = ((try? String(contentsOf: url, encoding: .utf8)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             .split(separator: "\t").map(String.init)
         guard row.count == 6 else {
-            return ProductInfo(name: "C&C Unix Launcher", version: "0.2.0", repository: "RickWoltheus/cnc-unix-launcher",
+            return ProductInfo(name: "C&C Unix Launcher", version: "0.3.0", repository: "RickWoltheus/cnc-unix-launcher",
                                macArchive: "CnC-Unix-Launcher-macOS-arm64.zip", linuxArchive: "CnC-Unix-Launcher-linux-x86_64.tar.gz", executable: "CnCUnixLauncher")
         }
         return ProductInfo(name: row[0], version: row[1], repository: row[2], macArchive: row[3], linuxArchive: row[4], executable: row[5])

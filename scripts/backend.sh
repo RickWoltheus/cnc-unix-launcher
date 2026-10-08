@@ -28,13 +28,7 @@ select_mod() {
   MOD_MANIFEST="$RESOURCES/manifests/$MOD_ID.tsv"
 }
 if [[ "$PROFILE" == base ]]; then ENGINE="$ROOT/engine-base/GeneralsX.app"; GAME="$ROOT/Generals"; fi
-verify() {
-  [[ -f "$1" ]] || return 1
-  local digest
-  if command -v shasum >/dev/null; then digest="$(shasum -a 256 "$1" | awk '{print $1}')"
-  else digest="$(sha256sum "$1" | awk '{print $1}')"; fi
-  [[ "$digest" == "$2" ]]
-}
+source "$RESOURCES/scripts/downloads.sh"
 find_game_file() { find "$1" -maxdepth 1 -type f -iname "$2" -print | head -n 1; }
 steam_manifest_ready() {
   local manifest="$1/steamapps/appmanifest_$2.acf"
@@ -46,6 +40,7 @@ source "$RESOURCES/scripts/native-mods.sh"
 source "$RESOURCES/scripts/settings.sh"
 source "$RESOURCES/scripts/online.sh"
 source "$RESOURCES/scripts/compatibility.sh"
+source "$RESOURCES/scripts/security.sh"
 if compatibility_profile "$PROFILE"; then GAME="$(compatibility_directory "$PROFILE")"; fi
 if classic_profile "$PROFILE"; then
   GAME="$ROOT/$(classic_directory "$PROFILE")"; ENGINE="$(classic_engine_path "$PROFILE")"
@@ -56,15 +51,6 @@ if native_profile "$PROFILE"; then
 fi
 installed_name() {
   if [[ "$1" == *.gib ]]; then printf '%s.big' "${1%.gib}"; else printf '%s' "$1"; fi
-}
-download() {
-  local name="$1" url="$2" checksum="$3" target="$CACHE/$1"
-  if verify "$target" "$checksum"; then printf 'Using verified %s\n' "$name"; return; fi
-  printf 'Downloading %s\n' "$name"
-  mkdir -p "$(dirname "$target")"
-  curl -fL --retry 3 --connect-timeout 20 --max-time 1800 -o "$target.part" "$url"
-  verify "$target.part" "$checksum" || fail "Checksum mismatch for $name. Nothing was installed."
-  mv "$target.part" "$target"
 }
 assets_ready() {
   local folder="$1" game="${2:-vanilla}" file appid=2732960
@@ -95,6 +81,8 @@ if [[ "$ACTION" == status ]]; then
   install=idle
   if [[ -f "$ROOT/.install-lock/pid" ]] && kill -0 "$(cat "$ROOT/.install-lock/pid")" 2>/dev/null; then install=busy; fi
   echo "install=$install"
+  security_tool clamscan >/dev/null && echo "scanner=ready" || echo "scanner=missing"
+  echo "scan_definitions=$(security_definitions_status)"
   echo "wine_session=$(compatibility_session)"
   compatibility_dependencies_ready && echo "wine_dependencies=ready" || echo "wine_dependencies=missing"
   platform_supported && echo 'platform=ready' || echo 'platform=unsupported'
@@ -199,6 +187,9 @@ trap cleanup EXIT
 trap 'exit 130' INT TERM
 
 case "$ACTION" in
+  security-tools) security_install_tools ;;
+  security-update) security_update ;;
+  security-scan-cache) security_scan_cache ;;
   graphics)
     if compatibility_profile "$PROFILE"; then echo "Display mode is applied through cnc-ddraw at launch; graphics settings stay in the game."; exit 0; fi
     if classic_profile "$PROFILE" || native_profile "$PROFILE"; then echo 'OpenRA uses its own graphics settings. Display mode is applied at launch.'; exit 0; fi

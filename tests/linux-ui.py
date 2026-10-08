@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 import tempfile
 import time
 
@@ -11,6 +12,7 @@ sys.path.insert(0, str(REPO / "linux"))
 from state import LauncherState
 from app import LauncherWindow
 from community import CommunityWindow
+from security_setup import SecuritySetupWindow
 from PySide6.QtWidgets import QApplication, QLineEdit, QPushButton, QLabel
 from PySide6.QtCore import Qt
 
@@ -155,6 +157,35 @@ class WidgetChecks(unittest.TestCase):
         self.assertEqual(calls, ["rotr", "vanilla"])
         self.window.choose_profile("shockwave")
         self.assertEqual(self.window.play_button.text(), "INSTALL & PLAY →")
+
+    def test_terminal_operations_keep_scan_preference(self):
+        with tempfile.TemporaryDirectory() as root:
+            with patch("app.ROOT", Path(root)), patch("app.shutil.which", return_value=None):
+                self.window.state.scan_downloads = True
+                self.window.open_terminal("Fixture", ["steam-login", "combined-arms"])
+                self.assertIn("export GX_SCAN_DOWNLOADS=1", (Path(root) / "fixture.sh").read_text())
+                self.window.state.scan_downloads = False
+                self.window.open_terminal("Fixture", ["security-update"])
+                self.assertIn("export GX_SCAN_DOWNLOADS=0", (Path(root) / "fixture.sh").read_text())
+
+    def test_optional_scanner_setup_and_preferences(self):
+        self.window.state.scan_downloads = False
+        self.window.state.update("platform=ready\ninstall=idle\nscanner=missing\nscan_definitions=missing")
+        dialog = SecuritySetupWindow(self.window)
+        self.assertFalse(dialog.scan.isEnabled())
+        self.assertFalse(dialog.scan_cache.isEnabled())
+        self.window.state.update("platform=ready\ninstall=idle\nscanner=ready\nscan_definitions=ready")
+        dialog.refresh()
+        self.assertTrue(dialog.scan.isEnabled())
+        self.assertTrue(dialog.scan_cache.isEnabled())
+        dialog.scan.setChecked(True)
+        self.assertEqual(self.window.environment().value("GX_SCAN_DOWNLOADS"), "1")
+        self.window.state.update("platform=ready\ninstall=idle\nscanner=missing\nscan_definitions=missing")
+        dialog.refresh()
+        self.assertTrue(dialog.scan.isEnabled())
+        dialog.scan.setChecked(False)
+        self.assertEqual(self.window.environment().value("GX_SCAN_DOWNLOADS"), "0")
+        dialog.close()
 
     def test_community_maintainer_support_links(self):
         button = self.window.findChild(QPushButton, "support-kofi")

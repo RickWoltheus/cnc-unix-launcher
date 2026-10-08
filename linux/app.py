@@ -17,6 +17,7 @@ from state import LauncherState
 from steam_guide import SteamGuideWindow
 from online_setup import OnlineSetupWindow
 from community import CommunityWindow
+from security_setup import SecuritySetupWindow
 
 ROOT = Path(os.environ.get("GX_INSTALL_ROOT", str(Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))) / "generalsx-launcher")))
 RESOURCES = Path(sys._MEIPASS) / "share" if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
@@ -48,6 +49,7 @@ QProgressBar::chunk { background:#efad40; }
 class LauncherWindow(QMainWindow):
     def __init__(self, resources=RESOURCES, auto_poll=True, load_media=True):
         super().__init__()
+        self.install_root = ROOT
         self.resources = resources
         self.backend = resources / "scripts/backend.sh"
         self.state = LauncherState(resources)
@@ -67,6 +69,7 @@ class LauncherWindow(QMainWindow):
         self.media_loaded = False
         self.load_media = load_media
         self.settings = QSettings("GeneralsXLauncher", "Linux")
+        self.state.scan_downloads = self.settings.value("scanDownloads", False, type=bool)
         self.network = QNetworkAccessManager(self)
         self.setWindowTitle(self.state.product["name"])
         self.setWindowIcon(QIcon(str(resources / "resources/launcher-icon.png")))
@@ -184,7 +187,7 @@ class LauncherWindow(QMainWindow):
         layout.addWidget(self.details)
         footer = QHBoxLayout()
         help_menu = QComboBox()
-        help_menu.addItems(["Help…", "Repair game engine", "Check Steam files", "Repair selected mod", "Open installation folder", "Steam account help", "Show Steam guide", "Online setup"])
+        help_menu.addItems(["Help…", "Repair game engine", "Check Steam files", "Repair selected mod", "Open installation folder", "Steam account help", "Show Steam guide", "Online setup", "Security & downloads"])
         help_menu.activated.connect(self.help_action)
         self.help_menu = help_menu
         footer.addWidget(help_menu)
@@ -481,6 +484,7 @@ class LauncherWindow(QMainWindow):
     def environment(self):
         environment = QProcessEnvironment.systemEnvironment()
         environment.insert("GX_INSTALL_ROOT", str(ROOT))
+        environment.insert("GX_SCAN_DOWNLOADS", "1" if self.state.scan_downloads else "0")
         return environment
 
     def read_status(self):
@@ -580,6 +584,10 @@ class LauncherWindow(QMainWindow):
         else:
             self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
 
+    def show_security(self):
+        dialog = SecuritySetupWindow(self)
+        dialog.exec()
+
     def show_community(self):
         dialog = CommunityWindow(self)
         dialog.exec()
@@ -610,7 +618,7 @@ class LauncherWindow(QMainWindow):
         ROOT.mkdir(parents=True, exist_ok=True)
         script = ROOT / (title.lower().replace(" ", "-") + ".sh")
         command = shlex.join(["/bin/bash", str(self.backend), *arguments])
-        script.write_text(f'#!/bin/bash\nexport GX_INSTALL_ROOT={shlex.quote(str(ROOT))}\n{command}\nresult=$?\nprintf "\\nReturn to the launcher. Press Return to close.\\n"\nread -r\nexit "$result"\n')
+        script.write_text(f'#!/bin/bash\nexport GX_INSTALL_ROOT={shlex.quote(str(ROOT))}\nexport GX_SCAN_DOWNLOADS={"1" if self.state.scan_downloads else "0"}\n{command}\nresult=$?\nprintf "\\nReturn to the launcher. Press Return to close.\\n"\nread -r\nexit "$result"\n')
         script.chmod(0o700)
         for program, prefix in [("x-terminal-emulator", ["-e"]), ("gnome-terminal", ["--"]), ("konsole", ["-e"]), ("xfce4-terminal", ["-x"]), ("xterm", ["-e"])]:
             if shutil.which(program):
@@ -733,6 +741,7 @@ class LauncherWindow(QMainWindow):
         elif index == 5: self.open_url("https://help.steampowered.com/en/wizard/HelpWithLogin")
         elif index == 6: self.show_steam_guide()
         elif index == 7: self.show_online_setup()
+        elif index == 8: self.show_security()
 
     def show_online_setup(self):
         self.online_window = OnlineSetupWindow(self)
@@ -761,7 +770,7 @@ def main():
         raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
     if "--self-check" in sys.argv:
         state = LauncherState(RESOURCES)
-        for name in ("backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh"):
+        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh"):
             subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
         if len(state.mods) != 7 or len(state.policy["steps"]) != 4:
             raise SystemExit("Packaged catalog or setup policy is incomplete.")

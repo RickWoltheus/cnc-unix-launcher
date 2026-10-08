@@ -29,6 +29,23 @@ verifies. Engine/SteamCMD downloads, ROTR installation and repair, settings
 backups, and launch arguments have been checked without starting the game.
 See [verification.md](docs/verification.md) for the evidence and remaining checks.
 
+## Downloads and security
+
+Every custom engine/mod download, including cache hits, must match a pinned SHA-256
+before installation. SteamCMD comes from Valve’s HTTPS CDN; Valve handles its later
+updates. Some Generals mod data uses a community HTTP mirror with pinned hashes.
+Hashes verify expected bytes; they do not certify malware-free software.
+
+**Help → Security & downloads** offers optional local ClamAV scanning before
+installation. Set up ClamAV and its definitions there, then enable the checkbox.
+No file upload is performed. Missing/stale definitions, scanner errors, threats and
+reported incomplete scans stop installation. Previously detected hashes stay blocked.
+You can also scan cached downloads and inspect local reports. ClamAV is optional;
+normal setup still checks download hashes.
+
+See [sources, security review and scanner limits](docs/security.md). This project
+cannot guarantee the safety of every third-party dependency.
+
 ## Requirements
 
 - Apple Silicon Mac with macOS 15 or later.
@@ -54,7 +71,7 @@ sandbox and GPU/gameplay tests remain pending.
 
 When a verified release is available:
 
-1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.2.0/CnC-Unix-Launcher-macOS-arm64.zip).
+1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip).
 2. Extract it, and move **C&C Unix Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively

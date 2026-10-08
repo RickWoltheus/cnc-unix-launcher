@@ -12,6 +12,7 @@ class LauncherState:
     busy: bool = False
     game_running: bool = False
     wine_session_observed: bool = False
+    scan_downloads: bool = False
     steam_starting: bool = False
     steam_target: str | None = None
     values: dict = field(default_factory=dict)
@@ -39,6 +40,7 @@ class LauncherState:
                 id, title, games, version, mod_id, app, source, homepage, image, summary = row
                 self.mods.append(dict(id=id, title=title, games=games.split(","), version=version, native=True, source=source,
                                       homepage=homepage, image=image, summary=summary))
+        self.security = json.loads((self.resources / "resources/security.json").read_text())
         self.community = json.loads((self.resources / "resources/community.json").read_text())
         self.online = json.loads((self.resources / "resources/online.json").read_text())
 

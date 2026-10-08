@@ -201,6 +201,12 @@
       "role": "Apple Silicon compatibility for SteamCMD and Wine; SwiftUI/AppKit and macOS system tooling",
       "url": "https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment",
       "contributorsURL": "https://developer.apple.com/"
+    },
+    {
+      "name": "ClamAV",
+      "role": "Optional local antivirus scanner and signed virus definitions",
+      "url": "https://github.com/Cisco-Talos/clamav",
+      "contributorsURL": "https://github.com/Cisco-Talos/clamav/graphs/contributors"
     }
   ],
   "supportTitle": "Consider supporting these projects too",
