@@ -2,9 +2,11 @@
 
 **Play supported Command & Conquer games on Mac and Linux with a guided setup.**
 
-Not everyone has the technical background—or the spare time—to find the right
-community port, troubleshoot Wine, or work out how to install a mod. Many players
-just want to play the games they already own.
+One day I was helping a nontechnical friend get Command & Conquer running so we
+could play together. Between finding the right community projects, troubleshooting
+Wine and figuring out mod installation, there was a lot to work through before
+we could even play. So I figured I’d vibecode a launcher to make setup easier for
+my friend, and share it in case it helps others too.
 
 C&C Unix Launcher brings that setup into one app. Choose a supported game, follow
 the Steam sign-in steps, select a mod if you want one, and press Play. The launcher
