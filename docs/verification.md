@@ -406,3 +406,18 @@ Version 0.3.0 is a local community-preview candidate. C&C 3 and other additional
 Manual Mac scanner installation/definition-terminal behavior and exhaustive
 platform/game/mod testing remain pending. Public publication requires the user's
 review of the concrete release notes; no GitHub repository or release was created.
+
+## Public preview publication — 2026-10-08
+
+Published the source to `RickWoltheus/cnc-unix-launcher` and released v0.3.0 as a
+public prerelease after user authorization. README includes a real Mac launcher
+window capture and an offscreen Linux interface capture, with no Steam console
+or game started for the screenshots. The original-code MIT license now names
+C&C Unix Launcher; third-party scope and notices are explicit in the repository
+and both packages. GitHub reports the repository public and recognizes MIT.
+
+Both release archives and SHA256SUMS.txt are uploaded. GitHub's server-side asset
+SHA-256 digests match the local Mac and Linux packages. The publication used the
+user's personal GitHub account and personal SSH alias; global authentication
+settings were not changed. This remains a community preview with the validation
+limits described above.

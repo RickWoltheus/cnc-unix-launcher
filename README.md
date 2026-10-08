@@ -101,7 +101,7 @@ sandbox and GPU/gameplay tests remain pending.
 
 ## Install and play on macOS
 
-When a verified release is available:
+For the current community preview:
 
 1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip).
 2. Extract it, and move **C&C Unix Launcher.app** to Applications.
