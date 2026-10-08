@@ -1,16 +1,31 @@
 # C&C Unix Launcher
 
-macOS and Linux launchers for Command & Conquer, Red Alert, Generals and
-Zero Hour, plus experimental Wine support for Red Alert 2, Yuri’s Revenge and
-Tiberian Sun / Firestorm. They install OpenRA, GeneralsX or free Wine + cnc-ddraw,
-download your owned files through Steam, and install curated community mods. A game sidebar changes the
-theme and setup state for the selected title. macOS uses SwiftUI; Linux has a separate Qt/PySide6 interface
+**Play supported Command & Conquer games on Mac and Linux with a guided setup.**
+
+Not everyone has the technical background—or the spare time—to find the right
+community port, troubleshoot Wine, or work out how to install a mod. Many players
+just want to play the games they already own.
+
+C&C Unix Launcher brings that setup into one app. Choose a supported game, follow
+the Steam sign-in steps, select a mod if you want one, and press Play. The launcher
+handles engine and runtime downloads, file verification, separate mod profiles,
+and common setup fixes. You do not need to build an engine or assemble game and
+mod folders by hand.
+
+Some steps still need you: signing in to Steam in its local console, approving
+macOS’s first-open prompt, or allowing Linux dependency installation. The goal is
+to take most routine technical work off your hands, while keeping those approvals
+and credentials under your control.
+
+The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
+Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
+Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. C&C 3 and other additional
+3D titles are deferred. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
 with the same guided flow.
 
-This project is for people who just want to play without sorting out engine builds,
-command lines or compatibility fixes. Years of work by engine developers, mod
-teams and open-source maintainers make that possible; this launcher makes their
-work easier to install and use.
+Years of work by engine developers, mod teams and open-source maintainers make
+this possible. This launcher makes their work easier to install and use; the
+engines, compatibility tools and mods belong to their creators.
 
 [Support the launcher on Ko-fi](https://ko-fi.com/ricklemore). Also consider
 supporting the projects and maintainers that make this launcher possible:
@@ -23,11 +38,11 @@ See the [community credits and support links](docs/community.md) for the project
 their contributors and the sources of these donation links. Support is optional;
 the launcher stays free and open source.
 
-**Development preview. Headless installer checks pass; full gameplay and fresh
-Steam sign-in testing remain pending.** The app builds for ARM64 and its ad-hoc signature
-verifies. Engine/SteamCMD downloads, ROTR installation and repair, settings
-backups, and launch arguments have been checked without starting the game.
-See [verification.md](docs/verification.md) for the evidence and remaining checks.
+**Community preview.** Installer, readiness, credential-guidance and security
+checks pass, and Zero Hour and Red Alert 2 have been played on the development Mac.
+Fresh-machine setup, live Linux gameplay and the full game/mod catalog still need
+broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
+for the evidence and remaining checks.
 
 ## Downloads and security
 

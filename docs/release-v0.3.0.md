@@ -1,5 +1,10 @@
 # C&C Unix Launcher v0.3.0 — community preview
 
+For players who want to play their owned C&C games without spending their evening
+finding an engine, troubleshooting Wine or working out mod installation. Choose a
+supported game, follow the Steam sign-in steps and press Play; the launcher handles
+most routine downloads, checks, profiles and setup fixes.
+
 A guided Mac and Linux launcher for owned Steam C&C games: OpenRA for C&C/Red Alert,
 GeneralsX for Generals/Zero Hour, and experimental Wine profiles for Red Alert 2,
 Yuri’s Revenge and Tiberian Sun/Firestorm. Includes curated community mods and
