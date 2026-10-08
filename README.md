@@ -46,6 +46,19 @@ Fresh-machine setup, live Linux gameplay and the full game/mod catalog still nee
 broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
 for the evidence and remaining checks.
 
+## Screenshots
+
+**macOS — choose the original game or a curated mod, then use one Play button.**
+
+![C&C Unix Launcher on macOS showing Zero Hour and its mod library](docs/screenshots/macos-mod-library.png)
+
+**Linux — the same guided setup with game selection and a themed sidebar.**
+
+![C&C Unix Launcher Linux interface showing Red Alert game selection](docs/screenshots/linux-game-selection.png)
+
+The Linux screenshot is an offscreen capture of the real interface in a fresh
+setup state. Screenshots show the launcher, not proof that every game has been tested.
+
 ## Downloads and security
 
 Every custom engine/mod download, including cache hits, must match a pinned SHA-256
