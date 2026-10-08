@@ -9,6 +9,7 @@ python3 -m PyInstaller --noconfirm --clean --onedir --name "$EXECUTABLE" \
   --add-data "$REPO/manifests:share/manifests" --add-data "$REPO/LICENSE:share" \
   --copy-metadata PySide6 --copy-metadata PySide6_Essentials --copy-metadata PySide6_Addons --copy-metadata shiboken6 \
   "$REPO/linux/app.py"
+cp "$REPO/THIRD-PARTY-NOTICES.md" "$REPO/dist/linux/$EXECUTABLE/"
 cp "$REPO/linux/THIRD-PARTY.md" "$REPO/dist/linux/$EXECUTABLE/"
 cp "$REPO/linux/start-launcher.sh" "$REPO/dist/linux/$EXECUTABLE/"
 chmod +x "$REPO/dist/linux/$EXECUTABLE/start-launcher.sh"

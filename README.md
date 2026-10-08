@@ -352,7 +352,8 @@ launcher’s contributors and published maintainer donation links. The same cred
 and support links are available from **Community & support** in both launchers; the
 coffee button’s tooltip explains their work and this launcher’s role.
 
-This launcher's original code is MIT-licensed. Downloaded software and game data
-retain their respective licenses. This is an independent community launcher,
+This launcher's original code is licensed under the [MIT License](LICENSE).
+Third-party components, derived files, artwork and game data keep their own
+licenses and ownership; see [third-party notices](THIRD-PARTY-NOTICES.md). This is an independent community launcher,
 not an official EA, Valve, engine or mod-team product. No upstream maintainer’s
 endorsement is implied.
