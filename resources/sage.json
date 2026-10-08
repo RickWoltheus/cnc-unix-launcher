@@ -1,0 +1,12 @@
+{
+  "macos": {
+    "detail": "Experimental Sikarugir Wine + D9VK runs the original Windows game. Requires Apple Silicon, Rosetta 2 and macOS Tahoe 26+. Campaigns, graphics and Steam startup still need gameplay testing.",
+    "prepare": "Pinned Sikarugir Wine 11 + D9VK in a separate runtime. Requires macOS Tahoe 26+; existing games keep their current requirements.",
+    "play": "Experimental C&C 3 support. Windowed mode uses 1280\u00d7720; fullscreen uses your desktop size. Adjust graphics in the game. Mods and C&C:Online are not installed yet."
+  },
+  "linux": {
+    "detail": "Experimental Steam Proton support. Uses your native Linux Steam client, owned game and Steam-managed Proton. Flatpak Steam is not supported in this first integration.",
+    "prepare": "Open Steam setup, enable Proton 11 in this game\u2019s Properties \u2192 Compatibility, install the English game and start it once. Return here to check readiness.",
+    "play": "Experimental Steam Proton support. Steam manages runtime updates, saves and its game copy. Launch display options are passed to Steam. Mods and C&C:Online are not installed yet."
+  }
+}

@@ -40,6 +40,9 @@ class LauncherState:
                 id, title, games, version, mod_id, app, source, homepage, image, summary = row
                 self.mods.append(dict(id=id, title=title, games=games.split(","), version=version, native=True, source=source,
                                       homepage=homepage, image=image, summary=summary))
+        with (self.resources / "manifests/compatibility.tsv").open() as stream:
+            self.sage_ids = {row[0] for row in csv.reader(stream, delimiter="\t") if len(row) == 5 and row[4] == "sage"}
+        self.sage_copy = json.loads((self.resources / "resources/sage.json").read_text())["linux"]
         self.security = json.loads((self.resources / "resources/security.json").read_text())
         self.community = json.loads((self.resources / "resources/community.json").read_text())
         self.online = json.loads((self.resources / "resources/online.json").read_text())
@@ -65,6 +68,10 @@ class LauncherState:
     @property
     def compatibility(self):
         return self.game["engine"] == "Wine"
+
+    @property
+    def sage(self):
+        return self.selected_game in self.sage_ids
 
     @property
     def available_mods(self):

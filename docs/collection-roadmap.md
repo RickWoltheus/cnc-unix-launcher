@@ -6,8 +6,12 @@ Yuri’s Revenge and Tiberian Sun/Firestorm through Wine + cnc-ddraw. The user h
 reported working Red Alert 2 gameplay; that is not a blanket validation of every
 Wine game, desktop or mod. OpenRA gameplay differs from the original clients.
 
-C&C 3/Tiberium Wars, Kane’s Wrath, Red Alert 3/Uprising, Renegade and Tiberian
-Twilight are deferred from this release. They require an additional 3D graphics
+The C&C 3 development PR adds experimental Tiberium Wars and Kane’s Wrath
+profiles with a separate macOS Tahoe Sikarugir/D9VK runtime and a Linux native
+Steam/Proton handoff. See [setup and pending validation](cnc3.md). These additions
+are not part of the v0.3.0 release.
+
+Red Alert 3/Uprising, Renegade and Tiberian Twilight remain deferred. They require an additional 3D graphics
 path and game-specific startup/dependency validation. Adding their Steam IDs to
 our 2D profile list would not provide that graphics support.
 

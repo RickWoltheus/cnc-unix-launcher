@@ -6,8 +6,9 @@ compatibility_select() {
   local row
   row="$(awk -F '\t' -v id="$1" '$1==id {print}' "$RESOURCES/manifests/compatibility.tsv")"
   [[ -n "$row" ]] || fail 'Unknown Wine game.'
-  IFS=$'\t' read -r COMPAT_ID COMPAT_EXE COMPAT_INI COMPAT_ARCHIVES <<< "$row"
+  IFS=$'\t' read -r COMPAT_ID COMPAT_EXE COMPAT_INI COMPAT_ARCHIVES COMPAT_KIND <<< "$row"
   COMPAT_GAME="$(compatibility_directory "$1")"
+  if sage_profile "$1" && [[ "$PLATFORM" == linux ]]; then COMPAT_GAME="$(sage_steam_game "$1")"; fi
   COMPAT_PLAY="$ROOT/compatibility/$1/game"
   COMPAT_PREFIX="$ROOT/compatibility/$1/prefix"
 }
@@ -21,7 +22,17 @@ compatibility_game_pids() {
   local profile="${1:-}" id exe rest path
   while IFS=$'\t' read -r id exe rest; do
     [[ -z "$profile" || "$profile" == "$id" ]] || continue
-    path="$ROOT/compatibility/$id/game/$exe"
+    if sage_profile "$id"; then
+      local folder config executable
+      folder="$ROOT/compatibility/$id/game"
+      [[ "$PLATFORM" != linux ]] || folder="$(sage_steam_game "$id")"
+      [[ -d "$folder" ]] || continue
+      config="$(sage_config "$folder" "$id")"
+      [[ -n "$config" ]] || continue
+      executable="$(sage_executable "$folder" "$config")"
+      [[ -n "$executable" ]] || continue
+      path="$executable"
+    else path="$ROOT/compatibility/$id/game/$exe"; fi
     ps -axo pid=,stat=,args= 2>/dev/null | awk -v path="$path" '
       $2 !~ /[ZE]/ {
         pid=$1; sub(/^[ \t]*[0-9]+[ \t]+[^ \t]+[ \t]+/, "")
@@ -59,7 +70,10 @@ compatibility_stop_helper() {
 compatibility_reset_prefix() {
   local profile="$1" server prefix waiter attempt result=0
   prefix="$ROOT/compatibility/$profile/prefix"
-  server="$(dirname "$(compatibility_wine)")/wineserver"
+  if sage_profile "$profile"; then
+    [[ "$PLATFORM" == macos ]] || return 0
+    server="$ROOT/sage-runtime/wine/wswine.bundle/bin/wineserver"
+  else server="$(dirname "$(compatibility_wine)")/wineserver"; fi
   [[ -d "$prefix" && -x "$server" ]] || return 0
   [[ -z "$(compatibility_game_pids "$profile")" ]] || return 1
   WINEPREFIX="$prefix" "$server" -k || result=$?
@@ -107,10 +121,12 @@ compatibility_wait_for_game() {
   done
 }
 compatibility_dependencies_ready() {
+  if [[ "$PLATFORM" == linux ]] && sage_profile "$PROFILE"; then sage_steam_ready; return; fi
   [[ "$PLATFORM" != linux ]] || { command -v /usr/bin/wine >/dev/null && command -v ps >/dev/null; }
 }
 compatibility_engine_ready() {
   local binary
+  if sage_profile "${1:-$PROFILE}"; then sage_engine_ready "${1:-$PROFILE}"; return; fi
   compatibility_package "$PLATFORM"
   binary="$ROOT/wine-runtime/$COMPAT_BINARY"
   [[ -x "$binary" && -f "$ROOT/wine-runtime/.version" ]] || return 1
@@ -121,6 +137,7 @@ compatibility_engine_ready() {
 }
 compatibility_assets_ready() {
   local id="$1" folder appid manifest file archive archives executable
+  if sage_profile "$id"; then sage_assets_ready "$id"; return; fi
   compatibility_select "$id"
   folder="$COMPAT_GAME"; appid="$(compatibility_metadata "$id" 5)"
   manifest="$folder/steamapps/appmanifest_$appid.acf"
@@ -134,6 +151,7 @@ compatibility_assets_ready() {
   done
 }
 compatibility_install() {
+  if sage_profile "$PROFILE"; then sage_install; return; fi
   local binary
   compatibility_dependencies_ready || fail 'Wine system libraries are missing. Use Prepare Linux to install the dependencies in your local terminal.'
   compatibility_package "$PLATFORM"
@@ -188,6 +206,7 @@ compatibility_prepare_game() {
       fail 'Could not prepare the owned game copy; previous files restored.'
     fi
   fi
+  if sage_profile "$id"; then return; fi
   original="$(find_game_file "$COMPAT_PLAY" ddraw.dll)"
   if [[ -n "$original" && ! -f "$COMPAT_PLAY/ddraw.dll.before-launcher" ]]; then copy_file "$original" "$COMPAT_PLAY/ddraw.dll.before-launcher"; fi
   [[ -z "$original" || "$original" == "$COMPAT_PLAY/ddraw.dll" ]] || rm "$original"
@@ -225,13 +244,7 @@ compatibility_menu_scaling() {
   merge_ini_settings "$COMPAT_PLAY/ddraw.ini" "${COMPAT_EXE%.*}" "$WORK/menu-scaling.tsv"
   touch "$stamp"
 }
-compatibility_launch() {
-  local full=false width=1280 height=720 binary argument profile="$PROFILE"
-  compatibility_running && fail 'A Wine game is already running. Quit it before switching games.'
-  pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1 && fail 'Quit the running game before switching games.'
-  compatibility_engine_ready || fail 'Prepare the Wine runtime before playing.'
-  compatibility_assets_ready "$profile" || fail 'Download and validate the selected Steam game first.'
-  shift 2
+compatibility_parse_display() {
   while [[ $# -gt 0 ]]; do
     argument="$1"; shift
     case "$argument" in
@@ -241,17 +254,30 @@ compatibility_launch() {
         [[ $# -gt 0 && "$1" =~ ^[0-9]+$ && "$1" -ge 640 && "$1" -le 16384 ]] || fail 'Invalid display dimensions.'
         if [[ "$argument" == -xres ]]; then width="$1"; else height="$1"; fi
         shift ;;
-      *) fail "Unknown Wine launch option: $argument" ;;
+      *) fail "Unknown compatibility launch option: $argument" ;;
     esac
   done
-  mkdir -p "$ROOT/compatibility/$profile" "$ROOT/logs"
+}
+compatibility_begin_launch() {
+  mkdir -p "$ROOT/compatibility/$1" "$ROOT/logs"
   LOCK="$ROOT/.install-lock"
   mkdir "$LOCK" || fail 'Another installation is running.'
   printf '%s\n' "$$" > "$LOCK/pid"
-  printf 'launch:%s\n' "$profile" > "$LOCK/kind"
+  printf 'launch:%s\n' "$1" > "$LOCK/kind"
   WORK="$(mktemp -d "$ROOT/.staging.XXXXXX")"
   trap 'rm -rf "$WORK"; if [[ "$(head -n 1 "$LOCK/pid" 2>/dev/null)" == "$$" ]]; then rm -rf "$LOCK"; fi; compatibility_clear_marker' EXIT
   trap 'exit 130' INT TERM
+}
+compatibility_launch() {
+  if sage_profile "$PROFILE"; then sage_launch "$@"; exit $?; fi
+  local full=false width=1280 height=720 binary argument profile="$PROFILE"
+  compatibility_running && fail 'A Wine game is already running. Quit it before switching games.'
+  pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1 && fail 'Quit the running game before switching games.'
+  compatibility_engine_ready || fail 'Prepare the Wine runtime before playing.'
+  compatibility_assets_ready "$profile" || fail 'Download and validate the selected Steam game first.'
+  shift 2
+  compatibility_parse_display "$@"
+  compatibility_begin_launch "$profile"
   compatibility_prepare_game "$profile"
   compatibility_apply_defaults "$profile"
   compatibility_menu_scaling "$profile"

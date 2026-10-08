@@ -21,8 +21,10 @@ and credentials under your control.
 
 The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
-Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. C&C 3 and other additional
-3D titles are deferred. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
+Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The development branch adds
+experimental C&C 3 and Kane’s Wrath support: Sikarugir + D9VK on macOS Tahoe 26+,
+native Steam + Proton on Linux. These additions are not in the v0.3.0 download.
+See [C&C 3 setup and testing](docs/cnc3.md). Other additional 3D titles are deferred. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
 with the same guided flow.
 
 Years of work by engine developers, mod teams and open-source maintainers make

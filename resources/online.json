@@ -33,5 +33,15 @@
     ],
     "hosting": "No router or firewall changes are made. Automatic online preparation is disabled for these profiles.",
     "source": "https://cncnet.org/"
+  },
+  "sage": {
+    "title": "C&C:Online support pending",
+    "steps": [
+      "These experimental C&C 3 profiles target campaigns and skirmish.",
+      "The launcher does not install C&C:Online patches or register an account yet.",
+      "See the official C&C:Online instructions; cross-platform multiplayer has not been validated."
+    ],
+    "hosting": "No router or firewall changes are made. Automatic online preparation is disabled.",
+    "source": "https://cnc-online.net/"
   }
 }

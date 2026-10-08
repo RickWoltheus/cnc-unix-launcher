@@ -13,6 +13,7 @@ cleanup() {
 }
 trap cleanup EXIT
 source "$REPO/scripts/compatibility.sh"
+source "$REPO/scripts/sage.sh"
 PLATFORM=linux; [[ "$(uname -s)" != Darwin ]] || PLATFORM=macos
 sleep 30 & helper_pid=$!
 printf '%s\n' "$helper_pid" > "$ROOT/.compatibility-running"
@@ -82,4 +83,15 @@ result=0
 compatibility_wait_for_game "$helper_pid" ra2 || result=$?
 helper_pid=
 [[ "$result" == 7 ]]
+# The SAGE startup file identifies the real versioned executable, not CNC3.exe.
+PLATFORM=macos
+mkdir -p "$ROOT/compatibility/cnc3/game/RetailExe/1.10"
+sage_game="$ROOT/compatibility/cnc3/game/RetailExe/1.10/cnc3game.dat"
+printf 'set-exe RetailExe\\1.10\\cnc3game.dat\n' > "$ROOT/compatibility/cnc3/game/CNC3_english_1.10.SkuDef"
+if [[ "$(uname -s)" == Darwin ]]; then touch "$sage_game"; else cp /bin/sleep "$sage_game"; fi
+start_fixture "$sage_game" 30 & game_pid=$!
+for attempt in 1 2 3 4 5 6 7 8 9 10; do [[ -n "$(compatibility_game_pids cnc3)" ]] && break; sleep 0.1; done
+[[ -n "$(compatibility_game_pids cnc3)" ]] || { echo 'FAIL: versioned C&C 3 process not detected.'; exit 1; }
+kill "$game_pid"; wait "$game_pid" 2>/dev/null || true; game_pid=
+[[ -z "$(compatibility_game_pids cnc3)" ]]
 echo 'Wine lifecycle checks passed: helpers ignored, live game tracked, closure releases wrapper, launch errors preserved. POSIX sleep fixtures only.'

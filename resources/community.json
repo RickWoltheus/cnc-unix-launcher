@@ -207,6 +207,30 @@
       "role": "Optional local antivirus scanner and signed virus definitions",
       "url": "https://github.com/Cisco-Talos/clamav",
       "contributorsURL": "https://github.com/Cisco-Talos/clamav/graphs/contributors"
+    },
+    {
+      "name": "Sikarugir / Gcenx",
+      "role": "Separate macOS C&C 3 Wine engine, D9VK and runtime libraries",
+      "url": "https://github.com/Sikarugir-App/Sikarugir",
+      "contributorsURL": "https://github.com/Sikarugir-App/Sikarugir/graphs/contributors"
+    },
+    {
+      "name": "DXVK / D9VK",
+      "role": "DirectX 9 rendering used by Sikarugir and Proton",
+      "url": "https://github.com/doitsujin/dxvk",
+      "contributorsURL": "https://github.com/doitsujin/dxvk/graphs/contributors"
+    },
+    {
+      "name": "Mesa / Kosmickrisp",
+      "role": "Vulkan to Metal driver for experimental Mac C&C 3 rendering",
+      "url": "https://gitlab.freedesktop.org/mesa/mesa",
+      "contributorsURL": "https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main"
+    },
+    {
+      "name": "Valve / Proton",
+      "role": "Steam-managed Windows game compatibility for Linux C&C 3",
+      "url": "https://github.com/ValveSoftware/Proton",
+      "contributorsURL": "https://github.com/ValveSoftware/Proton/graphs/contributors"
     }
   ],
   "supportTitle": "Consider supporting these projects too",

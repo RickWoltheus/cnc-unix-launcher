@@ -421,3 +421,42 @@ SHA-256 digests match the local Mac and Linux packages. The publication used the
 user's personal GitHub account and personal SSH alias; global authentication
 settings were not changed. This remains a community preview with the validation
 limits described above.
+
+## C&C 3 development branch — 2026-10-08
+
+Added experimental Tiberium Wars and Kane’s Wrath profiles. Mac uses a separate
+Sikarugir Wine 11/D9VK/Kosmickrisp runtime and requires macOS Tahoe 26+. Linux
+hands installation and play to the native Steam client and configured Proton.
+Red Alert 3/Uprising remain follow-up work. The public v0.3.0 release is unchanged.
+
+Headless Mac app compilation, ad-hoc signature verification and model checks
+passed. Real pinned Sikarugir/Template archives were extracted through the backend
+in a disposable installation; their hashes match GitHub’s published digests.
+Preparation created no prefix. Synthetic English SkuDef/game fixtures exercised
+both Mac profile copies and dummy launch arguments without executing EA code.
+The existing 2D Wine integration regression suite also passed against the pinned
+Wine/cnc-ddraw archives with synthetic assets and fake Steam.
+
+A separate x86_64 headless Vulkan probe loaded the Template Vulkan loader and
+Kosmickrisp ICD on the M3 Pro host. `vkCreateInstance` returned 0 and physical
+device enumeration returned 0 with one device. The sandbox initially prevented
+device discovery; the same probe outside it succeeded. This opened no game or
+window and does not establish successful D3D9 rendering.
+
+Twenty Linux state/offscreen UI tests, synthetic Steam library/Proton selection
+checks, shared backend/security tests and Wine lifecycle fixtures passed in an
+OrbStack x86_64 container. Lifecycle fixtures include the versioned C&C 3 `.dat`
+path. Linux packaging and packaged resource/Qt import self-check passed. No real
+Linux Steam client, Proton game or desktop GPU was tested.
+
+The independent security reviewer checked both pinned archives and their member
+and link paths: no absolute paths, parent escapes or escaping links were found.
+Both install inputs use the shared checksum/optional local-scan gate. A privacy
+finding was corrected: Linux Steam handoff output is discarded instead of saved
+in launcher logs. No credentials were entered or captured. This audit does not
+certify upstream binaries or imply that a Wine prefix is a security sandbox.
+
+Real C&C 3/Kane’s Wrath startup, Steam ownership/registration behavior on Mac,
+campaign/skirmish/Global Conquest, video/audio/input, save/load, fullscreen,
+performance and repeated launches remain pending manual gameplay testing.
+See [the manual checklist](cnc3.md). No EA game was launched for this PR.

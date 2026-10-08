@@ -1,0 +1,18 @@
+C&C 3 experimental runtime
+Wine/Sikarugir engine: https://github.com/Sikarugir-App/Engines
+Wine sources: https://gitlab.winehq.org/wine/wine
+Sikarugir component sources: https://github.com/Sikarugir-App/Sikarugir-foss-sources
+Runtime libraries and D9VK: https://github.com/Sikarugir-App/Template
+D9VK/DXVK sources: https://github.com/Sikarugir-App/dxvk
+DXVK's included zlib/libpng LICENSE is retained with its DLLs.
+Kosmickrisp Vulkan driver: https://gitlab.freedesktop.org/mesa/mesa (MIT and component licenses)
+Vulkan loader: https://github.com/KhronosGroup/Vulkan-Loader (Apache-2.0)
+GStreamer: https://gstreamer.freedesktop.org/ (LGPL and plugin component licenses)
+Additional upstream runtime library licenses apply to the downloaded libraries.
+The launcher downloads original pinned upstream archives; it does not relicense
+or redistribute their contents in its releases. No Sikarugir SDK, Creator,
+launcher or proprietary D3DMetal renderer is installed by this integration.
+Linux: Valve Steam manages Proton, dependencies, game files, prefixes and updates.
+Proton sources and licenses: https://github.com/ValveSoftware/Proton
+Valve's Steam client is proprietary. Steam credentials stay in Valve's UI.
+Original EA game files come only from the user's owned Steam installation.

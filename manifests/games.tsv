@@ -5,3 +5,5 @@ vanilla	Zero Hour	Generals + expansion	GeneralsX	2732960	GeneralsZH	EFAD40	ZH	Ca
 ra2	Red Alert 2	Allied vs Soviet · experimental	Wine	2229850	RedAlert2	ED5552	RA2	Original Windows campaigns and skirmish through free Wine + cnc-ddraw. Experimental; gameplay validation pending.
 yuri	Yuri’s Revenge	Red Alert 2 expansion · experimental	Wine	2229850	RedAlert2	B28ADA	YR	Yuri’s Revenge through free Wine + cnc-ddraw. Shares the owned Steam download with Red Alert 2; separate saves and settings.
 ts	Tiberian Sun	Firestorm included · experimental	Wine	2229880	TiberianSun	88C552	TS	Original Tiberian Sun and Firestorm through free Wine + cnc-ddraw. Choose the expansion in the game menu; gameplay validation pending.
+cnc3	C&C 3: Tiberium Wars	GDI · Nod · Scrin · experimental	Wine	24790	TiberiumWars	B4CB59	TW	Original campaigns and skirmish. Experimental DirectX 9 support: Sikarugir on macOS Tahoe, Steam Proton on Linux.
+kw	Kane’s Wrath	C&C 3 expansion · experimental	Wine	24810	KanesWrath	EFAD40	KW	Kane’s campaign and Global Conquest. Experimental; requires an owned Steam copy and gameplay validation.

@@ -40,6 +40,7 @@ source "$RESOURCES/scripts/native-mods.sh"
 source "$RESOURCES/scripts/settings.sh"
 source "$RESOURCES/scripts/online.sh"
 source "$RESOURCES/scripts/compatibility.sh"
+source "$RESOURCES/scripts/sage.sh"
 source "$RESOURCES/scripts/security.sh"
 if compatibility_profile "$PROFILE"; then GAME="$(compatibility_directory "$PROFILE")"; fi
 if classic_profile "$PROFILE"; then
@@ -88,7 +89,7 @@ if [[ "$ACTION" == status ]]; then
   platform_supported && echo 'platform=ready' || echo 'platform=unsupported'
   dependencies_ready && echo 'dependencies=ready' || echo 'dependencies=missing'
   engine_ready "$ENGINE" && echo 'engine=ready' || echo 'engine=missing'
-  steam_ready && echo 'steam=ready' || echo 'steam=missing'
+  if sage_profile "$PROFILE" && [[ "$PLATFORM" == linux ]]; then sage_steam_ready && echo 'steam=ready' || echo 'steam=missing'; else steam_ready && echo 'steam=ready' || echo 'steam=missing'; fi
   assets_ready "$GAME" && echo 'assets=ready' || echo 'assets=missing'
   engine_ready "$ROOT/engine-base/GeneralsX.app" && echo 'base_engine=ready' || echo 'base_engine=missing'
   assets_ready "$ROOT/Generals" base && echo 'base_assets=ready' || echo 'base_assets=missing'
@@ -100,11 +101,11 @@ if [[ "$ACTION" == status ]]; then
     native_engine_ready "$id" && echo "native_engine_$id=ready" || echo "native_engine_$id=missing"
     native_ready "$id" && echo "$id=ready" || echo "$id=missing"
   done < "$RESOURCES/manifests/native-mods.tsv"
-  for game in ra2 yuri ts; do
-    compatibility_engine_ready && echo "${game}_engine=ready" || echo "${game}_engine=missing"
+  for game in ra2 yuri ts cnc3 kw; do
+    compatibility_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
     compatibility_assets_ready "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
-  for game in vanilla base cnc ra combined-arms tdhd ra2 yuri ts; do
+  for game in vanilla base cnc ra combined-arms tdhd ra2 yuri ts cnc3 kw; do
     state=idle
     if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
     case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|validating|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
@@ -191,7 +192,7 @@ case "$ACTION" in
   security-update) security_update ;;
   security-scan-cache) security_scan_cache ;;
   graphics)
-    if compatibility_profile "$PROFILE"; then echo "Display mode is applied through cnc-ddraw at launch; graphics settings stay in the game."; exit 0; fi
+    if compatibility_profile "$PROFILE"; then echo "Display mode is applied at launch; graphics settings stay in the game."; exit 0; fi
     if classic_profile "$PROFILE" || native_profile "$PROFILE"; then echo 'OpenRA uses its own graphics settings. Display mode is applied at launch.'; exit 0; fi
     if pgrep -x GeneralsXZH >/dev/null 2>&1; then fail 'Quit Zero Hour before changing graphics settings.'; fi
     leaf=GeneralsZH
@@ -219,9 +220,18 @@ case "$ACTION" in
     elif classic_profile "$PROFILE"; then classic_install; else engine_install; fi
     ;;
   steam)
-    steam_install
+    if sage_profile "$PROFILE" && [[ "$PLATFORM" == linux ]]; then sage_steam_ready || fail 'Install the native Linux Steam client from your distribution, then return here.'; else steam_install; fi
+    ;;
+  sage-steam)
+    [[ "$PLATFORM" == linux ]] && sage_profile "$PROFILE" || fail 'Steam desktop setup is for Linux C&C 3 profiles.'
+    sage_open_steam "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)"
     ;;
   steam-login)
+    if sage_profile "$PROFILE" && [[ "$PLATFORM" == linux ]]; then
+      sage_open_steam "steam://install/$(compatibility_metadata "$PROFILE" 5)"
+      if sage_assets_ready "$PROFILE"; then echo complete; else echo idle; fi > "$ROOT/steam-$PROFILE.status"
+      steam_finished=1; exit 0
+    fi
     [[ "$PROFILE" == vanilla || "$PROFILE" == base || "$PROFILE" == cnc || "$PROFILE" == ra ]] || native_profile "$PROFILE" || compatibility_profile "$PROFILE" || fail 'Choose a game for Steam downloads.'
     appid=2732960; title='Zero Hour'
     if compatibility_profile "$PROFILE"; then

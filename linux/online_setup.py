@@ -14,7 +14,7 @@ class OnlineSetupWindow(QDialog):
         layout.setContentsMargins(26, 26, 26, 26)
         layout.setSpacing(14)
         openra = state.classic or (state.mod and state.mod["native"])
-        family = copy["compatibility"] if state.compatibility else copy["openra"] if openra else copy["generals"]
+        family = copy["sage"] if state.sage else copy["compatibility"] if state.compatibility else copy["openra"] if openra else copy["generals"]
         for text in [copy["description"], family["title"], *[f"{index + 1}. {step}" for index, step in enumerate(family["steps"])], family["hosting"]]:
             label = QLabel(text)
             label.setWordWrap(True)

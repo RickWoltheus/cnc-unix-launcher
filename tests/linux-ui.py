@@ -39,8 +39,21 @@ class StateChecks(unittest.TestCase):
         self.state.values["steam_session_vanilla"] = "active"
         self.assertFalse(self.state.can_enter(3))
 
+    def test_sage_profiles_use_their_own_prerequisites(self):
+        for game in ("cnc3", "kw"):
+            self.state.selected_game = game
+            self.assertTrue(self.state.sage)
+            self.assertIn("Proton", self.state.sage_copy["prepare"])
+            self.state.update("platform=ready\nsteam=ready\nengine=ready\nassets=ready\ninstall=idle")
+            self.assertFalse(self.state.can_enter(2))
+            self.state.values[game + "_engine"] = "ready"
+            self.assertTrue(self.state.can_enter(2))
+            self.assertFalse(self.state.can_enter(3))
+            self.state.values[game + "_assets"] = "ready"
+            self.assertTrue(self.state.can_enter(3))
+
     def test_classic_game_readiness_is_independent(self):
-        for game in ("cnc", "ra", "ra2", "yuri", "ts"):
+        for game in ("cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw"):
             self.state.selected_game = game
             self.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=idle")
             self.assertEqual(self.state.profile, game)
@@ -142,6 +155,20 @@ class WidgetChecks(unittest.TestCase):
         self.assertFalse(self.window.step_buttons[3].isEnabled())
         self.window.go_to(3)
         self.assertEqual(self.window.step, 0)
+
+    def test_sage_steam_flow_uses_native_client_copy(self):
+        self.window.state.selected_game = "cnc3"
+        self.window.state.update("platform=ready\nsteam=ready\ncnc3_engine=ready\ninstall=idle")
+        self.window.step = 2
+        self.window.refresh_view()
+        self.assertEqual(self.window.signin_button.text(), "OPEN STEAM INSTALL →")
+        self.assertTrue(self.window.steam_guide_button.isHidden())
+        self.assertIn("Valve", self.window.steam_security_note.text())
+        calls = []
+        self.window.run_actions = lambda actions: calls.append(actions)
+        self.window.signin()
+        self.assertEqual(calls, [[("steam-login", "cnc3")]])
+        self.assertFalse(self.window.state.steam_starting)
 
     def test_single_play_action_uses_selected_mod(self):
         self.window.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=idle\nrotr=ready")

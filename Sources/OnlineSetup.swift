@@ -12,6 +12,7 @@ struct OnlineCopy: Decodable {
     let openra: Family
     let generals: Family
     let compatibility: Family
+    let sage: Family
     let prepareLabel: String
     let hostingLabel: String
     let resultNote: String
@@ -28,7 +29,7 @@ struct OnlineSetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             if let copy = OnlineCopy.shared {
-                let family = model.game.isCompatibility ? copy.compatibility : openra ? copy.openra : copy.generals
+                let family = model.game.isSage ? copy.sage : model.game.isCompatibility ? copy.compatibility : openra ? copy.openra : copy.generals
                 Text(copy.title + " · " + model.activeTitle).font(.title2.bold())
                 Text(copy.description).font(.callout).fixedSize(horizontal: false, vertical: true)
                 Text(family.title).font(.headline).foregroundStyle(model.game.color)
