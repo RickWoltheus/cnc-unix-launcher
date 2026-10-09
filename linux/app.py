@@ -428,7 +428,7 @@ class LauncherWindow(QMainWindow):
         self.choose_logo.setStyleSheet(f"color:{accent}; font-size:28px; font-weight:bold;")
         pixmap = self.game_logo_pixmaps.get(self.state.selected_game)
         if pixmap is not None:
-            self.choose_logo.setPixmap(pixmap.scaled(200, 110, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+            self.choose_logo.setPixmap(pixmap.scaled(200, 110, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
             if "original" in self.image_labels:
                 self.image_labels["original"].setPixmap(pixmap.scaled(130, 90, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         self.choose_note.setText("Own Red Alert and C&C on Steam. OpenRA needs C&C’s desert tileset; setup downloads both owned games." if self.state.selected_game == "ra" else "Own this game through Steam’s Ultimate Collection. Remastered assets are not used in this setup.")
@@ -698,11 +698,11 @@ class LauncherWindow(QMainWindow):
 
     def set_game_logo(self, id, pixmap):
         self.game_logo_pixmaps[id] = pixmap
-        self.game_logo_labels[id].setPixmap(pixmap.scaled(172, 70, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+        self.game_logo_labels[id].setPixmap(pixmap.scaled(172, 70, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         if id == self.state.selected_game and "original" in self.image_labels:
             self.image_labels["original"].setPixmap(pixmap.scaled(130, 90, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         if self.state.selected_game == id:
-            self.choose_logo.setPixmap(pixmap.scaled(200, 110, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+            self.choose_logo.setPixmap(pixmap.scaled(200, 110, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
     def fetch_game_logos(self):
         for game in self.state.games:

@@ -604,3 +604,17 @@ now leaves 32-bit components unchanged and patches only supported 64-bit PEs.
 A mixed-architecture fixture passed preservation and repair checks. Retrying
 the actual RA3 launch reached the Windows Steam handoff; game startup and
 gameplay remain unconfirmed.
+
+## RA3 DirectX startup investigation — 2026-10-09
+
+The real owned RA3 executable imports d3dx9_35.dll. Its fresh prefix had Wine's
+implementation; the launcher now extracts the Microsoft x86 helper from the
+owned AUG2007 CAB using bundled Wine extrac32 and applies a prefix-local native
+override. The extracted file matched an independent 7-Zip extraction. A fixture
+verifies the owned CAB path, installed DLL, registry override and missing-CAB
+rejection. No Microsoft DLL is committed or packaged.
+
+A subsequent renderer log identified Apple M3 Pro and reported a failed
+fullscreen display-mode change. Windowed launches now set DXVK_FORCE_WINDOWED
+in addition to the game arguments. Only the failed RA3 Wine profile was reset
+for a retry. Successful RA3 window rendering and gameplay remain unconfirmed.

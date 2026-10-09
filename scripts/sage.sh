@@ -213,6 +213,18 @@ sage_wait_for_game() {
   printf '%s\n%s\nplaying\n' "$$" "$profile" > "$ROOT/.compatibility-running"
   while [[ -n "$(compatibility_game_pids "$profile")" ]]; do sleep 0.5; done
 }
+sage_prepare_directx_helpers() {
+  local binary="$1" profile="$2" cabinet extracted
+  [[ "$profile" == ra3 ]] || return 0
+  cabinet="$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
+  [[ -s "$cabinet" ]] || fail 'RA3’s owned DirectX installer is missing. Validate the Steam download and retry.'
+  mkdir -p "$WORK/directx"
+  "$binary" extrac32 /Y /E /L "Z:$WORK/directx" "Z:$cabinet" > /dev/null 2>&1 || fail 'Could not extract RA3’s owned DirectX helper.'
+  extracted="$WORK/directx/d3dx9_35.dll"
+  [[ -s "$extracted" && "$(head -c 2 "$extracted")" == MZ ]] || fail 'RA3’s DirectX helper extraction is incomplete.'
+  copy_file "$extracted" "$COMPAT_PREFIX/drive_c/windows/syswow64/d3dx9_35.dll"
+  "$binary" reg add 'HKCU\Software\Wine\DllOverrides' /v d3dx9_35 /d native,builtin /f > /dev/null 2>&1 || fail 'Could not configure RA3’s DirectX helper.'
+}
 sage_launch() {
   local profile="$PROFILE" full=false width=1280 height=720 argument folder config executable binary result=0 attempt seen=0
   compatibility_running && fail 'A game is already running. Quit it before switching games.'
@@ -246,12 +258,14 @@ sage_launch() {
     export DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib"
     export GST_PLUGIN_PATH="$ROOT/sage-runtime/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0"
     unset DYLD_LIBRARY_PATH VK_DRIVER_FILES VK_ICD_FILENAMES DXVK_FORCE_WINDOWED
-    export WINEDLLOVERRIDES='d3d9=b;d3dx9_29,d3dx9_36=n,b;gameoverlayrenderer,gameoverlayrenderer64=d;winemenubuilder.exe=d;mscoree,mshtml=d'
+    export WINEDLLOVERRIDES='d3d9=b;d3dx9_29,d3dx9_35,d3dx9_36=n,b;gameoverlayrenderer,gameoverlayrenderer64=d;winemenubuilder.exe=d;mscoree,mshtml=d'
     export MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 DXVK_ASYNC=1 DXVK_LOG_PATH="$ROOT/logs"
+    [[ "$full" == true ]] || export DXVK_FORCE_WINDOWED=1
     if [[ ! -f "$COMPAT_PREFIX/.initialized" ]]; then
       "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'Game prefix initialization failed. Check its profile log.'
       touch "$COMPAT_PREFIX/.initialized"
     fi
+    sage_prepare_directx_helpers "$binary" "$profile"
     sage_prepare_windows_steam "$binary" "$profile"
     sage_prepare_steam_browser "$binary" "$profile"
     local renderer_choice

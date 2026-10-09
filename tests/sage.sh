@@ -58,6 +58,30 @@ for profile in cnc3 kw ra3; do
   printf '"StateFlags" "6"\n"installdir" "Owned %s"\n' "$prefix" > "$TEST_ROOT/Other Library/steamapps/appmanifest_$appid.acf"
   if sage_assets_ready "$profile"; then echo 'Incomplete Steam download accepted.'; exit 1; fi
 done
+(
+  COMPAT_GAME="$TEST_ROOT/Owned RA3"
+  COMPAT_PREFIX="$TEST_ROOT/RA3 prefix"
+  WORK="$TEST_ROOT/directx-work"
+  export GX_DIRECTX_FIXTURE_WORK="$WORK"
+  mkdir -p "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010" "$COMPAT_PREFIX/drive_c/windows/syswow64"
+  printf 'synthetic owned CAB' > "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
+  cat > "$TEST_ROOT/directx-wine" <<'DIRECTX_FIXTURE'
+#!/bin/bash
+if [[ "$1" == extrac32 ]]; then
+  [[ "$6" == *AUG2007_d3dx9_35_x86.cab ]] || exit 9
+  printf 'MZsynthetic native helper' > "$GX_DIRECTX_FIXTURE_WORK/directx/d3dx9_35.dll"
+elif [[ "$1" == reg ]]; then
+  [[ "$5" == d3dx9_35 && "$7" == native,builtin ]] || exit 10
+else exit 11
+fi
+DIRECTX_FIXTURE
+  chmod +x "$TEST_ROOT/directx-wine"
+  copy_file() { cp "$1" "$2"; }
+  sage_prepare_directx_helpers "$TEST_ROOT/directx-wine" ra3
+  cmp "$WORK/directx/d3dx9_35.dll" "$COMPAT_PREFIX/drive_c/windows/syswow64/d3dx9_35.dll"
+  rm "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
+  if (sage_prepare_directx_helpers "$TEST_ROOT/directx-wine" ra3) >/dev/null 2>&1; then fail 'Missing owned RA3 CAB accepted.'; fi
+)
 if [[ $# -ge 2 ]]; then
   [[ "$(uname -s)" == Darwin ]] || fail 'Real Sikarugir archive checks require Mac.'
   mkdir -p "$ROOT/downloads"
