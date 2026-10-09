@@ -531,3 +531,53 @@ user-facing isolation disclosure, which was added. Steam was opened alone with
 the workaround in the user's profile; no game launch argument was supplied.
 Its real UI outcome is awaiting the user's confirmation. No sign-in input or
 raw Steam arguments were captured. Successful C&C 3 gameplay remains unproven.
+
+## Renderer loading and working Steam comparison — 2026-10-09
+
+The browser-process workaround did not resolve the user's black window. A
+headless D3D11 device probe exposed feature level 9.3 on both engines. Module
+tracing showed Wine loading its original built-in d3d11/dxgi implementation and
+a WineD3D OpenGL framebuffer error. The DXMT prefix DLLs carry the Wine built-in
+marker and were redirected to the engine's original PE DLLs. Installation now
+places DXMT's PE DLLs in both engine architecture directories as well as its Unix
+library. The same Wine 11 probe then returned success with feature level 11.0,
+and reported maximum support 11.1. Readiness now compares engine and renderer
+d3d11 DLLs to catch that incomplete integration. Steam UI success on Wine 11
+still has not been demonstrated.
+
+An isolated, hash-verified Sikarugir 10.0_6 comparison used a fresh prefix and
+only Steam program files, excluding account data and games. The user reported
+that Steam displayed and they signed in. The login-state file existed only in
+that comparison prefix (contents were not read). Steam then displayed a service
+maintenance prompt; Cancel was recommended for this test. The working engine
+and newly signed-in prefix were moved locally to `compatibility/cnc3/wine10-test`
+to preserve the user's setup outside /tmp. The existing owned C&C 3 working copy
+and original Steam manifest were registered there, and only its Steam library
+page was opened. No game launch was issued by the agent. This remains a manual
+gameplay experiment, not a shipped fallback or a confirmed playable result.
+
+## C&C 3 gameplay confirmation — 2026-10-09
+
+The user subsequently launched C&C 3 through the launcher with the local
+Wine 10 comparison profile, windowed mode and Wine's built-in D3D9 renderer.
+They confirmed that the game works and that in-game performance is fine.
+They reported slow menus and intermittent graphical glitches, mostly in menus.
+Those menu issues remain unresolved; this does not establish release readiness
+or verify Kane's Wrath. The working comparison profile still needs a repeatable
+installation path before it can be offered to other users.
+
+## D9VK comparison and repeatable setup — 2026-10-09
+
+After reporting intermittent textured triangles during gameplay as well as menu
+corruption, the user tested the older D9VK/MoltenVK renderer and reported that
+it works. The pinned installer now uses WS12WineSikarugir10.0_6 and the matching
+Template-1.0.21 legacy D9VK lane. Existing comparison prefixes remain in place.
+This user confirmation applies to C&C 3 on this Mac; it does not certify every
+graphics setting, multiplayer, Kane's Wrath or Linux gameplay.
+
+Clean preparation was checked using the actual pinned Wine 10 and Template
+archives in an isolated installation root. Both engine architecture DLLs matched
+the selected renderer. Synthetic first-launch fixtures passed prefix setup,
+official Steam installer handoff, browser helper repair, Steam registration and
+actual process lifecycle checks. This does not verify a fresh real Steam login.
+Backend, security gates, model and Wine lifecycle checks passed.

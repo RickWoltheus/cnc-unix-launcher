@@ -11,6 +11,7 @@ compatibility_select() {
   if sage_profile "$1" && [[ "$PLATFORM" == linux ]]; then COMPAT_GAME="$(sage_steam_game "$1")"; fi
   COMPAT_PLAY="$ROOT/compatibility/$1/game"
   COMPAT_PREFIX="$ROOT/compatibility/$1/prefix"
+  if sage_profile "$1" && [[ "$PLATFORM" == macos ]]; then COMPAT_PREFIX="$(sage_mac_prefix "$1")"; fi
 }
 compatibility_package() {
   local row
@@ -38,7 +39,7 @@ compatibility_game_pids() {
         if [[ -n "$directory" ]]; then
           relative="${executable#"$folder/"}"
           steam_path="c:/program files (x86)/steam/steamapps/common/$directory/$relative"
-          steam_unix="$ROOT/compatibility/$id/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/$directory/$relative"
+          steam_unix="$(sage_mac_prefix "$id")/drive_c/Program Files (x86)/Steam/steamapps/common/$directory/$relative"
         fi
       fi
     else path="$ROOT/compatibility/$id/game/$exe"; fi
@@ -84,7 +85,8 @@ compatibility_reset_prefix() {
   prefix="$ROOT/compatibility/$profile/prefix"
   if sage_profile "$profile"; then
     [[ "$PLATFORM" == macos ]] || return 0
-    server="$ROOT/sage-runtime/wine/wswine.bundle/bin/wineserver"
+    prefix="$(sage_mac_prefix "$profile")"
+    server="$(dirname "$(sage_mac_wine "$profile")")/wineserver"
   else server="$(dirname "$(compatibility_wine)")/wineserver"; fi
   [[ -d "$prefix" && -x "$server" ]] || return 0
   [[ -z "$(compatibility_game_pids "$profile")" ]] || return 1
@@ -103,7 +105,7 @@ compatibility_reset_prefix() {
   return 1
 }
 compatibility_wait_for_game() {
-  local client="$1" profile="$2" seen=0 attempts=0 result=0
+  local client="$1" profile="$2" seen=0 attempts=0 result=0 cleanup_prefix="${3:-1}"
   while true; do
     if [[ -n "$(compatibility_game_pids "$profile")" ]]; then
       seen=1
@@ -114,7 +116,7 @@ compatibility_wait_for_game() {
         compatibility_stop_helper "$client"
       else wait "$client" 2>/dev/null || result=$?; fi
       printf '%s\n%s\nstopping\n' "$$" "$profile" > "$ROOT/.compatibility-running"
-      compatibility_reset_prefix "$profile" || result=1
+      if [[ "$cleanup_prefix" == 1 ]]; then compatibility_reset_prefix "$profile" || result=1; fi
       compatibility_clear_marker
       return "$result"
     elif ! kill -0 "$client" 2>/dev/null; then

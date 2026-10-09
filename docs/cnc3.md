@@ -1,8 +1,9 @@
 # C&C 3 and Kane’s Wrath — experimental development support
 
 These profiles are being prepared in a development PR. They are not included in
-v0.3.0. No campaign, skirmish, video playback, graphics or multiplayer success
-has been established by the headless tests. Red Alert 3/Uprising are follow-up
+v0.3.0. The user confirmed playable C&C 3 gameplay on one Mac with Wine 10 and
+D9VK/MoltenVK. Headless tests do not verify graphics or gameplay; Kane’s Wrath
+and Linux gameplay remain unverified. Red Alert 3/Uprising are follow-up
 work, after the C&C 3 graphics path has been tested.
 
 ## Mac
@@ -11,7 +12,7 @@ Requires Apple Silicon, macOS Tahoe 26+, Rosetta 2 and an owned Steam copy of th
 selected game. The launcher keeps its existing macOS 15 minimum for older games.
 The [Sikarugir documentation](https://github.com/Sikarugir-App/Sikarugir) specifies
 Apple Silicon/Tahoe for D9VK. This integration uses the separately pinned
-WS12WineSikarugir11.0_1 engine and D9VK/Kosmickrisp libraries from Template-1.0.21.
+WS12WineSikarugir10.0_6 engine and Mac-compatible D9VK/MoltenVK libraries from Template-1.0.21.
 It does not replace the working 2D Wine runtime.
 
 1. Select **C&C 3: Tiberium Wars** or **Kane’s Wrath**.
@@ -34,8 +35,9 @@ It does not replace the working 2D Wine runtime.
 
 Prefixes and saves are under `compatibility/cnc3/prefix` and
 `compatibility/kw/prefix` in the installation folder. Updating the owned Steam
-copy refreshes the working game copy while retaining the prefix. Runtime repair
-retains both game prefixes and does not upgrade Red Alert 2’s runtime.
+copy refreshes the working game copy while retaining the prefix. The previously tested local comparison prefix remains under
+`compatibility/cnc3/wine10-test/prefix`; existing installations retain that path.
+Runtime repair retains both game prefixes and does not upgrade Red Alert 2’s runtime.
 
 ## Linux
 
