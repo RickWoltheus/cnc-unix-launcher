@@ -493,3 +493,19 @@ owned-copy registration and Steam launch arguments without running a real Steam
 client or EA game. Real Windows Steam sign-in, client rendering and successful
 C&C 3 gameplay remain pending manual testing. Valve-managed client updates are
 outside the launcher's pinned archive/local-scan coverage.
+
+## Windows Steam black-window investigation — 2026-10-09
+
+The user reported a black, repeatedly restarting Steam window. The Mac runtime
+contained only the D3D9 lane used by C&C 3; Steam’s web interface also needs a
+usable D3D11 lane. The same pinned Template archive supplies open-source DXMT.
+Installation now retains its license, installs only d3d10core/d3d11/dxgi/winemetal
+DLLs and the Unix winemetal library, and applies those DLLs to both prefix
+architectures. The pinned Sikarugir winemac driver exports macdrv functions.
+The runtime version marker includes DXMT so incomplete old installs fail readiness.
+
+Actual runtime repair on this Mac and synthetic installer/prefix checks passed.
+Only this C&C 3 profile’s Steam/Wine services were stopped for the repair.
+The shutdown command required the bundled native-library search path, as does
+normal launch. Steam’s real interface rendering and game launch are still
+awaiting manual verification; this is a candidate fix, not a confirmed result.

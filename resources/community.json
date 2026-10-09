@@ -231,6 +231,12 @@
       "role": "Steam-managed Windows game compatibility for Linux C&C 3",
       "url": "https://github.com/ValveSoftware/Proton",
       "contributorsURL": "https://github.com/ValveSoftware/Proton/graphs/contributors"
+    },
+    {
+      "name": "DXMT",
+      "role": "DirectX 10/11 to Metal renderer used by the Windows Steam interface",
+      "url": "https://github.com/3Shain/dxmt",
+      "contributorsURL": "https://github.com/3Shain/dxmt/graphs/contributors"
     }
   ],
   "supportTitle": "Consider supporting these projects too",

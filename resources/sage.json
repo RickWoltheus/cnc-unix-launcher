@@ -1,7 +1,7 @@
 {
   "macos": {
     "detail": "Experimental Sikarugir Wine + D9VK runs the original Windows game. Requires Apple Silicon, Rosetta 2 and macOS Tahoe 26+. Campaigns, graphics and Steam startup still need gameplay testing.",
-    "prepare": "Pinned Sikarugir Wine 11 + D9VK in a separate runtime. Requires macOS Tahoe 26+; existing games keep their current requirements.",
+    "prepare": "Pinned Sikarugir Wine 11 + D9VK for the game and DXMT for Steam’s interface, in a separate runtime. Requires macOS Tahoe 26+; existing games keep their current requirements.",
     "play": "Experimental C&C 3 support. First Play installs/opens Valve’s Windows Steam client in this Wine profile; sign in only in Steam’s window. Steam starts the game after authentication. First-time updates may take several minutes. Windowed mode uses 1280×720. Mods and C&C:Online are not installed yet."
   },
   "linux": {

@@ -63,8 +63,10 @@ sage_engine_ready() {
   sage_supported || return 1
   if [[ "$PLATFORM" == linux ]]; then sage_steam_ready && sage_proton_ready "${1:-$PROFILE}"; return; fi
   [[ -x "$ROOT/sage-runtime/wine/wswine.bundle/bin/wine" &&
-     "$(cat "$ROOT/sage-runtime/.version" 2>/dev/null)" == WS12WineSikarugir11.0_1+Template-1.0.21 &&
+     "$(cat "$ROOT/sage-runtime/.version" 2>/dev/null)" == WS12WineSikarugir11.0_1+Template-1.0.21+DXMT &&
      -s "$ROOT/sage-runtime/Frameworks/renderer/d9vk/wine/i386-windows/d3d9.dll" &&
+     -s "$ROOT/sage-runtime/Frameworks/renderer/dxmt/wine/x86_64-windows/d3d11.dll" &&
+     -s "$ROOT/sage-runtime/wine/wswine.bundle/lib/wine/x86_64-unix/winemetal.so" &&
      -s "$ROOT/sage-runtime/Frameworks/libvulkan_kosmickrisp.dylib" &&
      -s "$ROOT/sage-runtime/Resources/vulkan/icd.d/kosmickrisp_mesa_icd.json" ]]
 }
@@ -129,10 +131,19 @@ sage_install() {
   cp -R "$template/Frameworks/"*.dylib "$WORK/sage/Frameworks/"
   cp -R "$template/Frameworks/GStreamer.framework" "$WORK/sage/Frameworks/"
   cp -R "$template/Frameworks/renderer/d9vk" "$WORK/sage/Frameworks/renderer/"
+  mkdir -p "$WORK/sage/Frameworks/renderer/dxmt/wine/i386-windows" "$WORK/sage/Frameworks/renderer/dxmt/wine/x86_64-windows"
+  local architecture dll
+  for architecture in i386-windows x86_64-windows; do
+    for dll in d3d10core.dll d3d11.dll dxgi.dll winemetal.dll; do
+      cp "$template/Frameworks/renderer/dxmt/wine/$architecture/$dll" "$WORK/sage/Frameworks/renderer/dxmt/wine/$architecture/"
+    done
+  done
+  cp "$template/Frameworks/renderer/dxmt/LICENSE" "$template/Frameworks/renderer/dxmt/version" "$WORK/sage/Frameworks/renderer/dxmt/"
+  cp "$template/Frameworks/renderer/dxmt/wine/x86_64-unix/winemetal.so" "$WORK/sage/wine/wswine.bundle/lib/wine/x86_64-unix/"
   cp "$template/Resources/vulkan/icd.d/kosmickrisp_mesa_icd.json" "$WORK/sage/Resources/vulkan/icd.d/"
   [[ "$(head -c 2 "$WORK/sage/Frameworks/renderer/d9vk/wine/i386-windows/d3d9.dll")" == MZ ]] || fail 'DirectX 9 renderer is incomplete.'
   cp "$RESOURCES/manifests/sage-notice.txt" "$WORK/sage/NOTICE.txt"
-  printf 'WS12WineSikarugir11.0_1+Template-1.0.21\n' > "$WORK/sage/.version"
+  printf 'WS12WineSikarugir11.0_1+Template-1.0.21+DXMT\n' > "$WORK/sage/.version"
   xattr -dr com.apple.quarantine "$WORK/sage" 2>/dev/null || true
   if /usr/bin/arch -x86_64 /usr/bin/true 2>/dev/null; then "$binary" --version; fi
   [[ ! -d "$ROOT/sage-runtime" ]] || mv "$ROOT/sage-runtime" "$WORK/previous-sage"
@@ -210,13 +221,20 @@ sage_launch() {
     export DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib"
     export GST_PLUGIN_PATH="$ROOT/sage-runtime/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0"
     export VK_DRIVER_FILES="$ROOT/sage-runtime/Resources/vulkan/icd.d/kosmickrisp_mesa_icd.json"
-    export WINEDLLOVERRIDES='d3d9=n,b;winemenubuilder.exe=d;mscoree,mshtml=d'
+    export WINEDLLOVERRIDES='d3d9,d3d10core,d3d11,dxgi=n,b;winemenubuilder.exe=d;mscoree,mshtml=d'
     if [[ ! -f "$COMPAT_PREFIX/.initialized" ]]; then
       "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'C&C 3 prefix initialization failed. Check its profile log.'
       touch "$COMPAT_PREFIX/.initialized"
     fi
     cp "$ROOT/sage-runtime/Frameworks/renderer/d9vk/wine/i386-windows/d3d9.dll" "$COMPAT_PREFIX/drive_c/windows/syswow64/d3d9.dll"
     cp "$ROOT/sage-runtime/Frameworks/renderer/d9vk/wine/x86_64-windows/d3d9.dll" "$COMPAT_PREFIX/drive_c/windows/system32/d3d9.dll"
+    local architecture destination dll
+    for architecture in i386-windows x86_64-windows; do
+      destination=syswow64; [[ "$architecture" != x86_64-windows ]] || destination=system32
+      for dll in d3d10core.dll d3d11.dll dxgi.dll winemetal.dll; do
+        cp "$ROOT/sage-runtime/Frameworks/renderer/dxmt/wine/$architecture/$dll" "$COMPAT_PREFIX/drive_c/windows/$destination/$dll"
+      done
+    done
     sage_prepare_windows_steam "$binary" "$profile"
     local steam_args=(-cef-disable-gpu -cef-disable-gpu-compositing -applaunch "$(compatibility_metadata "$profile" 5)" -xres "$width" -yres "$height")
     if [[ "$full" == true ]]; then steam_args+=(-fullscreen); else steam_args+=(-win); fi

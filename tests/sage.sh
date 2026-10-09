@@ -65,6 +65,8 @@ if [[ $# -ge 2 ]]; then
   cp "$2" "$ROOT/downloads/Template-1.0.21.tar.xz"
   /bin/bash "$REPO/scripts/backend.sh" engine cnc3
   [[ ! -d "$ROOT/compatibility/cnc3/prefix" ]]
+  [[ -s "$ROOT/sage-runtime/wine/wswine.bundle/lib/wine/x86_64-unix/winemetal.so" ]]
+  [[ -s "$ROOT/sage-runtime/Frameworks/renderer/dxmt/wine/x86_64-windows/d3d11.dll" ]]
   [[ ! -e "$ROOT/sage-runtime/Frameworks/SikarugirSdk.framework" && ! -e "$ROOT/sage-runtime/Frameworks/renderer/d3dmetal" ]]
   /bin/bash "$REPO/scripts/backend.sh" status > "$TEST_ROOT/status.txt"
   grep -q 'cnc3_engine=ready' "$TEST_ROOT/status.txt"
@@ -111,6 +113,8 @@ WINE_FIXTURE
   grep -qx '24790' "$ROOT/steam-handoff.txt"
   [[ -L "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/Owned CNC3" ]]
   [[ -f "$ROOT/compatibility/cnc3/prefix/.initialized" ]]
+  [[ -s "$ROOT/compatibility/cnc3/prefix/drive_c/windows/system32/d3d11.dll" ]]
+  [[ -s "$ROOT/compatibility/cnc3/prefix/drive_c/windows/syswow64/dxgi.dll" ]]
 
 fi
 printf 'C&C 3 Steam library discovery, Proton selection, versioned startup, path rejection and dummy launches passed. No game or Steam client ran.\n'

@@ -59,6 +59,7 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [DXVK / D9VK](https://github.com/doitsujin/dxvk) | DirectX 9 rendering used by Sikarugir and Proton | [Contributors / team](https://github.com/doitsujin/dxvk/graphs/contributors) |
 | [Mesa / Kosmickrisp](https://gitlab.freedesktop.org/mesa/mesa) | Vulkan to Metal driver for experimental Mac C&C 3 rendering | [Contributors / team](https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main) |
 | [Valve / Proton](https://github.com/ValveSoftware/Proton) | Steam-managed Windows game compatibility for Linux C&C 3 | [Contributors / team](https://github.com/ValveSoftware/Proton/graphs/contributors) |
+| [DXMT](https://github.com/3Shain/dxmt) | DirectX 10/11 to Metal renderer used by the Windows Steam interface | [Contributors / team](https://github.com/3Shain/dxmt/graphs/contributors) |
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 

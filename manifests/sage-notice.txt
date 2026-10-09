@@ -22,3 +22,7 @@ from https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe. Its
 pinned bootstrap hash passes the shared install gate. Steam is proprietary;
 its self-updated client and game downloads are managed by Valve and are not
 pinned or scanned by this launcher. Authentication stays in Steam’s own UI.
+DXMT DirectX 10/11 renderer (used by the Windows Steam interface):
+https://github.com/3Shain/dxmt — its included LICENSE is retained.
+Only d3d10core, d3d11, dxgi, winemetal PE DLLs and winemetal.so are installed;
+optional NVAPI/NGX/D3D12 components are not installed by this integration.
