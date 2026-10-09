@@ -7,6 +7,10 @@ steam_webhelper_install() {
   [[ -d "$steam/bin/cef" ]] || return 2
   local found=0
   while IFS= read -r -d '' target; do
+    if ! file "$target" | /usr/bin/grep -q 'PE32+'; then
+      file "$target" | /usr/bin/grep -q 'PE32 executable' && continue
+      fail 'Steam browser executable is incomplete. Let Steam finish updating.'
+    fi
     found=1; directory="$(dirname "$target")"; original="$directory/steamwebhelper.cnc-original.exe"; stamp="$directory/.cnc-webhelper.sha256"
     previous="$(cat "$stamp" 2>/dev/null || true)"
     if verify "$target" "$expected" || { [[ "$previous" =~ ^[0-9a-f]{64}$ ]] && verify "$target" "$previous"; }; then

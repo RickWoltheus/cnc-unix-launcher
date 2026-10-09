@@ -594,3 +594,13 @@ RA3 game launch or graphics/gameplay result is claimed.
 
 The RA3 `.game` lifecycle fixture also passed live process detection and closure.
 The Apple Silicon app built and its ad hoc signature verified.
+
+## Fresh Steam browser setup blocker — 2026-10-09
+
+The first real RA3 attempt stopped before the game launch with “This Steam
+compatibility helper requires a 64-bit Steam browser.” The fresh Valve client
+contained both cef.win7 (32-bit) and cef.win7x64 (64-bit). Helper installation
+now leaves 32-bit components unchanged and patches only supported 64-bit PEs.
+A mixed-architecture fixture passed preservation and repair checks. Retrying
+the actual RA3 launch reached the Windows Steam handoff; game startup and
+gameplay remain unconfirmed.
