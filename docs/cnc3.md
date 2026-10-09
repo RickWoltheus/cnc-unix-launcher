@@ -22,8 +22,11 @@ It does not replace the working 2D Wine runtime.
    is downloaded from GitHub or mod sites.
 4. Choose windowed mode for the first manual test, then **Play**. The launcher
    copies Steam files into a per-game working folder, initializes that game’s own
-   Wine prefix, installs D9VK DLLs in it and starts the versioned game executable
-   using its English startup configuration. Graphics quality stays in the game.
+   Wine prefix and installs D9VK DLLs. It then installs/opens Valve’s official
+   Windows Steam client inside that profile and starts the game through Steam.
+   Sign in only in Valve’s window if requested. SteamCMD alone cannot satisfy
+   this edition’s Steam API authentication. First-time client updates may take
+   several minutes. Graphics quality stays in the game.
 
 Prefixes and saves are under `compatibility/cnc3/prefix` and
 `compatibility/kw/prefix` in the installation folder. Updating the owned Steam

@@ -143,6 +143,40 @@ sage_install() {
   sage_engine_ready || fail 'Sikarugir runtime is incomplete.'
   echo 'Experimental Sikarugir DirectX 9 runtime prepared. No game or Wine prefix was started.'
 }
+sage_prepare_windows_steam() {
+  local binary="$1" profile="$2" steam_directory installer manifest directory
+  steam_directory="$COMPAT_PREFIX/drive_c/Program Files (x86)/Steam"
+  SAGE_STEAM_EXE="$steam_directory/steam.exe"
+  if [[ ! -s "$SAGE_STEAM_EXE" ]]; then
+    compatibility_package sage-steam
+    download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"
+    installer="$CACHE/$COMPAT_ARCHIVE"
+    printf 'Installing Valve’s Windows Steam client for game authentication.\n'
+    "$binary" "$installer" /S > /dev/null 2>&1 || fail 'Windows Steam installation failed. Retry Play to run the official installer again.'
+    [[ -s "$SAGE_STEAM_EXE" ]] || fail 'Valve’s installer did not create the Windows Steam client.'
+  fi
+  manifest="$COMPAT_GAME/steamapps/appmanifest_$(compatibility_metadata "$profile" 5).acf"
+  directory="$(awk -F '\"' '$2=="installdir" {print $4}' "$manifest")"
+  [[ -n "$directory" && "$directory" != */* && "$directory" != *\\* && "$directory" != . && "$directory" != .. ]] || fail 'The owned Steam manifest has an invalid installation directory.'
+  mkdir -p "$steam_directory/steamapps/common"
+  if [[ ! -e "$steam_directory/steamapps/common/$directory" ]]; then
+    ln -s "$COMPAT_PLAY" "$steam_directory/steamapps/common/$directory"
+  fi
+  [[ "$steam_directory/steamapps/common/$directory" -ef "$COMPAT_PLAY" ]] || fail 'Steam already has a different copy of this game. Use its installation or select a separate profile.'
+  local destination="$steam_directory/steamapps/$(basename "$manifest")"
+  # Steam may update its own manifest after registration; retain that newer state.
+  [[ -f "$destination" ]] || copy_file "$manifest" "$destination"
+}
+sage_wait_for_game() {
+  local profile="$1" limit="$2" seen=0 attempt
+  for attempt in $(seq 1 "$limit"); do
+    if [[ -n "$(compatibility_game_pids "$profile")" ]]; then seen=1; break; fi
+    sleep 0.5
+  done
+  [[ "$seen" == 1 ]] || fail 'Steam did not start the game. Finish signing in in the Steam window, then retry Play or start the game from its Steam library.'
+  printf '%s\n%s\nplaying\n' "$$" "$profile" > "$ROOT/.compatibility-running"
+  while [[ -n "$(compatibility_game_pids "$profile")" ]]; do sleep 0.5; done
+}
 sage_launch() {
   local profile="$PROFILE" full=false width=1280 height=720 argument folder config executable binary result=0 attempt seen=0
   compatibility_running && fail 'A game is already running. Quit it before switching games.'
@@ -168,14 +202,7 @@ sage_launch() {
     if [[ "$full" == true ]]; then steam_args+=(-fullscreen); else steam_args+=(-win); fi
     printf 'Handing the selected game to Steam Proton. Steam diagnostics stay in Steam.\n' > "$ROOT/logs/$profile.log"
     "$binary" "${steam_args[@]}" > /dev/null 2>&1 < /dev/null &
-    # The Steam command returns before Proton's game process. Keep our session open.
-    for attempt in $(seq 1 240); do
-      if [[ -n "$(compatibility_game_pids "$profile")" ]]; then seen=1; break; fi
-      sleep 0.5
-    done
-    [[ "$seen" == 1 ]] || fail 'Steam did not start a detectable game within two minutes. Check its Compatibility setting and launch it once from Steam.'
-    printf '%s\n%s\nplaying\n' "$$" "$profile" > "$ROOT/.compatibility-running"
-    while [[ -n "$(compatibility_game_pids "$profile")" ]]; do sleep 0.5; done
+    sage_wait_for_game "$profile" 240
   else
     binary="$ROOT/sage-runtime/wine/wswine.bundle/bin/wine"
     export SikarugirAppWine11=1
@@ -184,14 +211,17 @@ sage_launch() {
     export GST_PLUGIN_PATH="$ROOT/sage-runtime/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0"
     export VK_DRIVER_FILES="$ROOT/sage-runtime/Resources/vulkan/icd.d/kosmickrisp_mesa_icd.json"
     export WINEDLLOVERRIDES='d3d9=n,b;winemenubuilder.exe=d;mscoree,mshtml=d'
-    compatibility_reset_prefix "$profile" || fail 'Could not clean up the old C&C 3 Wine session.'
     if [[ ! -f "$COMPAT_PREFIX/.initialized" ]]; then
       "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'C&C 3 prefix initialization failed. Check its profile log.'
       touch "$COMPAT_PREFIX/.initialized"
     fi
     cp "$ROOT/sage-runtime/Frameworks/renderer/d9vk/wine/i386-windows/d3d9.dll" "$COMPAT_PREFIX/drive_c/windows/syswow64/d3d9.dll"
     cp "$ROOT/sage-runtime/Frameworks/renderer/d9vk/wine/x86_64-windows/d3d9.dll" "$COMPAT_PREFIX/drive_c/windows/system32/d3d9.dll"
-    "$binary" "$executable" "${args[@]}" >> "$ROOT/logs/$profile.log" 2>&1 &
-    compatibility_wait_for_game "$!" "$profile"
+    sage_prepare_windows_steam "$binary" "$profile"
+    local steam_args=(-cef-disable-gpu -cef-disable-gpu-compositing -applaunch "$(compatibility_metadata "$profile" 5)" -xres "$width" -yres "$height")
+    if [[ "$full" == true ]]; then steam_args+=(-fullscreen); else steam_args+=(-win); fi
+    printf 'Opening Valve’s Windows Steam client. Complete sign-in in its own window if requested.\n'
+    "$binary" "$SAGE_STEAM_EXE" "${steam_args[@]}" > /dev/null 2>&1 < /dev/null &
+    sage_wait_for_game "$profile" 1200
   fi
 }

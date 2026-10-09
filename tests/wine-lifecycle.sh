@@ -94,4 +94,11 @@ for attempt in 1 2 3 4 5 6 7 8 9 10; do [[ -n "$(compatibility_game_pids cnc3)" 
 [[ -n "$(compatibility_game_pids cnc3)" ]] || { echo 'FAIL: versioned C&C 3 process not detected.'; exit 1; }
 kill "$game_pid"; wait "$game_pid" 2>/dev/null || true; game_pid=
 [[ -z "$(compatibility_game_pids cnc3)" ]]
+mkdir -p "$ROOT/TiberiumWars/steamapps"
+printf '\"installdir\" \"Owned CNC3\"\n' > "$ROOT/TiberiumWars/steamapps/appmanifest_24790.acf"
+python3 -c 'import os,sys; os.execv("/bin/sleep", [sys.argv[1], "30"])' 'C:\Program Files (x86)\Steam\steamapps\common\Owned CNC3\RetailExe\1.10\cnc3game.dat' & game_pid=$!
+for attempt in 1 2 3 4 5 6 7 8 9 10; do [[ -n "$(compatibility_game_pids cnc3)" ]] && break; sleep 0.1; done
+[[ -n "$(compatibility_game_pids cnc3)" ]] || { echo 'FAIL: Steam C: game path not detected.'; exit 1; }
+kill "$game_pid"; wait "$game_pid" 2>/dev/null || true; game_pid=
+[[ -z "$(compatibility_game_pids cnc3)" ]]
 echo 'Wine lifecycle checks passed: helpers ignored, live game tracked, closure releases wrapper, launch errors preserved. POSIX sleep fixtures only.'

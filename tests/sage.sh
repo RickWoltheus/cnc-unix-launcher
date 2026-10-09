@@ -58,7 +58,7 @@ for profile in cnc3 kw; do
   printf '"StateFlags" "6"\n"installdir" "Owned %s"\n' "$prefix" > "$TEST_ROOT/Other Library/steamapps/appmanifest_$appid.acf"
   if sage_assets_ready "$profile"; then echo 'Incomplete Steam download accepted.'; exit 1; fi
 done
-if [[ $# == 2 ]]; then
+if [[ $# -ge 2 ]]; then
   [[ "$(uname -s)" == Darwin ]] || fail 'Real Sikarugir archive checks require Mac.'
   mkdir -p "$ROOT/downloads"
   cp "$1" "$ROOT/downloads/WS12WineSikarugir11.0_1.tar.xz"
@@ -72,7 +72,7 @@ if [[ $# == 2 ]]; then
     prefix=CNC3; executable=cnc3game.dat; [[ "$profile" != kw ]] || { prefix=CNC3EP1; executable=cnc3ep1.dat; }
     appid="$(compatibility_metadata "$profile" 5)"; game="$ROOT/$(compatibility_metadata "$profile" 6)"
     mkdir -p "$game/steamapps" "$game/RetailExe/1.10"
-    printf '"StateFlags" "4"\n' > "$game/steamapps/appmanifest_$appid.acf"
+    printf '"StateFlags" "4"\n"installdir" "Owned %s"\n' "$prefix" > "$game/steamapps/appmanifest_$appid.acf"
     printf 'MZsynthetic executable; never executed' > "$game/RetailExe/1.10/$executable"
     printf 'set-exe RetailExe\\1.10\\%s\r\n' "$executable" > "$game/${prefix}_english_1.10.SkuDef"
     /bin/bash "$REPO/scripts/backend.sh" launch "$profile" -win -xres 1280 -yres 720
@@ -88,12 +88,28 @@ if [[ $# == 2 ]]; then
 if [[ "$1" == wineboot ]]; then
   mkdir -p "$WINEPREFIX/drive_c/windows/syswow64" "$WINEPREFIX/drive_c/windows/system32"
   printf 'prefix setup received SikarugirAppWine11=1\n'
-else printf 'synthetic game handoff received SikarugirAppWine11=1\n'; fi
+elif [[ "$1" == *SteamSetup* ]]; then
+  mkdir -p "$WINEPREFIX/drive_c/Program Files (x86)/Steam"
+  printf 'MZsynthetic Steam client' > "$WINEPREFIX/drive_c/Program Files (x86)/Steam/steam.exe"
+else
+  printf 'synthetic Steam handoff received SikarugirAppWine11=1\n' > "$GX_INSTALL_ROOT/steam-handoff.txt"
+  printf '%s\n' "$@" >> "$GX_INSTALL_ROOT/steam-handoff.txt"
+  exec python3 -c 'import os,sys; os.execv("/bin/sleep", [sys.argv[1], "2"])' "${WINEPREFIX%/prefix}/game/RetailExe/1.10/cnc3game.dat"
+fi
 WINE_FIXTURE
   chmod +x "$fixture_wine"
+  if [[ $# == 3 ]]; then
+    cp "$3" "$ROOT/downloads/SteamSetup-2026-10-09.exe"
+  else
+    mkdir -p "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam"
+    printf 'MZsynthetic Steam client' > "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steam.exe"
+  fi
   env -u GX_LAUNCH_WRAPPER /bin/bash "$REPO/scripts/backend.sh" launch cnc3 -win
   grep -q 'prefix setup received SikarugirAppWine11=1' "$ROOT/logs/cnc3.log"
-  grep -q 'synthetic game handoff received SikarugirAppWine11=1' "$ROOT/logs/cnc3.log"
+  grep -q 'synthetic Steam handoff received SikarugirAppWine11=1' "$ROOT/steam-handoff.txt"
+  grep -qx -- '-applaunch' "$ROOT/steam-handoff.txt"
+  grep -qx '24790' "$ROOT/steam-handoff.txt"
+  [[ -L "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/Owned CNC3" ]]
   [[ -f "$ROOT/compatibility/cnc3/prefix/.initialized" ]]
 
 fi

@@ -475,3 +475,21 @@ game startup. A shell Wine fixture exercises the actual backend initialization
 path and rejects either handoff if the flag is absent. This regression check
 passed, as did the synthetic C&C 3 setup/launch checks. Actual gameplay remains
 pending the user's next manual test; Linux's Steam/Proton handoff is unchanged.
+
+## C&C 3 Steam authentication repair — 2026-10-09
+
+After prefix repair, the user reached the game's “Failed to initialize Steam”
+dialog. Directly starting the Steam edition's versioned executable without a
+Windows Steam session was an incomplete Mac launch flow. Mac C&C 3 profiles now
+install Valve’s official Windows Steam bootstrap through the shared hash/scan
+gate, register the existing owned working copy with that client, and launch with
+Steam's `-applaunch`. Credentials are entered only in Valve’s window; client
+stdout/stderr is discarded. Startup supervision allows time for updates/sign-in
+and recognizes the game's managed Windows C: path as well as Unix/Z: paths.
+Steam stays open after game exit. Linux retains its native Steam handoff.
+
+A shell Steam/Wine fixture checks installer gating, the retained Sikarugir flag,
+owned-copy registration and Steam launch arguments without running a real Steam
+client or EA game. Real Windows Steam sign-in, client rendering and successful
+C&C 3 gameplay remain pending manual testing. Valve-managed client updates are
+outside the launcher's pinned archive/local-scan coverage.

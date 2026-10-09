@@ -16,3 +16,9 @@ Linux: Valve Steam manages Proton, dependencies, game files, prefixes and update
 Proton sources and licenses: https://github.com/ValveSoftware/Proton
 Valve's Steam client is proprietary. Steam credentials stay in Valve's UI.
 Original EA game files come only from the user's owned Steam installation.
+
+Mac C&C 3 also downloads Valve’s official Windows Steam bootstrap installer
+from https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe. Its
+pinned bootstrap hash passes the shared install gate. Steam is proprietary;
+its self-updated client and game downloads are managed by Valve and are not
+pinned or scanned by this launcher. Authentication stays in Steam’s own UI.

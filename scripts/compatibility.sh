@@ -19,9 +19,10 @@ compatibility_package() {
 }
 compatibility_wine() { compatibility_package "$PLATFORM"; printf '%s/wine-runtime/%s\n' "$ROOT" "$COMPAT_BINARY"; }
 compatibility_game_pids() {
-  local profile="${1:-}" id exe rest path
+  local profile="${1:-}" id exe rest path steam_path steam_unix directory relative
   while IFS=$'\t' read -r id exe rest; do
     [[ -z "$profile" || "$profile" == "$id" ]] || continue
+    steam_path=; steam_unix=
     if sage_profile "$id"; then
       local folder config executable
       folder="$ROOT/compatibility/$id/game"
@@ -32,15 +33,26 @@ compatibility_game_pids() {
       executable="$(sage_executable "$folder" "$config")"
       [[ -n "$executable" ]] || continue
       path="$executable"
+      if [[ "$PLATFORM" == macos ]]; then
+        directory="$(awk -F '\"' '$2=="installdir" {print $4}' "$(compatibility_directory "$id")/steamapps/appmanifest_$(compatibility_metadata "$id" 5).acf" 2>/dev/null)"
+        if [[ -n "$directory" ]]; then
+          relative="${executable#"$folder/"}"
+          steam_path="c:/program files (x86)/steam/steamapps/common/$directory/$relative"
+          steam_unix="$ROOT/compatibility/$id/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/$directory/$relative"
+        fi
+      fi
     else path="$ROOT/compatibility/$id/game/$exe"; fi
-    ps -axo pid=,stat=,args= 2>/dev/null | awk -v path="$path" '
+    ps -axo pid=,stat=,args= 2>/dev/null | awk -v path="$path" -v steam_path="$steam_path" -v steam_unix="$steam_unix" '
+      function starts(command, candidate) {
+        return candidate!="" && index(command,tolower(candidate))==1 && (length(command)==length(candidate) || substr(command,length(candidate)+1,1) ~ /[ \t"]/ )
+      }
       $2 !~ /[ZE]/ {
         pid=$1; sub(/^[ \t]*[0-9]+[ \t]+[^ \t]+[ \t]+/, "")
         gsub(/\\/, "/"); command=tolower($0); path=tolower(path)
         sub(/^"/, "", command)
         unix=index(command,path)==1; windows=index(command,"z:" path)==1
         end=length(path)+(windows ? 2 : 0)+1
-        if ((unix || windows) && (length(command)==end-1 || substr(command,end,1) ~ /[ \t"]/)) print pid
+        if (((unix || windows) && (length(command)==end-1 || substr(command,end,1) ~ /[ \t"]/)) || starts(command,steam_path) || starts(command,steam_unix) || (steam_unix!="" && starts(command,"z:" steam_unix))) print pid
       }'
   done < "$RESOURCES/manifests/compatibility.tsv"
 }
