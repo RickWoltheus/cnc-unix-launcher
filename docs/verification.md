@@ -460,3 +460,18 @@ Real C&C 3/Kane’s Wrath startup, Steam ownership/registration behavior on Mac,
 campaign/skirmish/Global Conquest, video/audio/input, save/load, fullscreen,
 performance and repeated launches remain pending manual gameplay testing.
 See [the manual checklist](cnc3.md). No EA game was launched for this PR.
+
+## C&C 3 prefix setup repair — 2026-10-09
+
+The user's first manual launch failed during prefix initialization, before the
+game started. Sikarugir Wine 11 requires `SikarugirAppWine11=1` when running
+Windows processes outside its wrapper. That flag was missing from our integration.
+The requirement is visible in the pinned engine's Unix ntdll binary. A clean,
+temporary real prefix reproduced exit 1 without the flag and completed wineboot
+with exit 0 when the flag was supplied. No EA executable was run in that probe.
+
+The Mac launch environment now supplies the flag for both prefix creation and
+game startup. A shell Wine fixture exercises the actual backend initialization
+path and rejects either handoff if the flag is absent. This regression check
+passed, as did the synthetic C&C 3 setup/launch checks. Actual gameplay remains
+pending the user's next manual test; Linux's Steam/Proton handoff is unchanged.

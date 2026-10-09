@@ -79,5 +79,22 @@ if [[ $# == 2 ]]; then
     grep -q 'argument=-win' "$ROOT/logs/$profile.log"
     [[ ! -d "$ROOT/compatibility/$profile/prefix" && ! -f "$ROOT/compatibility/$profile/game/ddraw.dll" ]]
   done
+  # A shell Wine fixture exercises actual prefix initialization, without a game.
+  fixture_wine="$ROOT/sage-runtime/wine/wswine.bundle/bin/wine"
+  mv "$fixture_wine" "$fixture_wine.original"
+  cat > "$fixture_wine" <<'WINE_FIXTURE'
+#!/bin/bash
+[[ "${SikarugirAppWine11:-}" == 1 ]] || { echo 'Missing Sikarugir startup flag'; exit 77; }
+if [[ "$1" == wineboot ]]; then
+  mkdir -p "$WINEPREFIX/drive_c/windows/syswow64" "$WINEPREFIX/drive_c/windows/system32"
+  printf 'prefix setup received SikarugirAppWine11=1\n'
+else printf 'synthetic game handoff received SikarugirAppWine11=1\n'; fi
+WINE_FIXTURE
+  chmod +x "$fixture_wine"
+  env -u GX_LAUNCH_WRAPPER /bin/bash "$REPO/scripts/backend.sh" launch cnc3 -win
+  grep -q 'prefix setup received SikarugirAppWine11=1' "$ROOT/logs/cnc3.log"
+  grep -q 'synthetic game handoff received SikarugirAppWine11=1' "$ROOT/logs/cnc3.log"
+  [[ -f "$ROOT/compatibility/cnc3/prefix/.initialized" ]]
+
 fi
 printf 'C&C 3 Steam library discovery, Proton selection, versioned startup, path rejection and dummy launches passed. No game or Steam client ran.\n'

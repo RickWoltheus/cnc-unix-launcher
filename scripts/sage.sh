@@ -178,6 +178,7 @@ sage_launch() {
     while [[ -n "$(compatibility_game_pids "$profile")" ]]; do sleep 0.5; done
   else
     binary="$ROOT/sage-runtime/wine/wswine.bundle/bin/wine"
+    export SikarugirAppWine11=1
     export WINEPREFIX="$COMPAT_PREFIX" WINEARCH=win64 WINEDEBUG=-all
     export DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib"
     export GST_PLUGIN_PATH="$ROOT/sage-runtime/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0"
