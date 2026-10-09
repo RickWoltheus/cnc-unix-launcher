@@ -237,6 +237,12 @@
       "role": "DirectX 10/11 to Metal renderer used by the Windows Steam interface",
       "url": "https://github.com/3Shain/dxmt",
       "contributorsURL": "https://github.com/3Shain/dxmt/graphs/contributors"
+    },
+    {
+      "name": "steam-on-m1-wine / notpop",
+      "role": "Steam browser compatibility research and documented CEF workaround",
+      "url": "https://github.com/notpop/steam-on-m1-wine",
+      "contributorsURL": "https://github.com/notpop/steam-on-m1-wine/graphs/contributors"
     }
   ],
   "supportTitle": "Consider supporting these projects too",

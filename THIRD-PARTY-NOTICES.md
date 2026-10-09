@@ -35,3 +35,10 @@ licenses and source links are listed in [sage-notice.txt](manifests/sage-notice.
 these downloads are not bundled or relicensed in launcher releases. On Linux,
 the user installs Valve’s proprietary Steam client and Steam manages Proton
 and its component licenses. [Proton source](https://github.com/ValveSoftware/Proton).
+
+The project-owned Steam browser helper is MIT-licensed, with its C source and
+rebuild instructions packaged alongside the executable. Its Wine compatibility
+approach follows [notpop/steam-on-m1-wine](https://github.com/notpop/steam-on-m1-wine).
+Valve’s original browser executable is backed up locally and is never bundled
+in this project’s releases. Single-process Chromium reduces browser process
+isolation; see [the C&C 3 guide](docs/cnc3.md).

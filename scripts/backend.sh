@@ -41,6 +41,7 @@ source "$RESOURCES/scripts/settings.sh"
 source "$RESOURCES/scripts/online.sh"
 source "$RESOURCES/scripts/compatibility.sh"
 source "$RESOURCES/scripts/sage.sh"
+source "$RESOURCES/scripts/steam-webhelper.sh"
 source "$RESOURCES/scripts/security.sh"
 if compatibility_profile "$PROFILE"; then GAME="$(compatibility_directory "$PROFILE")"; fi
 if classic_profile "$PROFILE"; then

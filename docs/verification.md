@@ -509,3 +509,25 @@ Only this C&C 3 profile’s Steam/Wine services were stopped for the repair.
 The shutdown command required the bundled native-library search path, as does
 normal launch. Steam’s real interface rendering and game launch are still
 awaiting manual verification; this is a candidate fix, not a confirmed result.
+
+## Steam browser process workaround — 2026-10-09
+
+The user's next test remained black after adding DXMT. That renderer change
+did not establish a fix. Steam helper diagnostics showed repeated browser
+crashes and no single-process flag. The published steam-on-m1-wine workaround
+adds `--disable-gpu --single-process` directly to the original CEF executable.
+A small project-owned MIT helper implements that forwarding without a shell,
+argument logging, credential handling or networking. Valve’s original browser
+executable is preserved locally and not redistributed. Source/rebuild instructions
+and the bundled executable hash are packaged with the launcher. Reduced browser
+process isolation is disclosed in the main README and C&C 3 guide.
+
+Synthetic tests passed for hash-before-scan, original preservation, repeated
+installation, Steam update handling and missing/tampered input rejection. A real
+Wine test with a synthetic Windows child confirmed both flags, quoted Unicode
+argument forwarding and exit-code propagation (37 expected, 37 returned).
+An independent security review found no confirmed blocker and requested the
+user-facing isolation disclosure, which was added. Steam was opened alone with
+the workaround in the user's profile; no game launch argument was supplied.
+Its real UI outcome is awaiting the user's confirmation. No sign-in input or
+raw Steam arguments were captured. Successful C&C 3 gameplay remains unproven.

@@ -60,6 +60,7 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [Mesa / Kosmickrisp](https://gitlab.freedesktop.org/mesa/mesa) | Vulkan to Metal driver for experimental Mac C&C 3 rendering | [Contributors / team](https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main) |
 | [Valve / Proton](https://github.com/ValveSoftware/Proton) | Steam-managed Windows game compatibility for Linux C&C 3 | [Contributors / team](https://github.com/ValveSoftware/Proton/graphs/contributors) |
 | [DXMT](https://github.com/3Shain/dxmt) | DirectX 10/11 to Metal renderer used by the Windows Steam interface | [Contributors / team](https://github.com/3Shain/dxmt/graphs/contributors) |
+| [steam-on-m1-wine / notpop](https://github.com/notpop/steam-on-m1-wine) | Steam browser compatibility research and documented CEF workaround | [Contributors / team](https://github.com/notpop/steam-on-m1-wine/graphs/contributors) |
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 

@@ -26,7 +26,11 @@ It does not replace the working 2D Wine runtime.
    Windows Steam client inside that profile and starts the game through Steam.
    Sign in only in Valve’s window if requested. SteamCMD alone cannot satisfy
    this edition’s Steam API authentication. First-time client updates may take
-   several minutes. Graphics quality stays in the game.
+   several minutes. A small open-source helper runs Steam’s original browser
+   with CPU rendering and single-process mode to work around Wine’s black-window
+   problem. Single-process mode reduces browser process isolation; it is a
+   compatibility tradeoff, not a security improvement. The helper logs no
+   arguments and handles no credentials. Graphics quality stays in the game.
 
 Prefixes and saves are under `compatibility/cnc3/prefix` and
 `compatibility/kw/prefix` in the installation folder. Updating the owned Steam

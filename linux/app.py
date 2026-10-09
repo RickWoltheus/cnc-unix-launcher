@@ -786,7 +786,7 @@ def main():
         raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
     if "--self-check" in sys.argv:
         state = LauncherState(RESOURCES)
-        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh", "sage.sh"):
+        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh", "sage.sh", "steam-webhelper.sh"):
             subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
         if len(state.mods) != 7 or len(state.policy["steps"]) != 4:
             raise SystemExit("Packaged catalog or setup policy is incomplete.")

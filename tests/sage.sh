@@ -106,6 +106,8 @@ WINE_FIXTURE
     mkdir -p "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam"
     printf 'MZsynthetic Steam client' > "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steam.exe"
   fi
+  mkdir -p "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/bin/cef/cef.win64"
+  python3 "$REPO/tests/fixtures/steam-browser.py" "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/bin/cef/cef.win64/steamwebhelper.exe" 'synthetic Steam browser'
   env -u GX_LAUNCH_WRAPPER /bin/bash "$REPO/scripts/backend.sh" launch cnc3 -win
   grep -q 'prefix setup received SikarugirAppWine11=1' "$ROOT/logs/cnc3.log"
   grep -q 'synthetic Steam handoff received SikarugirAppWine11=1' "$ROOT/steam-handoff.txt"
@@ -113,6 +115,7 @@ WINE_FIXTURE
   grep -qx '24790' "$ROOT/steam-handoff.txt"
   [[ -L "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/Owned CNC3" ]]
   [[ -f "$ROOT/compatibility/cnc3/prefix/.initialized" ]]
+  [[ -f "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/bin/cef/cef.win64/steamwebhelper.cnc-original.exe" ]]
   [[ -s "$ROOT/compatibility/cnc3/prefix/drive_c/windows/system32/d3d11.dll" ]]
   [[ -s "$ROOT/compatibility/cnc3/prefix/drive_c/windows/syswow64/dxgi.dll" ]]
 

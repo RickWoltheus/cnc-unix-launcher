@@ -178,6 +178,23 @@ sage_prepare_windows_steam() {
   # Steam may update its own manifest after registration; retain that newer state.
   [[ -f "$destination" ]] || copy_file "$manifest" "$destination"
 }
+sage_prepare_steam_browser() {
+  local binary="$1" profile="$2" steam_directory="$(dirname "$SAGE_STEAM_EXE")" result=0 attempt
+  steam_webhelper_install "$steam_directory" || result=$?
+  [[ "$result" != 0 ]] || return 0
+  [[ "$result" == 2 ]] || return "$result"
+  printf 'Steam is downloading its browser components. Applying the Wine compatibility fix when ready.\n'
+  "$binary" "$SAGE_STEAM_EXE" -silent -cef-disable-gpu > /dev/null 2>&1 < /dev/null &
+  local ready=0
+  for attempt in $(seq 1 480); do
+    if [[ -d "$steam_directory/bin/cef" ]] && [[ -n "$(find "$steam_directory/bin/cef" -maxdepth 2 -type f -name steamwebhelper.exe -print -quit)" ]]; then ready=1; break; fi
+    sleep 0.5
+  done
+  [[ "$ready" == 1 ]] || fail 'Steam has not finished downloading its browser. Let its update finish, then retry Play.'
+  sleep 2
+  compatibility_reset_prefix "$profile" || fail 'Close this profile’s Steam window before applying its browser fix.'
+  steam_webhelper_install "$steam_directory" || fail 'Steam browser setup is incomplete. Finish its update and retry Play.'
+}
 sage_wait_for_game() {
   local profile="$1" limit="$2" seen=0 attempt
   for attempt in $(seq 1 "$limit"); do
@@ -236,6 +253,7 @@ sage_launch() {
       done
     done
     sage_prepare_windows_steam "$binary" "$profile"
+    sage_prepare_steam_browser "$binary" "$profile"
     local steam_args=(-cef-disable-gpu -cef-disable-gpu-compositing -applaunch "$(compatibility_metadata "$profile" 5)" -xres "$width" -yres "$height")
     if [[ "$full" == true ]]; then steam_args+=(-fullscreen); else steam_args+=(-win); fi
     printf 'Opening Valve’s Windows Steam client. Complete sign-in in its own window if requested.\n'
