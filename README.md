@@ -22,9 +22,10 @@ and credentials under your control.
 The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
 Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The development branch adds
-experimental C&C 3 and Kane’s Wrath support: Sikarugir + D9VK on macOS Tahoe 26+,
+experimental C&C 3, Kane’s Wrath and Red Alert 3 support: Sikarugir + D9VK on macOS Tahoe 26+,
 native Steam + Proton on Linux. These additions are not in the v0.3.0 download.
-See [C&C 3 setup and testing](docs/cnc3.md). Its experimental Mac Steam browser
+See [C&C 3 setup and testing](docs/cnc3.md) and the separate
+[experimental Red Alert 3 profile](docs/ra3.md). The experimental Mac Steam browser
 helper uses single-process Chromium for Wine compatibility, reducing browser
 process isolation; the guide explains that tradeoff. Other additional 3D titles are deferred. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
 with the same guided flow.

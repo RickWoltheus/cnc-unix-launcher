@@ -65,7 +65,8 @@ struct ModelChecks {
         precondition(RecoveryAdvice.forMessage("VK_ERROR_INCOMPATIBLE_DRIVER").title == "The graphics runtime needs repair")
         precondition(GameInfo.catalog.contains { $0.id == "cnc3" && $0.isSage && $0.compatibilityDetail.contains("Tahoe") })
         precondition(GameInfo.catalog.contains { $0.id == "kw" && $0.isSage })
-        for id in ["cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw"] {
+        precondition(GameInfo.catalog.contains { $0.id == "ra3" && $0.isSage && $0.steamID == "17480" })
+        for id in ["cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw", "ra3"] {
             model.selectedGame = id
             precondition(model.activeProfile == id)
             precondition(model.selectedModInfo == nil)

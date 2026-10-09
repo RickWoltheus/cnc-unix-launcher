@@ -581,3 +581,16 @@ the selected renderer. Synthetic first-launch fixtures passed prefix setup,
 official Steam installer handoff, browser helper repair, Steam registration and
 actual process lifecycle checks. This does not verify a fresh real Steam login.
 Backend, security gates, model and Wine lifecycle checks passed.
+
+## Red Alert 3 initial integration — 2026-10-09
+
+A separate development branch adds Steam app 17480 to both frontends through
+the shared catalogue and Sage setup policy. SkuDef discovery derives its prefix
+from the compatibility manifest, retaining CNC3/CNC3EP1 behavior and adding RA3.
+Synthetic fixtures passed discovery, numeric version selection, path rejection,
+windowed launch arguments and independent setup gates. Mac model tests and all
+20 Linux UI tests passed. No owned RA3 installation was present locally; no real
+RA3 game launch or graphics/gameplay result is claimed.
+
+The RA3 `.game` lifecycle fixture also passed live process detection and closure.
+The Apple Silicon app built and its ad hoc signature verified.

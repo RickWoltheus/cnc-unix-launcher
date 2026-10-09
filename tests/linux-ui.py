@@ -40,7 +40,7 @@ class StateChecks(unittest.TestCase):
         self.assertFalse(self.state.can_enter(3))
 
     def test_sage_profiles_use_their_own_prerequisites(self):
-        for game in ("cnc3", "kw"):
+        for game in ("cnc3", "kw", "ra3"):
             self.state.selected_game = game
             self.assertTrue(self.state.sage)
             self.assertIn("Proton", self.state.sage_copy["prepare"])
@@ -53,7 +53,7 @@ class StateChecks(unittest.TestCase):
             self.assertTrue(self.state.can_enter(3))
 
     def test_classic_game_readiness_is_independent(self):
-        for game in ("cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw"):
+        for game in ("cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw", "ra3"):
             self.state.selected_game = game
             self.state.update("platform=ready\nengine=ready\nsteam=ready\nassets=ready\ninstall=idle")
             self.assertEqual(self.state.profile, game)

@@ -7,3 +7,4 @@ yuri	Yuri’s Revenge	Red Alert 2 expansion · experimental	Wine	2229850	RedAler
 ts	Tiberian Sun	Firestorm included · experimental	Wine	2229880	TiberianSun	88C552	TS	Original Tiberian Sun and Firestorm through free Wine + cnc-ddraw. Choose the expansion in the game menu; gameplay validation pending.
 cnc3	C&C 3: Tiberium Wars	GDI · Nod · Scrin · experimental	Wine	24790	TiberiumWars	B4CB59	TW	Original campaigns and skirmish. Experimental DirectX 9 support: Sikarugir on macOS Tahoe, Steam Proton on Linux.
 kw	Kane’s Wrath	C&C 3 expansion · experimental	Wine	24810	KanesWrath	EFAD40	KW	Kane’s campaign and Global Conquest. Experimental; requires an owned Steam copy and gameplay validation.
+ra3	Red Alert 3	Allied · Soviet · Empire · experimental	Wine	17480	RedAlert3	E95645	RA3	Original campaigns and skirmish through Wine on Mac or Steam Proton on Linux. Experimental; gameplay validation pending.

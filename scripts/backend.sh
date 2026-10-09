@@ -102,11 +102,11 @@ if [[ "$ACTION" == status ]]; then
     native_engine_ready "$id" && echo "native_engine_$id=ready" || echo "native_engine_$id=missing"
     native_ready "$id" && echo "$id=ready" || echo "$id=missing"
   done < "$RESOURCES/manifests/native-mods.tsv"
-  for game in ra2 yuri ts cnc3 kw; do
+  for game in ra2 yuri ts cnc3 kw ra3; do
     compatibility_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
     compatibility_assets_ready "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
-  for game in vanilla base cnc ra combined-arms tdhd ra2 yuri ts cnc3 kw; do
+  for game in vanilla base cnc ra combined-arms tdhd ra2 yuri ts cnc3 kw ra3; do
     state=idle
     if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
     case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|validating|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
@@ -224,7 +224,7 @@ case "$ACTION" in
     if sage_profile "$PROFILE" && [[ "$PLATFORM" == linux ]]; then sage_steam_ready || fail 'Install the native Linux Steam client from your distribution, then return here.'; else steam_install; fi
     ;;
   sage-steam)
-    [[ "$PLATFORM" == linux ]] && sage_profile "$PROFILE" || fail 'Steam desktop setup is for Linux C&C 3 profiles.'
+    [[ "$PLATFORM" == linux ]] && sage_profile "$PROFILE" || fail 'Steam desktop setup is for Linux DirectX 9 profiles.'
     sage_open_steam "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)"
     ;;
   steam-login)

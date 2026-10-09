@@ -101,4 +101,13 @@ for attempt in 1 2 3 4 5 6 7 8 9 10; do [[ -n "$(compatibility_game_pids cnc3)" 
 [[ -n "$(compatibility_game_pids cnc3)" ]] || { echo 'FAIL: Steam C: game path not detected.'; exit 1; }
 kill "$game_pid"; wait "$game_pid" 2>/dev/null || true; game_pid=
 [[ -z "$(compatibility_game_pids cnc3)" ]]
+mkdir -p "$ROOT/compatibility/ra3/game/Data"
+ra3_game="$ROOT/compatibility/ra3/game/Data/ra3_1.12.game"
+printf 'set-exe Data\\ra3_1.12.game\n' > "$ROOT/compatibility/ra3/game/RA3_english_1.12.SkuDef"
+if [[ "$(uname -s)" == Darwin ]]; then touch "$ra3_game"; else cp /bin/sleep "$ra3_game"; fi
+start_fixture "$ra3_game" 30 & game_pid=$!
+for attempt in 1 2 3 4 5 6 7 8 9 10; do [[ -n "$(compatibility_game_pids ra3)" ]] && break; sleep 0.1; done
+[[ -n "$(compatibility_game_pids ra3)" ]] || { echo 'FAIL: RA3 .game process not detected.'; exit 1; }
+kill "$game_pid"; wait "$game_pid" 2>/dev/null || true; game_pid=
+[[ -z "$(compatibility_game_pids ra3)" ]]
 echo 'Wine lifecycle checks passed: helpers ignored, live game tracked, closure releases wrapper, launch errors preserved. POSIX sleep fixtures only.'

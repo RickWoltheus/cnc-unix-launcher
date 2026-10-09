@@ -85,8 +85,8 @@ sage_engine_ready() {
   done
 }
 sage_config() {
-  local folder="$1" prefix=CNC3 config name major minor best_major=-1 best_minor=-1 selected=''
-  [[ "$2" != kw ]] || prefix=CNC3EP1
+  local folder="$1" prefix config name major minor best_major=-1 best_minor=-1 selected=''
+  prefix="$(awk -F '\t' -v id="$2" '$1==id {print $2}' "$RESOURCES/manifests/compatibility.tsv")"; prefix="${prefix%.*}"
   for config in "$folder"/"${prefix}"_english_*.SkuDef "$folder"/"${prefix}"_english_*.skudef; do
     [[ -f "$config" ]] || continue
     name="${config##*/}"; name="${name#${prefix}_english_}"; name="${name%.*}"
@@ -124,7 +124,7 @@ sage_open_steam() {
   "$binary" "$1" > /dev/null 2>&1 < /dev/null &
 }
 sage_install() {
-  sage_supported || fail 'C&C 3 on Mac currently requires macOS Tahoe 26 or later. Older games keep their existing requirements.'
+  sage_supported || fail 'These DirectX 9 games on Mac currently require macOS Tahoe 26 or later. Older games keep their existing requirements.'
   if [[ "$PLATFORM" == linux ]]; then
     sage_steam_ready || fail 'Install and open the native Linux Steam client, then use Open Steam setup.'
     sage_proton_ready "$PROFILE" || fail 'In Steam, enable Proton for this game in Properties → Compatibility, then install it and start it once to download Proton. Return here afterwards.'
@@ -217,7 +217,7 @@ sage_launch() {
   local profile="$PROFILE" full=false width=1280 height=720 argument folder config executable binary result=0 attempt seen=0
   compatibility_running && fail 'A game is already running. Quit it before switching games.'
   pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1 && fail 'Quit the running game before switching games.'
-  sage_engine_ready "$profile" || fail 'Prepare the C&C 3 runtime first. Mac requires Tahoe; Linux requires Steam and Proton.'
+  sage_engine_ready "$profile" || fail 'Prepare the DirectX 9 runtime first. Mac requires Tahoe; Linux requires Steam and Proton.'
   sage_assets_ready "$profile" || fail 'Install and validate the English Steam game first.'
   shift 2
   compatibility_parse_display "$@"

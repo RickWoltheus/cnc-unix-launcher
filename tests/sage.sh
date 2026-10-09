@@ -32,9 +32,9 @@ if sage_proton_ready cnc3; then echo 'Explicitly disabled Proton accepted throug
 printf '"CompatToolMapping"\n{\n"24790"\n{\n"name" "proton_missing"\n}\n}\n' > "$GX_STEAM_ROOT/config/config.vdf"
 if sage_proton_ready cnc3; then echo 'Different installed Proton accepted for selected missing tool.'; exit 1; fi
 printf '"CompatToolMapping"\n{\n"24790"\n{\n"name" "proton_11"\n}\n}\n' > "$GX_STEAM_ROOT/config/config.vdf"
-for profile in cnc3 kw; do
+for profile in cnc3 kw ra3; do
   PROFILE="$profile"
-  prefix=CNC3; executable=cnc3game.dat; [[ "$profile" != kw ]] || { prefix=CNC3EP1; executable=cnc3ep1.dat; }
+  case "$profile" in cnc3) prefix=CNC3; executable=cnc3game.dat ;; kw) prefix=CNC3EP1; executable=cnc3ep1.dat ;; ra3) prefix=RA3; executable=ra3_1.12.game ;; esac
   appid="$(compatibility_metadata "$profile" 5)"
   folder="$TEST_ROOT/Other Library/steamapps/common/Owned $prefix"
   mkdir -p "$folder/RetailExe/1.9" "$folder/RetailExe/1.10"
@@ -71,8 +71,8 @@ if [[ $# -ge 2 ]]; then
   [[ ! -e "$ROOT/sage-runtime/Frameworks/SikarugirSdk.framework" && ! -e "$ROOT/sage-runtime/Frameworks/renderer/d3dmetal" ]]
   /bin/bash "$REPO/scripts/backend.sh" status > "$TEST_ROOT/status.txt"
   grep -q 'cnc3_engine=ready' "$TEST_ROOT/status.txt"
-  for profile in cnc3 kw; do
-    prefix=CNC3; executable=cnc3game.dat; [[ "$profile" != kw ]] || { prefix=CNC3EP1; executable=cnc3ep1.dat; }
+  for profile in cnc3 kw ra3; do
+    case "$profile" in cnc3) prefix=CNC3; executable=cnc3game.dat ;; kw) prefix=CNC3EP1; executable=cnc3ep1.dat ;; ra3) prefix=RA3; executable=ra3_1.12.game ;; esac
     appid="$(compatibility_metadata "$profile" 5)"; game="$ROOT/$(compatibility_metadata "$profile" 6)"
     mkdir -p "$game/steamapps" "$game/RetailExe/1.10"
     printf '"StateFlags" "4"\n"installdir" "Owned %s"\n' "$prefix" > "$game/steamapps/appmanifest_$appid.acf"
