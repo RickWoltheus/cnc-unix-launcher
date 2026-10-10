@@ -99,13 +99,7 @@ sage_engine_ready() {
   if sage_wine10_profile "${1:-$PROFILE}"; then
     [[ -x "$(sage_mac_wine "${1:-$PROFILE}")" && "$(cat "$ROOT/compatibility/${1:-$PROFILE}/wine10-test/.version" 2>/dev/null)" == WS12WineSikarugir10.0_6 ]]; return
   fi
-  [[ -x "$ROOT/sage-runtime/wine/wswine.bundle/bin/wine" &&
-     "$(cat "$ROOT/sage-runtime/.version" 2>/dev/null)" == WS12WineSikarugir10.0_6+Template-1.0.21+D9VK &&
-     -s "$ROOT/sage-runtime/Frameworks/renderer/dxvk/wine/i386-windows/d3d9.dll" ]] || return 1
-  local architecture
-  for architecture in i386-windows x86_64-windows; do
-    cmp -s "$ROOT/sage-runtime/wine/wswine.bundle/lib/wine/$architecture/d3d9.dll" "$ROOT/sage-runtime/Frameworks/renderer/dxvk/wine/$architecture/d3d9.dll" || return 1
-  done
+  return 1
 }
 sage_config() {
   local folder="$1" prefix config name major minor best_major=-1 best_minor=-1 selected=''
