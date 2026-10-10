@@ -32,9 +32,9 @@ if sage_proton_ready cnc3; then echo 'Explicitly disabled Proton accepted throug
 printf '"CompatToolMapping"\n{\n"24790"\n{\n"name" "proton_missing"\n}\n}\n' > "$GX_STEAM_ROOT/config/config.vdf"
 if sage_proton_ready cnc3; then echo 'Different installed Proton accepted for selected missing tool.'; exit 1; fi
 printf '"CompatToolMapping"\n{\n"24790"\n{\n"name" "proton_11"\n}\n}\n' > "$GX_STEAM_ROOT/config/config.vdf"
-for profile in cnc3 kw; do
+for profile in cnc3 kw ra3; do
   PROFILE="$profile"
-  prefix=CNC3; executable=cnc3game.dat; [[ "$profile" != kw ]] || { prefix=CNC3EP1; executable=cnc3ep1.dat; }
+  case "$profile" in cnc3) prefix=CNC3; executable=cnc3game.dat ;; kw) prefix=CNC3EP1; executable=cnc3ep1.dat ;; ra3) prefix=RA3; executable=ra3_1.12.game ;; esac
   appid="$(compatibility_metadata "$profile" 5)"
   folder="$TEST_ROOT/Other Library/steamapps/common/Owned $prefix"
   mkdir -p "$folder/RetailExe/1.9" "$folder/RetailExe/1.10"
@@ -44,80 +44,51 @@ for profile in cnc3 kw; do
   printf 'set-exe RetailExe\\1.10\\%s\r\n' "$executable" > "$folder/${prefix}_english_1.10.SkuDef"
   [[ "$(sage_steam_game "$profile")" == "$folder" ]]
   [[ "$(sage_config "$folder" "$profile")" == "$folder/${prefix}_english_1.10.SkuDef" ]]
+  if [[ "$profile" == ra3 ]]; then
+    printf 'set-exe retailexe\\1.10\\RA3_1.12.GAME\n' > "$folder/${prefix}_english_1.10.SkuDef"
+    mv "$folder/${prefix}_english_1.10.SkuDef" "$folder/ra3_English_1.10.SKUDef"
+    [[ "$(sage_config "$folder" "$profile")" == "$folder/ra3_English_1.10.SKUDef" ]]
+    [[ "$(sage_executable "$folder" "$(sage_config "$folder" "$profile")")" == "$folder/RetailExe/1.10/$executable" || "$(uname -s)" == Darwin ]]
+  fi
   sage_assets_ready "$profile"
   # The launcher copy is untouched on Linux; Steam owns files and prefix updates.
   sage_engine_ready() { return 0; }
   compatibility_running() { return 1; }
   (sage_launch launch "$profile" -win -xres 1280 -yres 720)
-  grep -q "exe=$folder/RetailExe/1.10/$executable" "$ROOT/logs/$profile.log"
+  grep -qi "exe=$folder/RetailExe/1.10/$executable" "$ROOT/logs/$profile.log"
   grep -q 'argument=-win' "$ROOT/logs/$profile.log"
   [[ ! -d "$ROOT/compatibility/$profile/prefix" && ! -d "$ROOT/compatibility/$profile/game" ]]
-  printf 'set-exe ../../outside.exe\n' > "$folder/${prefix}_english_1.10.SkuDef"
+  printf 'set-exe ../../outside.exe\n' > "$(sage_config "$folder" "$profile")"
   [[ -z "$(sage_executable "$folder" "$(sage_config "$folder" "$profile")")" ]]
   if sage_assets_ready "$profile"; then echo 'Escaping executable path accepted.'; exit 1; fi
   printf '"StateFlags" "6"\n"installdir" "Owned %s"\n' "$prefix" > "$TEST_ROOT/Other Library/steamapps/appmanifest_$appid.acf"
   if sage_assets_ready "$profile"; then echo 'Incomplete Steam download accepted.'; exit 1; fi
 done
-if [[ $# -ge 2 ]]; then
-  [[ "$(uname -s)" == Darwin ]] || fail 'Real Sikarugir archive checks require Mac.'
-  mkdir -p "$ROOT/downloads"
-  cp "$1" "$ROOT/downloads/WS12WineSikarugir10.0_6.tar.xz"
-  cp "$2" "$ROOT/downloads/Template-1.0.21.tar.xz"
-  /bin/bash "$REPO/scripts/backend.sh" engine cnc3
-  [[ ! -d "$ROOT/compatibility/cnc3/prefix" ]]
-  for architecture in i386-windows x86_64-windows; do
-    cmp "$ROOT/sage-runtime/wine/wswine.bundle/lib/wine/$architecture/d3d9.dll" "$ROOT/sage-runtime/Frameworks/renderer/dxvk/wine/$architecture/d3d9.dll"
-  done
-  [[ ! -e "$ROOT/sage-runtime/Frameworks/SikarugirSdk.framework" && ! -e "$ROOT/sage-runtime/Frameworks/renderer/d3dmetal" ]]
-  /bin/bash "$REPO/scripts/backend.sh" status > "$TEST_ROOT/status.txt"
-  grep -q 'cnc3_engine=ready' "$TEST_ROOT/status.txt"
-  for profile in cnc3 kw; do
-    prefix=CNC3; executable=cnc3game.dat; [[ "$profile" != kw ]] || { prefix=CNC3EP1; executable=cnc3ep1.dat; }
-    appid="$(compatibility_metadata "$profile" 5)"; game="$ROOT/$(compatibility_metadata "$profile" 6)"
-    mkdir -p "$game/steamapps" "$game/RetailExe/1.10"
-    printf '"StateFlags" "4"\n"installdir" "Owned %s"\n' "$prefix" > "$game/steamapps/appmanifest_$appid.acf"
-    printf 'MZsynthetic executable; never executed' > "$game/RetailExe/1.10/$executable"
-    printf 'set-exe RetailExe\\1.10\\%s\r\n' "$executable" > "$game/${prefix}_english_1.10.SkuDef"
-    /bin/bash "$REPO/scripts/backend.sh" launch "$profile" -win -xres 1280 -yres 720
-    grep -q 'argument=-win' "$ROOT/logs/$profile.log"
-    [[ ! -d "$ROOT/compatibility/$profile/prefix" && ! -f "$ROOT/compatibility/$profile/game/ddraw.dll" ]]
-  done
-  # A shell Wine fixture exercises actual prefix initialization, without a game.
-  fixture_wine="$ROOT/sage-runtime/wine/wswine.bundle/bin/wine"
-  mv "$fixture_wine" "$fixture_wine.original"
-  cat > "$fixture_wine" <<'WINE_FIXTURE'
+(
+  COMPAT_GAME="$TEST_ROOT/Owned RA3"
+  COMPAT_PREFIX="$TEST_ROOT/RA3 prefix"
+  WORK="$TEST_ROOT/directx-work"
+  export GX_DIRECTX_FIXTURE_WORK="$WORK"
+  mkdir -p "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010" "$COMPAT_PREFIX/drive_c/windows/syswow64"
+  printf 'synthetic owned CAB' > "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
+  cat > "$TEST_ROOT/directx-wine" <<'DIRECTX_FIXTURE'
 #!/bin/bash
-[[ "${SikarugirAppWine11:-}" == 1 ]] || { echo 'Missing Sikarugir startup flag'; exit 77; }
-if [[ "$1" == wineboot ]]; then
-  mkdir -p "$WINEPREFIX/drive_c/windows/syswow64" "$WINEPREFIX/drive_c/windows/system32"
-  printf 'prefix setup received SikarugirAppWine11=1\n'
-elif [[ "$1" == *SteamSetup* ]]; then
-  mkdir -p "$WINEPREFIX/drive_c/Program Files (x86)/Steam"
-  printf 'MZsynthetic Steam client' > "$WINEPREFIX/drive_c/Program Files (x86)/Steam/steam.exe"
-else
-  printf 'synthetic Steam handoff received SikarugirAppWine11=1\n' > "$GX_INSTALL_ROOT/steam-handoff.txt"
-  printf '%s\n' "$@" >> "$GX_INSTALL_ROOT/steam-handoff.txt"
-  exec python3 -c 'import os,sys; os.execv("/bin/sleep", [sys.argv[1], "2"])' "${WINEPREFIX%/prefix}/game/RetailExe/1.10/cnc3game.dat"
+if [[ "$1" == extrac32 ]]; then
+  [[ "$6" == *AUG2007_d3dx9_35_x86.cab ]] || exit 9
+  printf 'MZsynthetic native helper' > "$GX_DIRECTX_FIXTURE_WORK/directx/d3dx9_35.dll"
+elif [[ "$1" == reg ]]; then
+  [[ "$5" == d3dx9_35 && "$7" == native,builtin ]] || exit 10
+else exit 11
 fi
-WINE_FIXTURE
-  chmod +x "$fixture_wine"
-  if [[ $# == 3 ]]; then
-    cp "$3" "$ROOT/downloads/SteamSetup-2026-10-09.exe"
-  else
-    mkdir -p "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam"
-    printf 'MZsynthetic Steam client' > "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steam.exe"
-  fi
-  mkdir -p "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/bin/cef/cef.win64"
-  python3 "$REPO/tests/fixtures/steam-browser.py" "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/bin/cef/cef.win64/steamwebhelper.exe" 'synthetic Steam browser'
-  env -u GX_LAUNCH_WRAPPER /bin/bash "$REPO/scripts/backend.sh" launch cnc3 -win
-  grep -q 'prefix setup received SikarugirAppWine11=1' "$ROOT/logs/cnc3.log"
-  grep -q 'synthetic Steam handoff received SikarugirAppWine11=1' "$ROOT/steam-handoff.txt"
-  grep -qx -- '-applaunch' "$ROOT/steam-handoff.txt"
-  grep -qx '24790' "$ROOT/steam-handoff.txt"
-  [[ -L "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/Owned CNC3" ]]
-  [[ -f "$ROOT/compatibility/cnc3/prefix/.initialized" ]]
-  [[ -f "$ROOT/compatibility/cnc3/prefix/drive_c/Program Files (x86)/Steam/bin/cef/cef.win64/steamwebhelper.cnc-original.exe" ]]
-  [[ -s "$ROOT/sage-runtime/Frameworks/renderer/dxvk/wine/i386-windows/d3d9.dll" ]]
-
+DIRECTX_FIXTURE
+  chmod +x "$TEST_ROOT/directx-wine"
+  copy_file() { cp "$1" "$2"; }
+  sage_prepare_directx_helpers "$TEST_ROOT/directx-wine" ra3
+  cmp "$WORK/directx/d3dx9_35.dll" "$COMPAT_PREFIX/drive_c/windows/syswow64/d3dx9_35.dll"
+  rm "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
+  if (sage_prepare_directx_helpers "$TEST_ROOT/directx-wine" ra3) >/dev/null 2>&1; then fail 'Missing owned RA3 CAB accepted.'; fi
+)
+if [[ $# -ge 2 ]]; then
+  /bin/bash "$REPO/tests/sage-metal.sh" "$@"
 fi
 printf 'C&C 3 Steam library discovery, Proton selection, versioned startup, path rejection and dummy launches passed. No game or Steam client ran.\n'

@@ -41,3 +41,22 @@ struct SteamGuideCopy: Decodable {
                               continueLabel: "Continue to Play", helpLabel: "Steam account help", terminalLabel: "Return to Terminal")
     }()
 }
+
+struct GameLaunchGuide: Decodable {
+    let copy: SteamGuideCopy
+    let phases: [String: SteamGuidance]
+    let permission: String?
+    let library: String
+
+    static let shared: GameLaunchGuide = {
+        if let url = Bundle.main.resourceURL?.appendingPathComponent("resources/launch-guide.json"),
+           let data = try? Data(contentsOf: url),
+           let copies = try? JSONDecoder().decode([String: GameLaunchGuide].self, from: data),
+           let copy = copies["macos"] { return copy }
+        return GameLaunchGuide(copy: SteamGuideCopy.shared, phases: [:], permission: nil,
+                               library: "Reinstall the launcher to restore the game launch guide.")
+    }()
+    func guidance(_ phase: String) -> SteamGuidance {
+        phases[phase] ?? phases["preparing"] ?? SteamGuidance.forStatus("idle")
+    }
+}

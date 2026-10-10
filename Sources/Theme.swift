@@ -99,7 +99,7 @@ struct GameLogo: View {
     let game: GameInfo
     var width: CGFloat = 166
     var height: CGFloat = 70
-    var fit = false
+    var fit = true
     var body: some View {
         AsyncImage(url: game.logoURL) { phase in
             if let image = phase.image {

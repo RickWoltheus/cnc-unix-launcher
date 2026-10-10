@@ -222,13 +222,13 @@
     },
     {
       "name": "Mesa / Kosmickrisp",
-      "role": "Vulkan to Metal driver for experimental Mac C&C 3 rendering",
+      "role": "Vulkan-to-Metal driver used during compatibility development and renderer comparisons",
       "url": "https://gitlab.freedesktop.org/mesa/mesa",
       "contributorsURL": "https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main"
     },
     {
       "name": "Valve / Proton",
-      "role": "Steam-managed Windows game compatibility for Linux C&C 3",
+      "role": "Steam-managed Windows-game compatibility for Linux DirectX 9 profiles",
       "url": "https://github.com/ValveSoftware/Proton",
       "contributorsURL": "https://github.com/ValveSoftware/Proton/graphs/contributors"
     },
@@ -243,6 +243,24 @@
       "role": "Steam browser compatibility research and documented CEF workaround",
       "url": "https://github.com/notpop/steam-on-m1-wine",
       "contributorsURL": "https://github.com/notpop/steam-on-m1-wine/graphs/contributors"
+    },
+    {
+      "name": "mtld3d / athei",
+      "role": "DirectX 9 to Metal renderer used by C&C 3 and Red Alert 3 on Mac",
+      "url": "https://github.com/athei/mtld3d",
+      "contributorsURL": "https://github.com/athei/mtld3d/graphs/contributors"
+    },
+    {
+      "name": "athei / wine-build",
+      "role": "Free Wine runtime packaging and compatibility patches built from CrossOver-derived Wine sources",
+      "url": "https://github.com/athei/wine-build",
+      "contributorsURL": "https://github.com/athei/wine-build/graphs/contributors"
+    },
+    {
+      "name": "Apple Game Porting Toolkit / D3DMetal",
+      "role": "Proprietary DirectX 11/12 translation included by the upstream Wine bundle for compatible applications",
+      "url": "https://developer.apple.com/games/game-porting-toolkit/",
+      "contributorsURL": "https://github.com/apple/game-porting-toolkit"
     }
   ],
   "supportTitle": "Consider supporting these projects too",

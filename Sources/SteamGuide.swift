@@ -9,7 +9,7 @@ final class SteamGuideWindow: NSObject, NSWindowDelegate {
     func makePanel(model: LauncherModel, onContinue: @escaping () -> Void) -> NSPanel {
         let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 420, height: 600),
                             styleMask: [.titled, .closable, .nonactivatingPanel], backing: .buffered, defer: false)
-        panel.title = SteamGuideCopy.shared.title
+        panel.title = model.launchGuideProfile == nil ? SteamGuideCopy.shared.title : GameLaunchGuide.shared.copy.title
         panel.level = .floating
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
@@ -55,6 +55,11 @@ struct SteamGuideView: View {
     }
 
     var body: some View {
+        if model.launchGuideProfile != nil { GameLaunchGuideView(model: model, onClose: onContinue) }
+        else { downloadGuide }
+    }
+
+    private var downloadGuide: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Image(systemName: "lock.shield.fill").foregroundStyle(model.game.color)
@@ -95,6 +100,51 @@ struct SteamGuideView: View {
             }.font(.system(size: 12))
             Link(copy.helpLabel, destination: URL(string: "https://help.steampowered.com/en/wizard/HelpWithLogin")!)
                 .font(.system(size: 11))
+        }.padding(20).frame(width: 420, height: 600).background(CommandTheme.background)
+            .preferredColorScheme(.dark).tint(model.game.color)
+    }
+}
+
+struct GameLaunchGuideView: View {
+    @ObservedObject var model: LauncherModel
+    let onClose: () -> Void
+    private let guide = GameLaunchGuide.shared
+    private var message: SteamGuidance { guide.guidance(model.launchGuidePhase) }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(guide.copy.title).font(.system(size: 20, weight: .bold))
+            Text(model.launchGuideTitle).foregroundStyle(model.game.color)
+            ScrollView {
+              VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                ForEach(Array(guide.copy.stages.enumerated()), id: \.offset) { index, title in
+                    Text("\(index < message.stage ? "✓" : String(index + 1))  \(title)")
+                        .font(.system(size: 11, weight: .semibold)).frame(maxWidth: .infinity)
+                        .foregroundStyle(index <= message.stage ? model.game.color : CommandTheme.muted)
+                }
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text(message.title).font(.system(size: 18, weight: .bold)).foregroundStyle(model.game.color)
+                Text(message.detail).font(.system(size: 13)).fixedSize(horizontal: false, vertical: true)
+            }.accessibilityIdentifier("game-launch-guide-status")
+            Text(guide.library).font(.system(size: 12)).fixedSize(horizontal: false, vertical: true)
+            if let permission = guide.permission {
+                Label(permission, systemImage: "mic.fill").font(.system(size: 12))
+                    .fixedSize(horizontal: false, vertical: true).padding(12).background(CommandTheme.panel)
+            }
+            Text(guide.copy.securityDetail).font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(guide.copy.visibilityDetail).font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+              }
+            }
+            HStack {
+                Button(guide.copy.terminalLabel) { model.openGameSteam() }
+                    .disabled(message.stage == 0 || model.launchGuidePhase == "steam-install")
+                Spacer()
+                Button(guide.copy.continueLabel, action: onClose)
+            }
+            Link(guide.copy.helpLabel, destination: ProductInfo.shared.issuesURL).font(.system(size: 11))
         }.padding(20).frame(width: 420, height: 600).background(CommandTheme.background)
             .preferredColorScheme(.dark).tint(model.game.color)
     }

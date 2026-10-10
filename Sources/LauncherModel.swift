@@ -36,6 +36,10 @@ final class LauncherModel: ObservableObject {
     private var pendingNativePlay = false
     @Published var busy = false
     @Published var gameRunning = false
+    @Published var launchGuideProfile: String?
+    @Published var launchGuidePhase = "preparing"
+    @Published var launchGuideRequest = UUID()
+    private var launchGuidePID: Int32?
     private var wineSessionObserved = false
     private var activeLaunchID: UUID?
     @Published var recovery: RecoveryAdvice?
@@ -121,13 +125,12 @@ final class LauncherModel: ObservableObject {
         SetupPolicy.shared.isComplete(index, facts: setupFacts)
     }
     private var setupFacts: [String: Bool] {
-        ["platform": systemSupported && (!game.isSage || ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 26), "selected": GameInfo.catalog.contains { $0.id == selectedGame },
+        ["platform": systemSupported, "selected": GameInfo.catalog.contains { $0.id == selectedGame },
          "engine": gameEngineReady, "steam": steam, "assets": gameAssetsReady]
     }
 
     func stepHelp(_ index: Int) -> String {
         if !systemSupported { return "This launcher needs Apple Silicon and macOS 15 or later." }
-        if game.isSage && ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 26 { return "C&C 3 currently requires macOS Tahoe 26 or later." }
         if index >= 2 && (!gameEngineReady || !steam) { return "Prepare your Mac before signing into Steam." }
         if index == 3 && !gameAssetsReady { return "Finish Steam sign-in and validate the game download first." }
         return "Open this step."
@@ -165,6 +168,10 @@ final class LauncherModel: ObservableObject {
                     steamStartDeadline = nil
                 }
                 externalInstallRunning = states.contains("install=busy")
+                if let profile = launchGuideProfile, let pid = launchGuidePID,
+                   states.contains("launch_pid_\(profile)=\(pid)"),
+                   let phase = states.first(where: { $0.hasPrefix("launch_\(profile)=") })?.components(separatedBy: "=").last,
+                   GameLaunchGuide.shared.phases[phase] != nil { launchGuidePhase = phase }
                 applyWineSession(states.first { $0.hasPrefix("wine_session=") }?.components(separatedBy: "=").last)
                 if steamDownloadStatus == "incomplete" && !gameAssetsReady {
                     recovery = RecoveryAdvice.forMessage("Steam files are incomplete")
@@ -349,6 +356,17 @@ final class LauncherModel: ObservableObject {
                 profile: activeProfile, extra: [hosting ? "host" : "join"])
     }
 
+    var launchGuideTitle: String { GameInfo.catalog.first { $0.id == launchGuideProfile }?.title ?? game.title }
+
+    func openGameSteam() {
+        guard let profile = launchGuideProfile else { return }
+        let script = backend
+        Task {
+            do { _ = try await Task.detached { try Self.run(script, arguments: ["game-steam", profile]) }.value }
+            catch { status = error.localizedDescription }
+        }
+    }
+
     func returnToSteamWindow() {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
@@ -363,6 +381,7 @@ final class LauncherModel: ObservableObject {
         guard canEnterStep(3) else { return }
         busy = true
         recovery = nil
+        if game.isSage { launchGuidePhase = "preparing"; launchGuidePID = nil; launchGuideProfile = profile; launchGuideRequest = UUID() }
         let script = backend
         let screen = NSScreen.main
         let scale: CGFloat = game.isCompatibility ? 1 : (screen?.backingScaleFactor ?? 2)
@@ -395,6 +414,8 @@ final class LauncherModel: ObservableObject {
                     Task { @MainActor in
                         guard self.activeLaunchID == launchID else { return }
                         self.activeLaunchID = nil
+                        self.launchGuidePID = nil
+                        if self.launchGuideProfile == profile { self.launchGuidePhase = finished.terminationStatus == 0 ? "closed" : "failed" }
                         self.status = finished.terminationStatus == 0 ? "Game closed." : "Game stopped with an error. Open the installation folder and check logs/\(profile).log."
                         self.gameRunning = false
                         if finished.terminationStatus != 0 {
@@ -407,9 +428,11 @@ final class LauncherModel: ObservableObject {
                     }
                 }
                 try process.run()
+                if launchGuideProfile == profile { launchGuidePID = process.processIdentifier }
                 gameRunning = true
                 status = "Launching selected game… Logs are in your installation folder."
             } catch {
+                if launchGuideProfile == profile { launchGuidePhase = "failed" }
                 status = error.localizedDescription
                 recovery = RecoveryAdvice.forMessage(error.localizedDescription)
             }

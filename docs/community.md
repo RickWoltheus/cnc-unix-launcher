@@ -57,10 +57,13 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [ClamAV](https://github.com/Cisco-Talos/clamav) | Optional local antivirus scanner and signed virus definitions | [Contributors / team](https://github.com/Cisco-Talos/clamav/graphs/contributors) |
 | [Sikarugir / Gcenx](https://github.com/Sikarugir-App/Sikarugir) | Separate macOS C&C 3 Wine engine, D9VK and runtime libraries | [Contributors / team](https://github.com/Sikarugir-App/Sikarugir/graphs/contributors) |
 | [DXVK / D9VK](https://github.com/doitsujin/dxvk) | DirectX 9 rendering used by Sikarugir and Proton | [Contributors / team](https://github.com/doitsujin/dxvk/graphs/contributors) |
-| [Mesa / Kosmickrisp](https://gitlab.freedesktop.org/mesa/mesa) | Vulkan to Metal driver for experimental Mac C&C 3 rendering | [Contributors / team](https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main) |
-| [Valve / Proton](https://github.com/ValveSoftware/Proton) | Steam-managed Windows game compatibility for Linux C&C 3 | [Contributors / team](https://github.com/ValveSoftware/Proton/graphs/contributors) |
+| [Mesa / Kosmickrisp](https://gitlab.freedesktop.org/mesa/mesa) | Vulkan-to-Metal driver used during compatibility development and renderer comparisons | [Contributors / team](https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main) |
+| [Valve / Proton](https://github.com/ValveSoftware/Proton) | Steam-managed Windows-game compatibility for Linux DirectX 9 profiles | [Contributors / team](https://github.com/ValveSoftware/Proton/graphs/contributors) |
 | [DXMT](https://github.com/3Shain/dxmt) | DirectX 10/11 to Metal renderer used by the Windows Steam interface | [Contributors / team](https://github.com/3Shain/dxmt/graphs/contributors) |
 | [steam-on-m1-wine / notpop](https://github.com/notpop/steam-on-m1-wine) | Steam browser compatibility research and documented CEF workaround | [Contributors / team](https://github.com/notpop/steam-on-m1-wine/graphs/contributors) |
+| [mtld3d / athei](https://github.com/athei/mtld3d) | DirectX 9 to Metal renderer used by C&C 3 and Red Alert 3 on Mac | [Contributors / team](https://github.com/athei/mtld3d/graphs/contributors) |
+| [athei / wine-build](https://github.com/athei/wine-build) | Free Wine runtime packaging and compatibility patches built from CrossOver-derived Wine sources | [Contributors / team](https://github.com/athei/wine-build/graphs/contributors) |
+| [Apple Game Porting Toolkit / D3DMetal](https://developer.apple.com/games/game-porting-toolkit/) | Proprietary DirectX 11/12 translation included by the upstream Wine bundle for compatible applications | [Contributors / team](https://github.com/apple/game-porting-toolkit) |
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 

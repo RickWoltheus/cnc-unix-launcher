@@ -25,20 +25,21 @@ or third-party files included with the package.
 
 Keep the relevant notices when redistributing the launcher or third-party parts.
 
-## Experimental C&C 3 runtime
+## C&C 3 and Red Alert 3 compatibility runtime
 
-The C&C 3 profiles download pinned original Sikarugir Wine and Template archives
-on macOS. Installation retains the D9VK license and extracts the open-source
-runtime libraries, GStreamer and Kosmickrisp driver. It does not install
-Sikarugir’s SDK/launcher/Creator or Apple’s proprietary D3DMetal. Component
-licenses and source links are listed in [sage-notice.txt](manifests/sage-notice.txt);
-these downloads are not bundled or relicensed in launcher releases. On Linux,
-the user installs Valve’s proprietary Steam client and Steam manages Proton
-and its component licenses. [Proton source](https://github.com/ValveSoftware/Proton).
+Mac profiles download pinned original archives from athei/wine-build and
+athei/mtld3d. Wine is LGPL; mtld3d uses the zlib license. Sources and notices
+are linked in [the runtime notice](manifests/sage-notice.txt). The upstream Wine
+bundle also contains open-source DXMT and proprietary Apple D3DMetal
+Redistributables, with their supplied licenses retained. Downloading this bundle
+is separate from the launcher release; runtime archives and EA game files are
+not packaged in our app ZIP. No paid CrossOver application is installed.
 
-The project-owned Steam browser helper is MIT-licensed, with its C source and
-rebuild instructions packaged alongside the executable. Its Wine compatibility
-approach follows [notpop/steam-on-m1-wine](https://github.com/notpop/steam-on-m1-wine).
-Valve’s original browser executable is backed up locally and is never bundled
-in this project’s releases. Single-process Chromium reduces browser process
-isolation; see [the C&C 3 guide](docs/cnc3.md).
+Windows Steam comes from Valve’s official bootstrap. Valve manages subsequent
+client and game updates outside the launcher’s pinned download/scanner coverage.
+The project-owned MIT browser helper preserves Valve’s original executable and
+uses CPU rendering and single-process mode for Wine compatibility; that reduces
+browser process isolation. Its source, license, rebuild instructions and checksum
+are included. Microsoft DirectX DLLs are extracted locally from owned Steam game
+installer CABs, never redistributed. See [setup](docs/cnc3.md) and
+[security scope](docs/security.md).

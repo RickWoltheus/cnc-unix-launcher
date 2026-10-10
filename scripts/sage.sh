@@ -3,15 +3,30 @@ sage_profile() { [[ "$(awk -F '\t' -v id="$1" '$1==id {print $5}' "$RESOURCES/ma
 sage_wine10_profile() {
   [[ "$PLATFORM" == macos && "$(cat "$ROOT/compatibility/$1/.runtime-choice" 2>/dev/null)" == wine10-test ]]
 }
+sage_metal_runtime_ready() {
+  [[ -x "$ROOT/sage-metal-runtime/wine/bin/wine" &&
+     "$(cat "$ROOT/sage-metal-runtime/.version" 2>/dev/null)" == cx-26.3.0-7+mtld3d-0.12.0 &&
+     -s "$ROOT/sage-metal-runtime/wine/lib/wine/d3d9/mtld3d/i386-windows/d3d9.dll" &&
+     -s "$ROOT/sage-metal-runtime/wine/lib/wine/d3d9/mtld3d/x86_64-unix/mtld3d.so" ]]
+}
+sage_mtld3d_profile() {
+  [[ "$PLATFORM" == macos ]] && { sage_metal_runtime_ready || [[ "$(cat "$ROOT/compatibility/$1/.runtime-choice" 2>/dev/null)" == mtld3d-test ]]; }
+}
 sage_mac_prefix() {
-  if sage_wine10_profile "$1"; then printf '%s/compatibility/%s/wine10-test/prefix\n' "$ROOT" "$1"
+  if sage_mtld3d_profile "$1"; then
+    if [[ -d "$ROOT/compatibility/$1/mtld3d-test/prefix" ]]; then printf '%s/compatibility/%s/mtld3d-test/prefix\n' "$ROOT" "$1"
+    else printf '%s/compatibility/%s/metal/prefix\n' "$ROOT" "$1"; fi
+  elif sage_wine10_profile "$1"; then printf '%s/compatibility/%s/wine10-test/prefix\n' "$ROOT" "$1"
   else printf '%s/compatibility/%s/prefix\n' "$ROOT" "$1"; fi
 }
 sage_mac_wine() {
-  if sage_wine10_profile "$1"; then printf '%s/compatibility/%s/wine10-test/engine/wswine.bundle/bin/wine\n' "$ROOT" "$1"
+  if sage_mtld3d_profile "$1"; then
+    if sage_metal_runtime_ready; then printf '%s/sage-metal-runtime/wine/bin/wine\n' "$ROOT"
+    else printf '%s/compatibility/%s/mtld3d-test/wine/bin/wine\n' "$ROOT" "$1"; fi
+  elif sage_wine10_profile "$1"; then printf '%s/compatibility/%s/wine10-test/engine/wswine.bundle/bin/wine\n' "$ROOT" "$1"
   else printf '%s/sage-runtime/wine/wswine.bundle/bin/wine\n' "$ROOT"; fi
 }
-sage_supported() { [[ "$PLATFORM" == linux || "$(sw_vers -productVersion | cut -d. -f1)" -ge 26 ]]; }
+sage_supported() { [[ "$PLATFORM" == linux || "$(sw_vers -productVersion | cut -d. -f1)" -ge 15 ]]; }
 sage_steam_root() {
   local path
   if [[ -n "${GX_STEAM_ROOT:-}" ]]; then printf '%s\n' "$GX_STEAM_ROOT"; return; fi
@@ -73,29 +88,32 @@ sage_proton_ready() {
 sage_engine_ready() {
   sage_supported || return 1
   if [[ "$PLATFORM" == linux ]]; then sage_steam_ready && sage_proton_ready "${1:-$PROFILE}"; return; fi
+  if sage_mtld3d_profile "${1:-$PROFILE}"; then
+    sage_metal_runtime_ready && return 0
+    local metal_root="$ROOT/compatibility/${1:-$PROFILE}/mtld3d-test"
+    [[ -x "$(sage_mac_wine "${1:-$PROFILE}")" &&
+       "$(cat "$metal_root/.version" 2>/dev/null)" == cx-26.3.0-7+mtld3d-0.12.0 &&
+       -s "$metal_root/wine/lib/wine/d3d9/mtld3d/i386-windows/d3d9.dll" &&
+       -s "$metal_root/wine/lib/wine/d3d9/mtld3d/x86_64-unix/mtld3d.so" ]]; return
+  fi
   if sage_wine10_profile "${1:-$PROFILE}"; then
     [[ -x "$(sage_mac_wine "${1:-$PROFILE}")" && "$(cat "$ROOT/compatibility/${1:-$PROFILE}/wine10-test/.version" 2>/dev/null)" == WS12WineSikarugir10.0_6 ]]; return
   fi
-  [[ -x "$ROOT/sage-runtime/wine/wswine.bundle/bin/wine" &&
-     "$(cat "$ROOT/sage-runtime/.version" 2>/dev/null)" == WS12WineSikarugir10.0_6+Template-1.0.21+D9VK &&
-     -s "$ROOT/sage-runtime/Frameworks/renderer/dxvk/wine/i386-windows/d3d9.dll" ]] || return 1
-  local architecture
-  for architecture in i386-windows x86_64-windows; do
-    cmp -s "$ROOT/sage-runtime/wine/wswine.bundle/lib/wine/$architecture/d3d9.dll" "$ROOT/sage-runtime/Frameworks/renderer/dxvk/wine/$architecture/d3d9.dll" || return 1
-  done
+  return 1
 }
 sage_config() {
-  local folder="$1" prefix=CNC3 config name major minor best_major=-1 best_minor=-1 selected=''
-  [[ "$2" != kw ]] || prefix=CNC3EP1
-  for config in "$folder"/"${prefix}"_english_*.SkuDef "$folder"/"${prefix}"_english_*.skudef; do
-    [[ -f "$config" ]] || continue
-    name="${config##*/}"; name="${name#${prefix}_english_}"; name="${name%.*}"
+  local folder="$1" prefix config name major minor best_major=-1 best_minor=-1 selected=''
+  prefix="$(awk -F '\t' -v id="$2" '$1==id {print $2}' "$RESOURCES/manifests/compatibility.tsv")"; prefix="${prefix%.*}"
+  prefix="$(printf '%s' "$prefix" | tr '[:upper:]' '[:lower:]')"
+  while IFS= read -r config; do
+    name="$(printf '%s' "${config##*/}" | tr '[:upper:]' '[:lower:]')"
+    name="${name#${prefix}_english_}"; name="${name%.*}"
     [[ "$name" =~ ^([0-9]+)\.([0-9]+)$ ]] || continue
     major="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
     if (( 10#$major > best_major || (10#$major == best_major && 10#$minor > best_minor) )); then
       best_major=$((10#$major)); best_minor=$((10#$minor)); selected="$config"
     fi
-  done
+  done < <(find "$folder" -maxdepth 1 -type f -iname "${prefix}_english_*.skudef" -print 2>/dev/null)
   printf '%s\n' "$selected"
 }
 sage_executable() {
@@ -104,7 +122,21 @@ sage_executable() {
   relative="$(awk 'tolower($1)=="set-exe" {sub(/^[^ \t]+[ \t]+/, ""); sub(/\r$/, ""); print; exit}' "$config")"
   relative="${relative//\\//}"; relative="${relative#\"}"; relative="${relative%\"}"
   [[ -n "$relative" && "$relative" != /* && "$relative" != *:* && "/$relative/" != */../* && "/$relative/" != */./* ]] || return 0
-  [[ -f "$folder/$relative" ]] && printf '%s/%s\n' "$folder" "$relative"
+  case "$relative" in *'?'*|*'*'*|*'['*) return 0 ;; esac
+  local current="$folder" component match
+  local components=()
+  IFS=/ read -r -a components <<< "$relative"
+  for component in "${components[@]}"; do
+    [[ -n "$component" ]] || continue
+    if [[ -e "$current/$component" ]]; then current="$current/$component"
+    else
+      [[ -d "$current" ]] || return 0
+      match="$(find "$current" -maxdepth 1 -iname "$component" -print -quit)"
+      [[ -n "$match" ]] || return 0
+      current="$match"
+    fi
+  done
+  [[ ! -f "$current" ]] || printf '%s\n' "$current"
 }
 sage_assets_ready() {
   local id="$1" folder appid config executable manifest
@@ -124,44 +156,66 @@ sage_open_steam() {
   "$binary" "$1" > /dev/null 2>&1 < /dev/null &
 }
 sage_install() {
-  sage_supported || fail 'C&C 3 on Mac currently requires macOS Tahoe 26 or later. Older games keep their existing requirements.'
+  sage_supported || fail 'These games require Apple Silicon and macOS 15 or later. Older games keep their existing requirements.'
   if [[ "$PLATFORM" == linux ]]; then
     sage_steam_ready || fail 'Install and open the native Linux Steam client, then use Open Steam setup.'
     sage_proton_ready "$PROFILE" || fail 'In Steam, enable Proton for this game in Properties → Compatibility, then install it and start it once to download Proton. Return here afterwards.'
     echo 'Steam manages Proton and its updates. Set this game to Proton 11 in Steam Properties → Compatibility.'; return
   fi
-  local template binary
-  compatibility_package sage-macos
+  compatibility_package sage-metal-wine
   download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"
-  mkdir -p "$WORK/sage/wine"
-  tar -xJf "$CACHE/$COMPAT_ARCHIVE" -C "$WORK/sage/wine"
-  binary="$WORK/sage/wine/$COMPAT_BINARY"
-  [[ -x "$binary" ]] || fail 'Sikarugir engine is incomplete.'
-  compatibility_package sage-graphics
+  mkdir -p "$WORK/metal"
+  tar -xJf "$CACHE/$COMPAT_ARCHIVE" -C "$WORK/metal"
+  [[ -x "$WORK/metal/wine/bin/wine" ]] || fail 'The Metal-compatible Wine engine is incomplete.'
+  compatibility_package sage-metal-renderer
   download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"
-  mkdir -p "$WORK/template" "$WORK/sage/Frameworks/renderer" "$WORK/sage/Resources/vulkan/icd.d"
-  tar -xJf "$CACHE/$COMPAT_ARCHIVE" -C "$WORK/template"
-  template="$WORK/template/$COMPAT_BINARY"
-  cp -R "$template/Frameworks/"*.dylib "$WORK/sage/Frameworks/"
-  cp -R "$template/Frameworks/GStreamer.framework" "$WORK/sage/Frameworks/"
-  cp -R "$template/Frameworks/renderer/dxvk" "$WORK/sage/Frameworks/renderer/"
+  mkdir -p "$WORK/renderer"
+  tar -xJf "$CACHE/$COMPAT_ARCHIVE" -C "$WORK/renderer"
   local architecture
-  for architecture in i386-windows x86_64-windows; do
-    cp "$template/Frameworks/renderer/dxvk/wine/$architecture/d3d9.dll" "$WORK/sage/wine/wswine.bundle/lib/wine/$architecture/d3d9.dll"
+  for architecture in i386-windows x86_64-windows x86_64-unix; do
+    cp -R "$WORK/renderer/wine/$architecture/"* "$WORK/metal/wine/lib/wine/d3d9/mtld3d/$architecture/"
   done
-  [[ "$(head -c 2 "$WORK/sage/Frameworks/renderer/dxvk/wine/i386-windows/d3d9.dll")" == MZ ]] || fail 'DirectX 9 renderer is incomplete.'
-  cp "$RESOURCES/manifests/sage-notice.txt" "$WORK/sage/NOTICE.txt"
-  printf 'WS12WineSikarugir10.0_6+Template-1.0.21+D9VK\n' > "$WORK/sage/.version"
-  xattr -dr com.apple.quarantine "$WORK/sage" 2>/dev/null || true
-  if /usr/bin/arch -x86_64 /usr/bin/true 2>/dev/null; then "$binary" --version; fi
-  [[ ! -d "$ROOT/sage-runtime" ]] || mv "$ROOT/sage-runtime" "$WORK/previous-sage"
-  if ! mv "$WORK/sage" "$ROOT/sage-runtime"; then
-    [[ ! -d "$WORK/previous-sage" ]] || mv "$WORK/previous-sage" "$ROOT/sage-runtime"
-    fail 'Sikarugir installation failed; previous runtime restored.'
+  cp -R "$WORK/renderer/prefix-markers" "$WORK/metal/"
+  cp "$WORK/renderer/LICENSE" "$WORK/metal/mtld3d-LICENSE"
+  cp "$RESOURCES/manifests/sage-notice.txt" "$WORK/metal/NOTICE.txt"
+  printf 'cx-26.3.0-7+mtld3d-0.12.0\n' > "$WORK/metal/.version"
+  xattr -dr com.apple.quarantine "$WORK/metal" 2>/dev/null || true
+  [[ ! -d "$ROOT/sage-metal-runtime" ]] || mv "$ROOT/sage-metal-runtime" "$WORK/previous-metal"
+  if ! mv "$WORK/metal" "$ROOT/sage-metal-runtime"; then
+    [[ ! -d "$WORK/previous-metal" ]] || mv "$WORK/previous-metal" "$ROOT/sage-metal-runtime"
+    fail 'Metal runtime installation failed; previous files restored.'
   fi
-  sage_engine_ready || fail 'Sikarugir runtime is incomplete.'
-  echo 'Experimental Sikarugir DirectX 9 runtime prepared. No game or Wine prefix was started.'
+  sage_metal_runtime_ready || fail 'Metal runtime is incomplete.'
+  echo 'Wine and Metal renderer prepared. No Steam client, game or Wine prefix was started.'
 }
+sage_prepare_metal_prefix() {
+  local binary="$1" profile="$2" old_prefix old_wine architecture destination version=cx-26.3.0-7+mtld3d-0.12.0
+  [[ "$(cat "$COMPAT_PREFIX/.metal-version" 2>/dev/null)" != "$version" ]] || return 0
+  if [[ ! -d "$COMPAT_PREFIX" ]]; then
+    old_prefix="$ROOT/compatibility/$profile/prefix"
+    old_wine="$ROOT/sage-runtime/wine/wswine.bundle/bin/wine"
+    if sage_wine10_profile "$profile"; then
+      old_prefix="$ROOT/compatibility/$profile/wine10-test/prefix"
+      old_wine="$ROOT/compatibility/$profile/wine10-test/engine/wswine.bundle/bin/wine"
+    fi
+    mkdir -p "$(dirname "$COMPAT_PREFIX")"
+    if [[ -d "$old_prefix" ]]; then
+      WINEPREFIX="$old_prefix" DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib" "$(dirname "$old_wine")/wineserver" -k >/dev/null 2>&1 || true
+      copy_tree "$old_prefix" "$WORK/metal-prefix"
+      mv "$WORK/metal-prefix" "$COMPAT_PREFIX"
+    fi
+  fi
+  "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'Game prefix initialization failed. Check its profile log.'
+  if sage_metal_runtime_ready; then
+    for destination in syswow64 system32; do
+      copy_file "$ROOT/sage-metal-runtime/prefix-markers/$destination/mtld3d.dll" "$COMPAT_PREFIX/drive_c/windows/$destination/mtld3d.dll"
+    done
+  fi
+  "$binary" reg add 'HKCU\Software\Wine\X11 Driver' /v EmulateModeset /d Y /f >/dev/null 2>&1 || fail 'Could not configure virtual display mode changes.'
+  touch "$COMPAT_PREFIX/.initialized"
+  printf '%s\n' "$version" > "$COMPAT_PREFIX/.metal-version"
+}
+
 sage_prepare_windows_steam() {
   local binary="$1" profile="$2" steam_directory installer manifest directory
   steam_directory="$COMPAT_PREFIX/drive_c/Program Files (x86)/Steam"
@@ -170,6 +224,7 @@ sage_prepare_windows_steam() {
     compatibility_package sage-steam
     download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"
     installer="$CACHE/$COMPAT_ARCHIVE"
+    sage_launch_phase "$profile" steam-install
     printf 'Installing Valve’s Windows Steam client for game authentication.\n'
     "$binary" "$installer" /S > /dev/null 2>&1 || fail 'Windows Steam installation failed. Retry Play to run the official installer again.'
     [[ -s "$SAGE_STEAM_EXE" ]] || fail 'Valve’s installer did not create the Windows Steam client.'
@@ -191,6 +246,7 @@ sage_prepare_steam_browser() {
   steam_webhelper_install "$steam_directory" || result=$?
   [[ "$result" != 0 ]] || return 0
   [[ "$result" == 2 ]] || return "$result"
+  sage_launch_phase "$profile" steam-update
   printf 'Steam is downloading its browser components. Applying the Wine compatibility fix when ready.\n'
   "$binary" "$SAGE_STEAM_EXE" -silent -cef-disable-gpu > /dev/null 2>&1 < /dev/null &
   local ready=0
@@ -203,25 +259,96 @@ sage_prepare_steam_browser() {
   compatibility_reset_prefix "$profile" || fail 'Close this profile’s Steam window before applying its browser fix.'
   steam_webhelper_install "$steam_directory" || fail 'Steam browser setup is incomplete. Finish its update and retry Play.'
 }
+sage_launch_phase() {
+  local profile="$1" phase="$2" file="$ROOT/launch-$1.status"
+  case "$phase" in preparing|prefix|steam-install|steam-update|steam-signin|starting|playing|closed|failed) ;; *) return 1 ;; esac
+  printf '%s\n%s\n' "$phase" "$$" > "$file.$$"
+  mv "$file.$$" "$file"
+}
+sage_launch_status() {
+  local file="$ROOT/launch-$1.status" phase pid
+  [[ -f "$file" ]] || { echo idle; return; }
+  phase="$(head -n 1 "$file")"; pid="$(sed -n '2p' "$file")"
+  case "$phase" in preparing|prefix|steam-install|steam-update|steam-signin|starting)
+    [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null || { echo failed; return; } ;;
+    playing) [[ -n "$(compatibility_game_pids "$1")" ]] || { echo closed; return; } ;;
+    closed|failed) ;; *) phase=idle ;;
+  esac
+  echo "$phase"
+}
+sage_steam_update_state() {
+  local log="$1/logs/bootstrap_log.txt" initial="$2"
+  [[ -f "$log" ]] || return 1
+  [[ "$(wc -l < "$log")" -ge "$initial" ]] || initial=0
+  tail -n +"$((initial+1))" "$log" | awk '
+    /Downloading update|Downloading manifest|Updating installation|Extracting package|Installing update/ {state="updating"}
+    /Verification complete|Nothing to do|Startup - updater|Update complete/ {state="ready"}
+    END {if (state=="updating") exit 0; exit 1}'
+}
 sage_wait_for_game() {
-  local profile="$1" limit="$2" seen=0 attempt
+  local profile="$1" limit="$2" seen=0 attempt phase=starting
+  local steam_directory="${SAGE_STEAM_EXE:-}" initial="${SAGE_BOOTSTRAP_INITIAL:-0}"
+  steam_directory="${steam_directory%/*}"
   for attempt in $(seq 1 "$limit"); do
     if [[ -n "$(compatibility_game_pids "$profile")" ]]; then seen=1; break; fi
+    if [[ "$PLATFORM" == macos ]]; then
+      phase=starting
+      if sage_steam_update_state "$steam_directory" "$initial"; then phase=steam-update
+      elif (( attempt > 30 )); then phase=steam-signin; fi
+      sage_launch_phase "$profile" "$phase"
+    fi
     sleep 0.5
   done
   [[ "$seen" == 1 ]] || fail 'Steam did not start the game. Finish signing in in the Steam window, then retry Play or start the game from its Steam library.'
+  sage_launch_phase "$profile" playing
   printf '%s\n%s\nplaying\n' "$$" "$profile" > "$ROOT/.compatibility-running"
   while [[ -n "$(compatibility_game_pids "$profile")" ]]; do sleep 0.5; done
 }
+sage_prepare_directx_helpers() {
+  local binary="$1" profile="$2" entry cabinet extracted dll
+  local helpers=()
+  case "$profile" in
+    ra3) helpers=('AUG2007_d3dx9_35_x86.cab:d3dx9_35.dll') ;;
+    cnc3|kw) helpers=('Feb2006_d3dx9_29_x86.cab:d3dx9_29.dll' 'Nov2007_d3dx9_36_x86.cab:d3dx9_36.dll') ;;
+    *) return 0 ;;
+  esac
+  mkdir -p "$WORK/directx"
+  for entry in "${helpers[@]}"; do
+    cabinet="$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/${entry%%:*}"; dll="${entry#*:}"
+    [[ -s "$cabinet" ]] || fail 'The owned DirectX installer files are missing. Validate the Steam download and retry.'
+    "$binary" extrac32 /Y /E /L "Z:$WORK/directx" "Z:$cabinet" > /dev/null 2>&1 || fail 'Could not extract the owned DirectX helper.'
+    extracted="$WORK/directx/$dll"
+    [[ -s "$extracted" && "$(head -c 2 "$extracted")" == MZ ]] || fail 'DirectX helper extraction is incomplete.'
+    copy_file "$extracted" "$COMPAT_PREFIX/drive_c/windows/syswow64/$dll"
+    "$binary" reg add 'HKCU\Software\Wine\DllOverrides' /v "${dll%.dll}" /d native,builtin /f > /dev/null 2>&1 || fail 'Could not configure the DirectX helper.'
+  done
+}
+sage_mac_environment() {
+  local profile="$1" executable="$2"
+    export SikarugirAppWine10=1 SikarugirAppWine11=1
+    export WINEPREFIX="$(sage_mac_prefix "$profile")" WINEARCH=win64 WINEDEBUG=-all
+    export DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib"
+    export GST_PLUGIN_PATH="$ROOT/sage-runtime/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0"
+    unset DYLD_LIBRARY_PATH VK_DRIVER_FILES VK_ICD_FILENAMES DXVK_FORCE_WINDOWED
+    export WINEDLLOVERRIDES='d3d9=b;d3dx9_29,d3dx9_35,d3dx9_36=n,b;gameoverlayrenderer,gameoverlayrenderer64=d;winemenubuilder.exe=d;mscoree,mshtml=d'
+    export MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 DXVK_ASYNC=1 DXVK_LOG_PATH="$ROOT/logs"
+    [[ "${3:-false}" == true ]] || export DXVK_FORCE_WINDOWED=1
+    if sage_mtld3d_profile "$profile"; then
+      unset DYLD_FALLBACK_LIBRARY_PATH GST_PLUGIN_PATH MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS DXVK_ASYNC DXVK_LOG_PATH DXVK_FORCE_WINDOWED
+      printf -v WINE_COMPATDB 'v=3\nname=cnc-game-metal;exe=%s;d3d9=mtld3d' "$(basename "$executable")"
+      export WINE_COMPATDB
+    fi
+ }
 sage_launch() {
   local profile="$PROFILE" full=false width=1280 height=720 argument folder config executable binary result=0 attempt seen=0
   compatibility_running && fail 'A game is already running. Quit it before switching games.'
   pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1 && fail 'Quit the running game before switching games.'
-  sage_engine_ready "$profile" || fail 'Prepare the C&C 3 runtime first. Mac requires Tahoe; Linux requires Steam and Proton.'
+  sage_engine_ready "$profile" || fail 'Prepare the DirectX 9 runtime first. Mac requires macOS 15+; Linux requires Steam and Proton.'
   sage_assets_ready "$profile" || fail 'Install and validate the English Steam game first.'
   shift 2
   compatibility_parse_display "$@"
   compatibility_begin_launch "$profile"
+  sage_launch_phase "$profile" preparing
   if [[ "$PLATFORM" == macos ]]; then compatibility_prepare_game "$profile"; folder="$COMPAT_PLAY"; else folder="$COMPAT_GAME"; fi
   config="$(sage_config "$folder" "$profile")"; executable="$(sage_executable "$folder" "$config")"
   local args=(-config "Z:$config" -xres "$width" -yres "$height")
@@ -236,34 +363,36 @@ sage_launch() {
     binary="$(sage_steam_binary)"
     local steam_args=(-applaunch "$(compatibility_metadata "$profile" 5)" -xres "$width" -yres "$height")
     if [[ "$full" == true ]]; then steam_args+=(-fullscreen); else steam_args+=(-win); fi
+    sage_launch_phase "$profile" starting
     printf 'Handing the selected game to Steam Proton. Steam diagnostics stay in Steam.\n' > "$ROOT/logs/$profile.log"
     "$binary" "${steam_args[@]}" > /dev/null 2>&1 < /dev/null &
     sage_wait_for_game "$profile" 240
   else
     binary="$(sage_mac_wine "$profile")"
-    export SikarugirAppWine10=1 SikarugirAppWine11=1
-    export WINEPREFIX="$COMPAT_PREFIX" WINEARCH=win64 WINEDEBUG=-all
-    export DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib"
-    export GST_PLUGIN_PATH="$ROOT/sage-runtime/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0"
-    unset DYLD_LIBRARY_PATH VK_DRIVER_FILES VK_ICD_FILENAMES DXVK_FORCE_WINDOWED
-    export WINEDLLOVERRIDES='d3d9=b;d3dx9_29,d3dx9_36=n,b;gameoverlayrenderer,gameoverlayrenderer64=d;winemenubuilder.exe=d;mscoree,mshtml=d'
-    export MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 DXVK_ASYNC=1 DXVK_LOG_PATH="$ROOT/logs"
-    if [[ ! -f "$COMPAT_PREFIX/.initialized" ]]; then
+    sage_mac_environment "$profile" "$executable" "$full"
+    sage_launch_phase "$profile" prefix
+    if sage_mtld3d_profile "$profile"; then
+      sage_prepare_metal_prefix "$binary" "$profile"
+    elif [[ ! -f "$COMPAT_PREFIX/.initialized" ]]; then
       "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'Game prefix initialization failed. Check its profile log.'
       touch "$COMPAT_PREFIX/.initialized"
     fi
+    sage_prepare_directx_helpers "$binary" "$profile"
     sage_prepare_windows_steam "$binary" "$profile"
     sage_prepare_steam_browser "$binary" "$profile"
     local renderer_choice
     renderer_choice="$(cat "$ROOT/compatibility/$profile/.renderer-choice" 2>/dev/null || true)"
-    if sage_wine10_profile "$profile" && [[ "$renderer_choice" != builtin ]]; then
+    if ! sage_mtld3d_profile "$profile" && sage_wine10_profile "$profile" && [[ "$renderer_choice" != builtin ]]; then
       binary="$ROOT/compatibility/$profile/wine10-test/engine-legacy/wswine.bundle/bin/wine"
       [[ -x "$binary" ]] || fail 'The comparison renderer is missing. Restore the built-in renderer before retrying.'
-    elif sage_wine10_profile "$profile"; then
+    elif ! sage_mtld3d_profile "$profile" && sage_wine10_profile "$profile"; then
       unset MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS DXVK_ASYNC
     fi
     local steam_args=(-cef-disable-gpu -cef-disable-gpu-compositing -applaunch "$(compatibility_metadata "$profile" 5)" -xres "$width" -yres "$height")
     if [[ "$full" == true ]]; then steam_args+=(-fullscreen); else steam_args+=(-win); fi
+    SAGE_BOOTSTRAP_INITIAL=0
+    [[ ! -f "$(dirname "$SAGE_STEAM_EXE")/logs/bootstrap_log.txt" ]] || SAGE_BOOTSTRAP_INITIAL="$(wc -l < "$(dirname "$SAGE_STEAM_EXE")/logs/bootstrap_log.txt")"
+    sage_launch_phase "$profile" starting
     printf 'Opening Valve’s Windows Steam client. Complete sign-in in its own window if requested.\n'
     "$binary" "$SAGE_STEAM_EXE" "${steam_args[@]}" > /dev/null 2>&1 < /dev/null &
     sage_wait_for_game "$profile" 1200

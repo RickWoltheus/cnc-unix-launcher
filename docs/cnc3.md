@@ -1,43 +1,52 @@
 # C&C 3 and Kane’s Wrath — experimental development support
 
-These profiles are being prepared in a development PR. They are not included in
-v0.3.0. The user confirmed playable C&C 3 gameplay on one Mac with Wine 10 and
-D9VK/MoltenVK. Headless tests do not verify graphics or gameplay; Kane’s Wrath
-and Linux gameplay remain unverified. Red Alert 3/Uprising are follow-up
-work, after the C&C 3 graphics path has been tested.
+These profiles are included in the v0.4.0 prerelease. C&C 3 and
+Red Alert 3 were tested by the user on macOS 26 with excellent performance;
+RA3 also ran well at Ultra High settings. Kane’s Wrath and Linux gameplay
+remain unverified. This is original Windows-game compatibility, using owned
+Steam assets.
 
 ## Mac
 
-Requires Apple Silicon, macOS Tahoe 26+, Rosetta 2 and an owned Steam copy of the
-selected game. The launcher keeps its existing macOS 15 minimum for older games.
-The [Sikarugir documentation](https://github.com/Sikarugir-App/Sikarugir) specifies
-Apple Silicon/Tahoe for D9VK. This integration uses the separately pinned
-WS12WineSikarugir10.0_6 engine and Mac-compatible D9VK/MoltenVK libraries from Template-1.0.21.
-It does not replace the working 2D Wine runtime.
+Requires Apple Silicon, macOS 15+, Rosetta 2 and an owned Steam copy of the game.
+The installer pins [athei’s free Wine build](https://github.com/athei/wine-build)
+and [mtld3d](https://github.com/athei/mtld3d), which renders DirectX 9 through
+Metal. The Wine bundle also includes DXMT and Apple’s proprietary D3DMetal for
+other DirectX paths. Their supplied licenses are retained; the whole bundle is
+not open source. No paid compatibility application is required. Older 2D game
+runtimes remain separate.
 
-1. Select **C&C 3: Tiberium Wars** or **Kane’s Wrath**.
-2. Choose **Prepare my Mac**. Runtime archives pass SHA-256 and the optional local
-   scan before extraction. Preparation opens no game and creates no Wine prefix.
-3. Choose **Sign in to Steam**. Enter password/Guard only in the local SteamCMD
-   terminal. This downloads your owned game in English; no replacement EA binary
-   is downloaded from GitHub or mod sites.
-4. Choose windowed mode for the first manual test, then **Play**. The launcher
-   copies Steam files into a per-game working folder, initializes that game’s own
-   Wine prefix and installs D9VK DLLs. It then installs/opens Valve’s official
-   Windows Steam client inside that profile and starts the game through Steam.
-   Sign in only in Valve’s window if requested. SteamCMD alone cannot satisfy
-   this edition’s Steam API authentication. First-time client updates may take
-   several minutes. A small open-source helper runs Steam’s original browser
-   with CPU rendering and single-process mode to work around Wine’s black-window
-   problem. Single-process mode reduces browser process isolation; it is a
-   compatibility tradeoff, not a security improvement. The helper logs no
-   arguments and handles no credentials. Graphics quality stays in the game.
+1. Select the game and choose **Prepare my Mac**. Archives pass SHA-256 and the
+   optional local scan before extraction. Preparation opens no game or Wine prefix.
+2. Download your owned English Steam game. Password/Steam Guard go only into
+   Valve’s separate SteamCMD terminal.
+3. Choose windowed mode for the first launch, then **Play**. A floating launch
+   guide explains working-copy preparation, Wine setup and Windows Steam startup.
+4. Leave Steam’s updater open until it finishes. Sign in in Valve’s window if
+   requested. The launcher asks Steam to start this game; if its library remains
+   visible after updates finish, select this game and click Steam’s **Play** once.
+   Use the guide’s **Open Steam** button to return to the matching environment.
+5. macOS may ask about microphone access when the game initializes audio/voice
+   chat. Choose Allow only if you want voice chat; the launcher does not record
+   audio or grant permissions. The guide hides when the game process starts.
 
-Prefixes and saves are under `compatibility/cnc3/prefix` and
-`compatibility/kw/prefix` in the installation folder. Updating the owned Steam
-copy refreshes the working game copy while retaining the prefix. The previously tested local comparison prefix remains under
-`compatibility/cnc3/wine10-test/prefix`; existing installations retain that path.
-Runtime repair retains both game prefixes and does not upgrade Red Alert 2’s runtime.
+The launcher extracts the required Microsoft DirectX helpers locally from the
+owned game’s installer CABs. Those DLLs are never included in launcher releases.
+Graphics quality is configured in the game. The guide contains fixed progress
+labels and optional-permission advice; it does not inspect login fields or
+claim it can observe whether you answered a macOS permission prompt.
+
+New prefixes and saves live under `compatibility/<game>/metal/prefix`.
+Existing tested `mtld3d-test/prefix` paths are retained. Migration from an older
+Wine prefix copies it locally and leaves the source in place. Runtime repair
+retains prefixes and keeps the older compatibility runtime available.
+
+A project-owned MIT helper starts Steam’s original browser with CPU rendering
+and single-process mode, reducing browser process isolation. No sign-in inputs
+or raw browser arguments are logged. Valve manages client/game updates outside
+the pinned archive and optional-scanner coverage. Wine is not a security sandbox.
+
+To switch games, use the launcher so it selects the matching Wine environment.
 
 ## Linux
 
@@ -61,7 +70,7 @@ Our optional archive scanner does not inspect Steam-managed downloads.
 Use Steam’s **Verify integrity of game files** for repair and its own Downloads
 page for updates. Launcher releases do not update Steam-managed Proton.
 
-## Limits and manual checks before merging
+## Limits and remaining manual checks
 
 - English startup configurations only in this first integration.
 - No curated C&C 3 mods or automated C&C:Online installation yet.

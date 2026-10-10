@@ -49,6 +49,12 @@ struct LauncherView: View {
         .onChange(of: model.requestNativeSteam) { _, requested in
             if requested { model.requestNativeSteam = false; step = 2; showSteamGuide(); model.downloadAssets() }
         }
+        .onChange(of: model.launchGuideRequest) { _, _ in
+            if model.launchGuideProfile != nil { steamGuide.show(model: model) { steamGuide.close() } }
+        }
+        .onChange(of: model.launchGuidePhase) { _, phase in
+            if phase == "playing" { steamGuide.close() }
+        }
         .sheet(isPresented: $showDistribution) { MacDistributionView() }
         .sheet(isPresented: $showCommunity) { CommunityView() }
         .sheet(isPresented: $showSecurity) { SecuritySetupView(model: model) }
@@ -249,7 +255,7 @@ struct LauncherView: View {
             HStack(alignment: .center) {
                 BriefingTitle(eyebrow: model.activeNeedsInstall ? "Ready to install" : "Ready to deploy", title: model.activeTitle, subtitle: model.selectedModInfo?.summary ?? "Your game is ready. Choose your mode and take command.")
                 Spacer()
-                Button(model.gameRunning ? "GAME RUNNING" : (model.activeNeedsInstall ? "INSTALL & PLAY →" : "PLAY →")) {
+                Button(model.gameRunning ? (model.game.isSage && model.launchGuidePhase != "playing" ? "STARTING…" : "GAME RUNNING") : (model.activeNeedsInstall ? "INSTALL & PLAY →" : "PLAY →")) {
                     if model.activeNeedsInstall {
                         playAfterModInstall = true
                         model.showModConsent = true
@@ -257,6 +263,11 @@ struct LauncherView: View {
                 }
                     .buttonStyle(CommandButton()).disabled(!model.canEnterStep(3))
                     .accessibilityIdentifier("play-game")
+            }
+            if model.game.isSage && model.launchGuideProfile == model.activeProfile {
+                Button(GameLaunchGuide.shared.copy.showLabel) {
+                    steamGuide.show(model: model) { steamGuide.close() }
+                }.buttonStyle(.plain)
             }
             HStack(spacing: 24) {
                 Toggle("Fullscreen", isOn: $model.fullscreen).accessibilityIdentifier("fullscreen")
@@ -376,6 +387,7 @@ struct LauncherView: View {
     }
 
     private func showSteamGuide() {
+        model.launchGuideProfile = nil
         steamGuide.show(model: model) {
             guard model.canEnterStep(3) else { return }
             step = 3

@@ -16,6 +16,8 @@ jobs:
           bash tests/ini-settings.sh
           bash tests/security.sh
           bash tests/sage.sh
+          bash tests/sage-launch-guide.sh
+          bash tests/sage-open-steam.sh
           bash tests/steam-webhelper.sh
       - name: Check Wine process lifecycle without games
         run: bash tests/wine-lifecycle.sh
@@ -46,6 +48,7 @@ jobs:
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/security.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/ini-settings.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/sage.sh
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/sage-launch-guide.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-webhelper.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/backend.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-status.sh

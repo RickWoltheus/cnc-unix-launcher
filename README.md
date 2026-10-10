@@ -14,19 +14,25 @@ handles engine and runtime downloads, file verification, separate mod profiles,
 and common setup fixes. You do not need to build an engine or assemble game and
 mod folders by hand.
 
-Some steps still need you: signing in to Steam in its local console, approving
-macOS’s first-open prompt, or allowing Linux dependency installation. The goal is
+Some steps still need you: signing in to Steam in Valve’s console or client,
+responding to macOS’s first-open or microphone prompt, or allowing Linux
+dependency installation. The goal is
 to take most routine technical work off your hands, while keeping those approvals
 and credentials under your control.
 
 The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
-Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The development branch adds
-experimental C&C 3 and Kane’s Wrath support: Sikarugir + D9VK on macOS Tahoe 26+,
-native Steam + Proton on Linux. These additions are not in the v0.3.0 download.
-See [C&C 3 setup and testing](docs/cnc3.md). Its experimental Mac Steam browser
+Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The v0.4.0 prerelease adds
+C&C 3, Kane’s Wrath and Red Alert 3 support: free Wine + mtld3d
+Metal rendering on Apple Silicon with macOS 15+,
+native Steam + Proton on Linux. Kane’s Wrath and Linux gameplay remain experimental.
+See [C&C 3 setup and testing](docs/cnc3.md) and the separate
+[experimental Red Alert 3 profile](docs/ra3.md). The experimental Mac Steam browser
 helper uses single-process Chromium for Wine compatibility, reducing browser
-process isolation; the guide explains that tradeoff. Other additional 3D titles are deferred. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
+process isolation; the guide explains that tradeoff. C&C 3 and RA3 were tested on one Mac with excellent user-reported performance;
+Kane’s Wrath and Linux gameplay remain unverified. The upstream Wine bundle
+also contains proprietary Apple D3DMetal and its license for compatible
+applications; the whole runtime is not open source. C&C 4 is excluded. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
 with the same guided flow.
 
 Years of work by engine developers, mod teams and open-source maintainers make
@@ -50,7 +56,7 @@ Fresh-machine setup, live Linux gameplay and the full game/mod catalog still nee
 broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
 for the evidence and remaining checks.
 
-**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
+**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
 
 ## Screenshots
 
@@ -107,7 +113,7 @@ sandbox and GPU/gameplay tests remain pending.
 
 For the current community preview:
 
-1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip).
+1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-macOS-arm64.zip).
 2. Extract it, and move **C&C Unix Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively
