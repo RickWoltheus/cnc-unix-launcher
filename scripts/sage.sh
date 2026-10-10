@@ -104,15 +104,16 @@ sage_engine_ready() {
 sage_config() {
   local folder="$1" prefix config name major minor best_major=-1 best_minor=-1 selected=''
   prefix="$(awk -F '\t' -v id="$2" '$1==id {print $2}' "$RESOURCES/manifests/compatibility.tsv")"; prefix="${prefix%.*}"
-  for config in "$folder"/"${prefix}"_english_*.SkuDef "$folder"/"${prefix}"_english_*.skudef; do
-    [[ -f "$config" ]] || continue
-    name="${config##*/}"; name="${name#${prefix}_english_}"; name="${name%.*}"
+  prefix="$(printf '%s' "$prefix" | tr '[:upper:]' '[:lower:]')"
+  while IFS= read -r config; do
+    name="$(printf '%s' "${config##*/}" | tr '[:upper:]' '[:lower:]')"
+    name="${name#${prefix}_english_}"; name="${name%.*}"
     [[ "$name" =~ ^([0-9]+)\.([0-9]+)$ ]] || continue
     major="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
     if (( 10#$major > best_major || (10#$major == best_major && 10#$minor > best_minor) )); then
       best_major=$((10#$major)); best_minor=$((10#$minor)); selected="$config"
     fi
-  done
+  done < <(find "$folder" -maxdepth 1 -type f -iname "${prefix}_english_*.skudef" -print 2>/dev/null)
   printf '%s\n' "$selected"
 }
 sage_executable() {
@@ -121,7 +122,21 @@ sage_executable() {
   relative="$(awk 'tolower($1)=="set-exe" {sub(/^[^ \t]+[ \t]+/, ""); sub(/\r$/, ""); print; exit}' "$config")"
   relative="${relative//\\//}"; relative="${relative#\"}"; relative="${relative%\"}"
   [[ -n "$relative" && "$relative" != /* && "$relative" != *:* && "/$relative/" != */../* && "/$relative/" != */./* ]] || return 0
-  [[ -f "$folder/$relative" ]] && printf '%s/%s\n' "$folder" "$relative"
+  case "$relative" in *'?'*|*'*'*|*'['*) return 0 ;; esac
+  local current="$folder" component match
+  local components=()
+  IFS=/ read -r -a components <<< "$relative"
+  for component in "${components[@]}"; do
+    [[ -n "$component" ]] || continue
+    if [[ -e "$current/$component" ]]; then current="$current/$component"
+    else
+      [[ -d "$current" ]] || return 0
+      match="$(find "$current" -maxdepth 1 -iname "$component" -print -quit)"
+      [[ -n "$match" ]] || return 0
+      current="$match"
+    fi
+  done
+  [[ ! -f "$current" ]] || printf '%s\n' "$current"
 }
 sage_assets_ready() {
   local id="$1" folder appid config executable manifest

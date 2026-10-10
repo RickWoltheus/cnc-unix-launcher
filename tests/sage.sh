@@ -44,15 +44,21 @@ for profile in cnc3 kw ra3; do
   printf 'set-exe RetailExe\\1.10\\%s\r\n' "$executable" > "$folder/${prefix}_english_1.10.SkuDef"
   [[ "$(sage_steam_game "$profile")" == "$folder" ]]
   [[ "$(sage_config "$folder" "$profile")" == "$folder/${prefix}_english_1.10.SkuDef" ]]
+  if [[ "$profile" == ra3 ]]; then
+    printf 'set-exe retailexe\\1.10\\RA3_1.12.GAME\n' > "$folder/${prefix}_english_1.10.SkuDef"
+    mv "$folder/${prefix}_english_1.10.SkuDef" "$folder/ra3_English_1.10.SKUDef"
+    [[ "$(sage_config "$folder" "$profile")" == "$folder/ra3_English_1.10.SKUDef" ]]
+    [[ "$(sage_executable "$folder" "$(sage_config "$folder" "$profile")")" == "$folder/RetailExe/1.10/$executable" || "$(uname -s)" == Darwin ]]
+  fi
   sage_assets_ready "$profile"
   # The launcher copy is untouched on Linux; Steam owns files and prefix updates.
   sage_engine_ready() { return 0; }
   compatibility_running() { return 1; }
   (sage_launch launch "$profile" -win -xres 1280 -yres 720)
-  grep -q "exe=$folder/RetailExe/1.10/$executable" "$ROOT/logs/$profile.log"
+  grep -qi "exe=$folder/RetailExe/1.10/$executable" "$ROOT/logs/$profile.log"
   grep -q 'argument=-win' "$ROOT/logs/$profile.log"
   [[ ! -d "$ROOT/compatibility/$profile/prefix" && ! -d "$ROOT/compatibility/$profile/game" ]]
-  printf 'set-exe ../../outside.exe\n' > "$folder/${prefix}_english_1.10.SkuDef"
+  printf 'set-exe ../../outside.exe\n' > "$(sage_config "$folder" "$profile")"
   [[ -z "$(sage_executable "$folder" "$(sage_config "$folder" "$profile")")" ]]
   if sage_assets_ready "$profile"; then echo 'Escaping executable path accepted.'; exit 1; fi
   printf '"StateFlags" "6"\n"installdir" "Owned %s"\n' "$prefix" > "$TEST_ROOT/Other Library/steamapps/appmanifest_$appid.acf"
