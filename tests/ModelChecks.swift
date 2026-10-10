@@ -71,10 +71,6 @@ struct ModelChecks {
             precondition(model.activeProfile == id)
             precondition(model.selectedModInfo == nil)
             precondition(!model.activeNeedsInstall)
-            if model.game.isSage && ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 26 {
-                precondition(!model.canEnterStep(1))
-                continue
-            }
             precondition(!model.canEnterStep(2))
             model.classicEngines.insert(id)
             precondition(model.canEnterStep(2))
