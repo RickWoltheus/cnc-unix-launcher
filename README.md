@@ -14,20 +14,25 @@ handles engine and runtime downloads, file verification, separate mod profiles,
 and common setup fixes. You do not need to build an engine or assemble game and
 mod folders by hand.
 
-Some steps still need you: signing in to Steam in its local console, approving
-macOS’s first-open prompt, or allowing Linux dependency installation. The goal is
+Some steps still need you: signing in to Steam in Valve’s console or client,
+responding to macOS’s first-open or microphone prompt, or allowing Linux
+dependency installation. The goal is
 to take most routine technical work off your hands, while keeping those approvals
 and credentials under your control.
 
 The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
 Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The development branch adds
-experimental C&C 3, Kane’s Wrath and Red Alert 3 support: Sikarugir + D9VK on macOS Tahoe 26+,
+experimental C&C 3, Kane’s Wrath and Red Alert 3 support: free Wine + mtld3d
+Metal rendering on Apple Silicon with macOS 15+,
 native Steam + Proton on Linux. These additions are not in the v0.3.0 download.
 See [C&C 3 setup and testing](docs/cnc3.md) and the separate
 [experimental Red Alert 3 profile](docs/ra3.md). The experimental Mac Steam browser
 helper uses single-process Chromium for Wine compatibility, reducing browser
-process isolation; the guide explains that tradeoff. Other additional 3D titles are deferred. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
+process isolation; the guide explains that tradeoff. C&C 3 and RA3 were tested on one Mac with excellent user-reported performance;
+Kane’s Wrath and Linux gameplay remain unverified. The upstream Wine bundle
+also contains proprietary Apple D3DMetal and its license for compatible
+applications; the whole runtime is not open source. C&C 4 is excluded. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
 with the same guided flow.
 
 Years of work by engine developers, mod teams and open-source maintainers make

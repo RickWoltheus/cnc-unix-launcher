@@ -1,24 +1,23 @@
-C&C 3 experimental runtime
-Wine/Sikarugir engine: https://github.com/Sikarugir-App/Engines
-Wine sources: https://gitlab.winehq.org/wine/wine
-Sikarugir component sources: https://github.com/Sikarugir-App/Sikarugir-foss-sources
-Runtime libraries and D9VK: https://github.com/Sikarugir-App/Template
-D9VK/DXVK sources: https://github.com/Sikarugir-App/d9vk/tree/moltenvk-version
-DXVK's included zlib/libpng LICENSE is retained with its DLLs.
-MoltenVK: https://github.com/KhronosGroup/MoltenVK (Apache-2.0)
-Vulkan loader: https://github.com/KhronosGroup/Vulkan-Loader (Apache-2.0)
-GStreamer: https://gstreamer.freedesktop.org/ (LGPL and plugin component licenses)
-Additional upstream runtime library licenses apply to the downloaded libraries.
-The launcher downloads original pinned upstream archives; it does not relicense
-or redistribute their contents in its releases. No Sikarugir SDK, Creator,
-launcher or proprietary D3DMetal renderer is installed by this integration.
+DirectX 9 game compatibility runtime
+Wine build: https://github.com/athei/wine-build (LGPL Wine sources)
+Wine sources: https://github.com/athei/wine
+mtld3d: https://github.com/athei/mtld3d (zlib license retained)
+DXMT: https://github.com/3Shain/dxmt (licenses retained in upstream bundle)
+Apple Game Porting Toolkit / D3DMetal: https://developer.apple.com/games/game-porting-toolkit/
+D3DMetal is proprietary, free to use under Apple's supplied license. The upstream
+Wine bundle includes its Redistributables and license. The launcher downloads
+that original pinned bundle; it does not include the runtime in launcher releases.
+This is a free Wine build from CrossOver-derived open-source sources; no paid
+CrossOver application or license is required. The pinned build has no x87sidecar.
 Linux: Valve Steam manages Proton, dependencies, game files, prefixes and updates.
 Proton sources and licenses: https://github.com/ValveSoftware/Proton
-Valve's Steam client is proprietary. Steam credentials stay in Valve's UI.
-Original EA game files come only from the user's owned Steam installation.
-
-Mac C&C 3 also downloads Valve’s official Windows Steam bootstrap installer
-from https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe. Its
-pinned bootstrap hash passes the shared install gate. Steam is proprietary;
-its self-updated client and game downloads are managed by Valve and are not
-pinned or scanned by this launcher. Authentication stays in Steam’s own UI.
+Valve's Steam client is proprietary. Credentials stay in Valve's window.
+The official Windows Steam bootstrap is obtained only from Valve, with a pinned
+SHA-256 before extraction/execution. Valve-managed client updates are outside
+that pin and outside the launcher's optional archive scanner.
+Original EA game files and DirectX CAB dependencies come from the user's owned
+Steam installation. Microsoft DLLs are extracted locally, never redistributed.
+The Steam browser compatibility helper is project-owned MIT code. It preserves
+Valve's original executable and starts it with CPU rendering and single-process
+mode, reducing browser process isolation. Credentials and arguments are not
+logged. Wine prefixes are compatibility environments, not security sandboxes.

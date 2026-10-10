@@ -618,3 +618,91 @@ A subsequent renderer log identified Apple M3 Pro and reported a failed
 fullscreen display-mode change. Windowed launches now set DXVK_FORCE_WINDOWED
 in addition to the game arguments. Only the failed RA3 Wine profile was reset
 for a retry. Successful RA3 window rendering and gameplay remain unconfirmed.
+
+## Isolated mtld3d comparison — 2026-10-09
+
+RA3 booted with D9VK but the user reported severe menu-hover stalls and
+unplayable gameplay performance. An isolated mtld3d test copied the stopped RA3
+prefix, retaining the original prefix for rollback. Wine cx-26.3.0-7 and mtld3d
+0.12.0 archives matched GitHub's published SHA-256 asset digests; archive members
+and links were checked for escaping paths before extraction.
+
+The exact Wine tag uses WINE_COMPATDB v=3, unlike the newer main-branch README.
+It does not ship x87sidecar, so no x87 acceleration is claimed. A project-owned
+32-bit D3D9 window probe loaded mtld3d 0.12.0, initialized its Unix bridge and
+returned success for CreateDevice and Present.
+
+The real RA3 comparison remains incomplete: direct owned-executable startup
+displayed Steam initialization failure before a game Metal log was created.
+The next attempt keeps Steam on WineD3D and RA3 on mtld3d using per-process
+rules. Steam sign-in output and credentials were not captured. No RA3 performance
+improvement is established, and this comparison is not shipped as a default.
+
+## RA3 loader trace and Steam-session separation — 2026-10-10
+
+The user clarified that the DirectX dialog came from Play in Windows Steam.
+A controlled launch of the owned RA3 executable in the Metal prefix confirmed
+mtld3d.dll and d3d9.dll loaded as builtins and d3dx9_35.dll loaded as native.
+That attempt displayed Steam initialization failure before graphics-device
+creation; it does not reproduce the user's DirectX dialog.
+
+Executable-path metadata identified two Windows Steam clients: one using the
+C&C 3 Wine10 engine and one using the isolated RA3 Metal engine. The test
+client's experimental graphics overrides were removed in favor of its upstream
+defaults, while RA3 retained mtld3d selection. A visible test-client window was
+identified by its engine's process IDs and brought forward by its title bar.
+No Steam sign-in fields or screenshots were read or captured. Successful sign-in
+and RA3 gameplay are still awaiting the user; no performance fix is claimed.
+
+## RA3 exit after splash — 2026-10-10
+
+After all Steam clients were closed and the launcher was used again, the user
+reported that RA3 showed its boot screen and disappeared without a dialog.
+The newest RA3 mtld3d log confirmed renderer and Unix-bridge initialization,
+then SIGABRT with __TCC_CRASHING_DUE_TO_PRIVACY_VIOLATION__. A narrow macOS
+privacy-log query identified NSMicrophoneUsageDescription as a required key;
+the launcher's Info.plist lacked it. A purpose declaration was added for games'
+voice-chat requests, without granting permission or changing TCC settings.
+The rebuilt app passed ad hoc signature verification and plist validation.
+The actual launch after this change still needs a user permission response and
+confirmation; no gameplay or performance fix is claimed yet.
+
+## RA3 user confirmation and C&C 3 Metal comparison — 2026-10-10
+
+After adding the microphone purpose declaration, the user confirmed RA3 works
+with excellent performance at Ultra High settings. This confirms the current
+Metal setup on this Mac; it does not validate online play or all modes/platforms.
+
+C&C 3 was prepared in a separate mtld3d-test engine/prefix using an APFS copy
+of the stopped Wine10 profile. The previous runtime marker and original prefix
+were retained for rollback. The shared launch rule now selects the actual game
+executable's basename. Headless Sage checks and the Mac app build passed.
+A windowed C&C 3 launch was initiated through the actual launcher, retaining
+the macOS privacy declaration. C&C 3 graphics/performance confirmation is pending.
+
+## Repeatable Metal installation and after-Play guide — 2026-10-10
+
+The user confirmed excellent C&C 3 performance as well as RA3. Mac preparation
+now installs pinned Wine cx-26.3.0-7 and mtld3d 0.12.0 without starting a prefix
+or game. Existing test-prefix paths are retained; older prefixes are copied
+locally, with their source kept for rollback. A real-archive installer fixture
+passed fresh setup, synthetic Steam installation and per-game handoff for C&C 3,
+Kane's Wrath and RA3. It also preserved a sentinel save from a legacy prefix.
+Microsoft DirectX helpers are extracted only from owned game CABs.
+
+Both frontends now open a floating, nonmodal after-Play guide. Backend progress
+is fixed phase labels plus a numeric owner PID; Steam bootstrap text is reduced
+internally to update status and never presented as raw authentication output.
+Microphone copy is advisory, not detection of the permission dialog or its answer.
+The guide hides when the game process appears and can be reopened for that launch.
+Open Steam reuses the selected profile's renderer environment. A separate fixture
+proved the Metal rule, overlay setting and game-specific Steam URL survive it.
+
+Independent reviews found no confirmed security blocker. Two correctness findings
+were fixed: Linux captures the PID from QProcess.started, and the guide's Open
+Steam action shares launch environment setup. All 22 Linux frontend tests passed,
+including an actual short-lived QProcess PID check. Mac model, floating guide,
+legacy Wine lifecycle, backend, security and helper checks passed. Linux gameplay,
+Kane's Wrath gameplay and fresh real-user Steam authentication remain unverified.
+The updated guide has headless UI/fixture evidence; a real-client update and
+permission-prompt walkthrough remains useful follow-up evidence.

@@ -22,6 +22,12 @@ struct SteamGuideChecks {
         model.steamStarting = true
         precondition(!model.gameAssetsReady)
         precondition(model.steamGuidance.stage == 0)
+        model.launchGuideProfile = "cnc3"
+        model.launchGuidePhase = "steam-update"
+        precondition(GameLaunchGuide.shared.guidance(model.launchGuidePhase).title == "Steam is updating")
+        precondition(GameLaunchGuide.shared.permission?.contains("microphone") == true)
+        precondition(GameLaunchGuide.shared.guidance("steam-signin").detail.contains("Play button once"))
+        precondition(GameLaunchGuide.shared.copy.securityDetail.contains("Valve"))
         panel.close()
         print("Native Steam guide is floating, nonactivating, retained on deactivation, and validation gates passed. No visible windows, Steam or games started.")
     }

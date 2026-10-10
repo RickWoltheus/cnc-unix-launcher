@@ -63,6 +63,7 @@ class LauncherWindow(QMainWindow):
         self.steam_start_deadline = None
         self.steam_launch_error = None
         self.steam_guide = None
+        self.launch_guide = None
         self.output = ""
         self.image_labels = {}
         self.update_url = None
@@ -320,6 +321,9 @@ class LauncherWindow(QMainWindow):
         self.play_title, self.play_summary = self.title(layout, "Ready to deploy", "ZERO HOUR", "Your game is ready. Select what to play.")
         self.play_button = self.primary("PLAY →", self.play)
         layout.addWidget(self.play_button)
+        self.launch_guide_button = QPushButton(self.state.launch_guide["copy"]["showLabel"])
+        self.launch_guide_button.clicked.connect(self.show_launch_guide)
+        layout.addWidget(self.launch_guide_button)
         choices = QHBoxLayout()
         self.fullscreen = QCheckBox("Fullscreen")
         self.fullscreen.setChecked(self.settings.value("fullscreen", True, type=bool))
@@ -465,8 +469,9 @@ class LauncherWindow(QMainWindow):
         self.steam_help_detail.setText(self.state.sage_copy["prepare"] if self.state.sage else self.state.steam_guidance["detail"])
         self.play_title.setText(self.state.title)
         self.play_summary.setText(self.state.mod["summary"] if self.state.mod else ("OpenRA is ready. Modernized gameplay using your owned Steam assets." if self.state.classic else "Your original game is ready to deploy."))
-        self.play_button.setText("GAME RUNNING" if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
+        self.play_button.setText(("STARTING…" if self.state.sage and self.state.launch_phase != "playing" else "GAME RUNNING") if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
         self.play_button.setEnabled(self.state.can_enter(3))
+        self.launch_guide_button.setVisible(self.state.sage and self.state.launch_profile == self.state.profile)
         self.fullscreen.setEnabled(not self.state.busy and not self.state.game_running)
         self.graphics.setEnabled(not (self.state.classic or self.state.compatibility) and not self.state.busy and not self.state.game_running)
         self.graphics.setVisible(not (self.state.classic or self.state.compatibility))
@@ -483,6 +488,8 @@ class LauncherWindow(QMainWindow):
             button.setEnabled(not self.state.busy and not self.state.game_running)
         if self.steam_guide is not None:
             self.steam_guide.refresh()
+        if self.launch_guide is not None:
+            self.launch_guide.refresh()
         mod = self.state.mod
         self.mod_caption.setText(f'{mod["version"]} · Experimental support' if mod else "Original " + self.state.game["title"] + " · No mod active")
         self.mod_link.setVisible(mod is not None)
@@ -657,10 +664,33 @@ class LauncherWindow(QMainWindow):
         else:
             self.start_game()
 
+    def show_launch_guide(self):
+        if self.launch_guide is None:
+            self.launch_guide = SteamGuideWindow(self, launch=True)
+            screen = QApplication.primaryScreen().availableGeometry()
+            self.launch_guide.move(screen.right() - self.launch_guide.width() - 16, screen.top() + 24)
+        self.launch_guide.refresh()
+        self.launch_guide.show()
+
+    def open_game_steam(self):
+        if self.state.launch_profile:
+            self.open_url("steam://nav/games/details/" + next(game["steam_id"] for game in self.state.games if game["id"] == self.state.launch_profile))
+
+    def track_launch_process(self, process, profile):
+        def started():
+            if self.state.launch_profile == profile:
+                self.state.launch_owner = int(process.processId())
+        process.started.connect(started)
+
     def start_game(self):
         if self.state.game_running: return
         self.state.game_running = True
         profile = self.state.profile
+        if self.state.sage:
+            self.state.launch_profile = profile
+            self.state.launch_owner = None
+            self.state.launch_phase = "preparing"
+            self.show_launch_guide()
         self.state.busy = False
         quality = "maximum" if self.graphics.currentIndex() else "balanced"
         process = QProcess(self)
@@ -671,6 +701,7 @@ class LauncherWindow(QMainWindow):
             process.deleteLater()
             if code != 0:
                 self.state.game_running = False
+                if self.state.launch_profile == profile: self.state.launch_phase = "failed"
                 self.notice.setText("Could not save graphics settings. Check that no other game is running.")
                 self.refresh_view()
                 return
@@ -682,6 +713,8 @@ class LauncherWindow(QMainWindow):
                     game.deleteLater()
                     return
                 self.state.game_running = False
+                self.state.launch_owner = None
+                if self.state.launch_profile == profile: self.state.launch_phase = "closed" if code == 0 else "failed"
                 self.worker = None
                 game.deleteLater()
                 self.notice.setText("Game closed." if code == 0 else "Game stopped. Use Help to repair the engine, or inspect the profile log.")
@@ -691,6 +724,7 @@ class LauncherWindow(QMainWindow):
             screen = QApplication.primaryScreen()
             size = screen.size() if screen else None
             width, height = (size.width(), size.height()) if self.fullscreen.isChecked() and size else (1280, 720)
+            self.track_launch_process(game, profile)
             game.start("/bin/bash", [str(self.backend), "launch", profile, "-fullscreen" if self.fullscreen.isChecked() else "-win", "-xres", str(width), "-yres", str(height)])
         process.finished.connect(graphics_done)
         process.start("/bin/bash", [str(self.backend), "graphics", profile if profile in [game["id"] for game in self.state.games] or (self.state.mod and self.state.mod["native"]) else "vanilla", quality])
@@ -778,6 +812,8 @@ class LauncherWindow(QMainWindow):
         else:
             if self.steam_guide is not None:
                 self.steam_guide.close()
+            if self.launch_guide is not None:
+                self.launch_guide.close()
             event.accept()
 
 

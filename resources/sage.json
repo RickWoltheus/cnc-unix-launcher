@@ -1,8 +1,8 @@
 {
   "macos": {
-    "detail": "Experimental Sikarugir Wine + D9VK runs the original Windows game. Requires Apple Silicon, Rosetta 2 and macOS Tahoe 26+. C&C 3 was manually tested on one Mac. Other games and Linux gameplay remain experimental.",
-    "prepare": "Pinned Sikarugir Wine 10 + D9VK/MoltenVK, in a separate runtime. Requires macOS Tahoe 26+; existing games keep their current requirements.",
-    "play": "Experimental C&C 3 support. First Play installs/opens Valve’s Windows Steam client in this Wine profile; sign in only in Steam’s window. Steam starts the game after authentication. First-time updates may take several minutes. Windowed mode uses 1280×720. Mods and C&C:Online are not installed yet."
+    "detail": "Free Wine + mtld3d runs the original DirectX 9 game through Apple Metal. Requires Apple Silicon, Rosetta 2 and macOS 15+. C&C 3 and RA3 were manually tested on one Mac; Kane’s Wrath remains experimental.",
+    "prepare": "Pinned, free Wine build + mtld3d Metal renderer in a separate runtime. Existing game profiles and older compatibility engines are retained.",
+    "play": "Play opens a launch guide and this game’s Windows Steam client. Wait for client updates and sign in there if asked. The launcher requests the game; if the library appears without starting it, use Steam’s Play button for this game once. macOS may ask about microphone access for voice chat. Graphics quality stays in the game. Mods and C&C:Online are not installed yet."
   },
   "linux": {
     "detail": "Experimental Steam Proton support. Uses your native Linux Steam client, owned game and Steam-managed Proton. Flatpak Steam is not supported in this first integration.",

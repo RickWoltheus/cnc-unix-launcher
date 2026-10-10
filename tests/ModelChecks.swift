@@ -63,7 +63,7 @@ struct ModelChecks {
         precondition(RecoveryAdvice.forMessage("ERROR No subscription").title == "Steam could not find your game")
         precondition(RecoveryAdvice.forMessage("Checksum mismatch").title == "The download did not match")
         precondition(RecoveryAdvice.forMessage("VK_ERROR_INCOMPATIBLE_DRIVER").title == "The graphics runtime needs repair")
-        precondition(GameInfo.catalog.contains { $0.id == "cnc3" && $0.isSage && $0.compatibilityDetail.contains("Tahoe") })
+        precondition(GameInfo.catalog.contains { $0.id == "cnc3" && $0.isSage && $0.compatibilityDetail.contains("Metal") })
         precondition(GameInfo.catalog.contains { $0.id == "kw" && $0.isSage })
         precondition(GameInfo.catalog.contains { $0.id == "ra3" && $0.isSage && $0.steamID == "17480" })
         for id in ["cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw", "ra3"] {

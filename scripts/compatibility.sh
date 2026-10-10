@@ -272,6 +272,17 @@ compatibility_parse_display() {
     esac
   done
 }
+compatibility_finish_launch() {
+  local result="$1"
+  rm -rf "$WORK"
+  if [[ "$(head -n 1 "$LOCK/pid" 2>/dev/null)" == "$$" ]]; then rm -rf "$LOCK"; fi
+  compatibility_clear_marker
+  if declare -F sage_launch_phase >/dev/null && sage_profile "$PROFILE"; then
+    if [[ "$result" == 0 ]]; then sage_launch_phase "$PROFILE" closed
+    else sage_launch_phase "$PROFILE" failed; fi
+  fi
+  return "$result"
+}
 compatibility_begin_launch() {
   mkdir -p "$ROOT/compatibility/$1" "$ROOT/logs"
   LOCK="$ROOT/.install-lock"
@@ -279,7 +290,7 @@ compatibility_begin_launch() {
   printf '%s\n' "$$" > "$LOCK/pid"
   printf 'launch:%s\n' "$1" > "$LOCK/kind"
   WORK="$(mktemp -d "$ROOT/.staging.XXXXXX")"
-  trap 'rm -rf "$WORK"; if [[ "$(head -n 1 "$LOCK/pid" 2>/dev/null)" == "$$" ]]; then rm -rf "$LOCK"; fi; compatibility_clear_marker' EXIT
+  trap 'compatibility_finish_launch $?' EXIT
   trap 'exit 130' INT TERM
 }
 compatibility_launch() {

@@ -14,7 +14,7 @@ from app import LauncherWindow
 from community import CommunityWindow
 from security_setup import SecuritySetupWindow
 from PySide6.QtWidgets import QApplication, QLineEdit, QPushButton, QLabel
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QProcess
 
 
 class StateChecks(unittest.TestCase):
@@ -51,6 +51,19 @@ class StateChecks(unittest.TestCase):
             self.assertFalse(self.state.can_enter(3))
             self.state.values[game + "_assets"] = "ready"
             self.assertTrue(self.state.can_enter(3))
+
+    def test_launch_guide_uses_current_process_and_steam_client(self):
+        self.state.selected_game = "cnc3"
+        self.state.launch_profile = "cnc3"
+        self.state.launch_owner = 123
+        self.state.update("launch_cnc3=steam-update\nlaunch_pid_cnc3=122")
+        self.assertEqual(self.state.launch_phase, "preparing")
+        self.state.update("launch_cnc3=steam-update\nlaunch_pid_cnc3=123")
+        self.assertEqual(self.state.launch_phase, "steam-update")
+        self.assertIsNone(self.state.launch_guide["permission"])
+        self.assertIn("Steam", self.state.launch_guide["copy"]["securityDetail"])
+        self.state.update("launch_cnc3=private-input\nlaunch_pid_cnc3=123")
+        self.assertEqual(self.state.launch_phase, "steam-update")
 
     def test_classic_game_readiness_is_independent(self):
         for game in ("cnc", "ra", "ra2", "yuri", "ts", "cnc3", "kw", "ra3"):
@@ -139,6 +152,18 @@ class WidgetChecks(unittest.TestCase):
 
     def setUp(self):
         self.window = LauncherWindow(resources=REPO, auto_poll=False, load_media=False)
+
+    def test_launch_pid_is_captured_after_process_started(self):
+        self.window.state.launch_profile = "cnc3"
+        process = QProcess(self.window)
+        self.window.track_launch_process(process, "cnc3")
+        process.start("/bin/sleep", ["1"])
+        self.assertTrue(process.waitForStarted(3000))
+        self.assertGreater(self.window.state.launch_owner, 0)
+        owner = self.window.state.launch_owner
+        self.window.state.update(f"launch_cnc3=starting\nlaunch_pid_cnc3={owner}")
+        self.assertEqual(self.window.state.launch_phase, "starting")
+        process.waitForFinished(3000)
 
     def tearDown(self):
         self.window.state.game_running = False

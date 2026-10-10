@@ -3,10 +3,11 @@ from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLa
 
 
 class SteamGuideWindow(QDialog):
-    def __init__(self, launcher):
+    def __init__(self, launcher, launch=False):
         super().__init__(launcher, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.launcher = launcher
-        self.copy = launcher.state.guide_copy
+        self.launch_mode = launch
+        self.copy = launcher.state.launch_guide["copy"] if launch else launcher.state.guide_copy
         self.setWindowTitle(self.copy["title"])
         self.setModal(False)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
@@ -40,22 +41,44 @@ class SteamGuideWindow(QDialog):
         self.status_detail = QLabel("")
         self.status_detail.setWordWrap(True)
         layout.addWidget(self.status_detail)
-        self.progress_note = QLabel(self.copy["visibilityDetail"] + " Switch to the Steam terminal through your desktop’s taskbar to type.")
+        if launch:
+            library = QLabel(launcher.state.launch_guide["library"])
+            library.setWordWrap(True)
+            layout.addWidget(library)
+        self.progress_note = QLabel(self.copy["visibilityDetail"] + ("" if launch else " Switch to the Steam terminal through your desktop’s taskbar to type."))
         self.progress_note.setWordWrap(True)
         layout.addWidget(self.progress_note)
         self.retry_button = QPushButton(self.copy["retryLabel"])
-        self.retry_button.clicked.connect(launcher.signin)
+        self.retry_button.clicked.connect(launcher.open_game_steam if launch else launcher.signin)
+        if launch: self.retry_button.setText(self.copy["terminalLabel"])
         layout.addWidget(self.retry_button)
         self.continue_button = QPushButton(self.copy["continueLabel"])
-        self.continue_button.clicked.connect(self.continue_to_play)
+        self.continue_button.clicked.connect(self.close if launch else self.continue_to_play)
         layout.addWidget(self.continue_button)
         help_button = QPushButton(self.copy["helpLabel"])
-        help_button.clicked.connect(lambda: launcher.open_url("https://help.steampowered.com/en/wizard/HelpWithLogin"))
+        help_button.clicked.connect(lambda: launcher.open_url("https://github.com/" + launcher.state.product["repository"] + "/issues" if launch else "https://help.steampowered.com/en/wizard/HelpWithLogin"))
         layout.addWidget(help_button)
         self.refresh()
 
     def refresh(self):
         state = self.launcher.state
+        if self.launch_mode:
+            guidance = state.launch_guide["phases"].get(state.launch_phase, state.launch_guide["phases"]["preparing"])
+            accent = "#" + state.game["accent"]
+            self.game_title.setText(next(game["title"] for game in state.games if game["id"] == state.launch_profile))
+            self.status_title.setText(guidance["title"])
+            self.status_title.setStyleSheet(f"color:{accent}; font-size:16px; font-weight:bold;")
+            self.status_detail.setText(guidance["detail"])
+            for index, label in enumerate(self.steps):
+                label.setText(("✓  " if index < guidance["stage"] else str(index + 1) + "  ") + self.copy["stages"][index])
+                label.setStyleSheet(f"color:{accent};" if index <= guidance["stage"] else "color:#a4b0b3;")
+            self.retry_button.setVisible(True)
+            self.retry_button.setEnabled(guidance["stage"] > 0)
+            self.continue_button.setVisible(True)
+            self.continue_button.setEnabled(True)
+            if state.launch_phase == "playing": self.hide()
+            self.adjustSize()
+            return
         status = "complete" if state.assets_ready else "waiting" if state.steam_starting else state.steam_status
         guidance = state.guidance.get(status, state.guidance["idle"])
         accent = "#" + state.game["accent"]

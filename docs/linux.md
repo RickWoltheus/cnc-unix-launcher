@@ -101,9 +101,9 @@ pinned runtime for games. Other distributions require equivalent packages.
 See [compatibility setup](compatibility-games.md). CnCNet is not integrated.
 No Linux gameplay or GPU compatibility has been verified for these entries.
 
-## Experimental C&C 3 development profiles
+## Experimental DirectX 9 game profiles
 
-C&C 3 and Kane’s Wrath use the native Linux Steam client and its Proton runtime,
+C&C 3, Kane’s Wrath and Red Alert 3 use the native Linux Steam client and its Proton runtime,
 not the 2D Wine/cnc-ddraw installer. This platform exception preserves Steam’s
 owned install, prefix, saves, updates and first-run dependency handling. Flatpak
 Steam integration is deferred. Enable Proton 11 in each game’s Compatibility
@@ -113,4 +113,9 @@ versioned executable referenced by the game’s English SkuDef.
 
 Use **Open Steam setup** in Prepare Linux, then **Open Steam install** in the
 download step. Credentials stay in Valve’s client. No SteamCMD password window
-is used for these two games on Linux. See [C&C 3 setup](cnc3.md).
+is used for these games on Linux. See [C&C 3 setup](cnc3.md).
+
+After Play, a nonmodal launch guide explains Steam/Proton startup and sign-in.
+It hides when the game process is detected. macOS microphone instructions are
+omitted on Linux. Update details remain in Steam; the guide does not inspect
+passwords, Steam Guard fields or Steam-managed downloads.

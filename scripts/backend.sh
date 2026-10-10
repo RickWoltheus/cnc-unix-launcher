@@ -103,6 +103,7 @@ if [[ "$ACTION" == status ]]; then
     native_ready "$id" && echo "$id=ready" || echo "$id=missing"
   done < "$RESOURCES/manifests/native-mods.tsv"
   for game in ra2 yuri ts cnc3 kw ra3; do
+    if sage_profile "$game"; then echo "launch_$game=$(sage_launch_status "$game")"; launch_pid="$(sed -n '2p' "$ROOT/launch-$game.status" 2>/dev/null || true)"; [[ "$launch_pid" =~ ^[0-9]+$ ]] && echo "launch_pid_$game=$launch_pid"; fi
     compatibility_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
     compatibility_assets_ready "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
@@ -120,6 +121,23 @@ if [[ "$ACTION" == status ]]; then
     select_mod "$id"
     [[ -f "$MOD/.$id-complete" ]] && assets_ready "$MOD" && echo "$id=ready" || echo "$id=missing"
   done < "$RESOURCES/manifests/mods.tsv"
+  exit 0
+fi
+
+if [[ "$ACTION" == game-steam ]]; then
+  sage_profile "$PROFILE" || fail 'This game does not use the Steam launch guide.'
+  if [[ "$PLATFORM" == linux ]]; then sage_open_steam "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)"
+  else
+    sage_engine_ready "$PROFILE" || fail 'Prepare or repair the game runtime first.'
+    folder="$ROOT/compatibility/$PROFILE/game"
+    config="$(sage_config "$folder" "$PROFILE")"; executable="$(sage_executable "$folder" "$config")"
+    [[ -n "$executable" ]] || fail 'Click Play first to prepare the game.'
+    sage_mac_environment "$PROFILE" "$executable"
+    binary="$(sage_mac_wine "$PROFILE")"
+    steam_exe="$WINEPREFIX/drive_c/Program Files (x86)/Steam/steam.exe"
+    [[ -s "$steam_exe" ]] || fail 'Click Play first to prepare Windows Steam.'
+    "$binary" "$steam_exe" "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)" >/dev/null 2>&1 </dev/null &
+  fi
   exit 0
 fi
 

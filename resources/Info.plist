@@ -20,6 +20,8 @@
 	<string>15.0</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Windows games may request microphone access for in-game voice chat. The launcher does not record audio.</string>
 	<key>CFBundleDisplayName</key>
 	<string>C&amp;C Unix Launcher</string>
 </dict>

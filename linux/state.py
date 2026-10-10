@@ -16,6 +16,9 @@ class LauncherState:
     steam_starting: bool = False
     steam_target: str | None = None
     values: dict = field(default_factory=dict)
+    launch_profile: str | None = None
+    launch_owner: int | None = None
+    launch_phase: str = "preparing"
 
     def __post_init__(self):
         with (self.resources / "manifests/games.tsv").open() as stream:
@@ -26,6 +29,7 @@ class LauncherState:
         self.distribution = json.loads((self.resources / "resources/mac-distribution.json").read_text())
         self.policy = json.loads((self.resources / "resources/setup-policy.json").read_text())
         self.guide_copy = json.loads((self.resources / "resources/steam-guide.json").read_text())
+        self.launch_guide = json.loads((self.resources / "resources/launch-guide.json").read_text())["linux"]
         self.guidance = json.loads((self.resources / "resources/steam-guidance.json").read_text())
         self.recovery = json.loads((self.resources / "resources/recovery-guidance.json").read_text())
         with (self.resources / "manifests/mods.tsv").open() as stream:
@@ -49,6 +53,10 @@ class LauncherState:
 
     def update(self, text):
         self.values = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
+        if self.launch_profile and self.launch_owner is not None and self.values.get("launch_pid_" + self.launch_profile) == str(self.launch_owner):
+            phase = self.values.get("launch_" + self.launch_profile)
+            if phase in self.launch_guide["phases"]:
+                self.launch_phase = phase
         session = self.values.get("wine_session")
         if session in ("running", "starting", "stopping"):
             self.wine_session_observed = True

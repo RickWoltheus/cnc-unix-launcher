@@ -1,8 +1,10 @@
 # Red Alert 3 — experimental development support
 
-This profile is not included in the published v0.3.0 release. Gameplay remains
-unverified on Mac and Linux. It uses the shared DirectX 9 setup documented in
-[C&C 3 setup](cnc3.md), with its own Steam app (17480), working copy and prefix.
+This profile is not included in the published v0.3.0 release. The user confirmed
+excellent performance at Ultra High settings on macOS 26 with mtld3d Metal
+rendering. Linux gameplay remains unverified. It shares the runtime and launch
+guide documented in [C&C 3 setup](cnc3.md), with its own Steam app (17480),
+working copy and prefix.
 
 1. Select **Red Alert 3** and prepare the runtime.
 2. Download your owned English Steam installation using the launcher. On Linux,
@@ -20,5 +22,5 @@ replacement launcher or generate CD keys. Configuration discovery selects the
 highest numeric English RA3 SkuDef and validates its referenced executable.
 
 C&C 4 is intentionally excluded. Uprising is not included in this initial RA3
-profile. Headless fixtures verify configuration selection and launcher wiring;
-they do not establish that RA3 renders or plays correctly.
+profile. Headless fixtures verify configuration selection, installer behavior and launcher
+wiring. The user’s Mac gameplay test is separate from those checks.

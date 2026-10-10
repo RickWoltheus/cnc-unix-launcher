@@ -1,0 +1,154 @@
+{
+  "macos": {
+    "copy": {
+      "title": "Game launch guide",
+      "securityTitle": "Steam handles your sign-in",
+      "securityDetail": "Enter your password and Steam Guard only in Valve’s Steam window. The launcher never receives them. This guide reads fixed progress labels, not login fields.",
+      "visibilityDetail": "This guide stays above Steam without taking keyboard focus. It hides when the game starts. Closing it does not stop setup or the game.",
+      "stages": [
+        "Prepare",
+        "Steam",
+        "Start game"
+      ],
+      "showLabel": "Show launch guide",
+      "retryLabel": "Try Play again",
+      "continueLabel": "Close guide",
+      "helpLabel": "Report a problem or request",
+      "terminalLabel": "Open Steam"
+    },
+    "phases": {
+      "preparing": {
+        "title": "Preparing your game",
+        "detail": "We are checking the selected game and preparing its separate working copy. Wait here; another Play click is not needed.",
+        "stage": 0,
+        "error": false
+      },
+      "prefix": {
+        "title": "Preparing Windows compatibility",
+        "detail": "First launch can take longer while Wine creates or updates this game’s local environment. Your original Steam download is kept separate.",
+        "stage": 0,
+        "error": false
+      },
+      "steam-install": {
+        "title": "Installing Windows Steam",
+        "detail": "The official Valve installer is running in this game’s environment. It may open an installer or update window. This is separate from Mac Steam.",
+        "stage": 1,
+        "error": false
+      },
+      "steam-update": {
+        "title": "Steam is updating",
+        "detail": "Steam is downloading or checking its client files. Leave its update window open and wait. The launcher will request the selected game afterwards.",
+        "stage": 1,
+        "error": false
+      },
+      "starting": {
+        "title": "Starting Steam and your game",
+        "detail": "The launcher has asked Steam to start the selected game. Steam may update first or ask you to sign in. This can take a few minutes on the first launch.",
+        "stage": 1,
+        "error": false
+      },
+      "steam-signin": {
+        "title": "Check the Steam window",
+        "detail": "If Steam asks, sign in and complete Steam Guard there. If you already see your library and updates have finished, select this game and click Steam’s Play button once. That is safe in this game’s prepared environment.",
+        "stage": 1,
+        "error": false
+      },
+      "playing": {
+        "title": "Your game has started",
+        "detail": "The game process is running. This guide will hide so you can play. If a permission prompt is visible, respond to it directly in macOS.",
+        "stage": 2,
+        "error": false
+      },
+      "closed": {
+        "title": "Game closed",
+        "detail": "Return to the launcher for your next game. Steam may remain open in this game’s environment.",
+        "stage": 2,
+        "error": false
+      },
+      "failed": {
+        "title": "The game did not start",
+        "detail": "Check Steam for a sign-in prompt, unfinished update or an error dialog. Close a failed game window before retrying Play in the launcher. Use the issues link if the problem persists.",
+        "stage": 2,
+        "error": true
+      }
+    },
+    "permission": "macOS may ask for microphone access when the game checks its audio devices. Choose Allow only if you want in-game voice chat. The launcher does not record audio.",
+    "library": "Steam’s library may appear before the game. Wait for client updates, sign in if asked, then use Play for the selected game if it has not started. To switch games, return to the launcher so it selects the matching environment."
+  },
+  "linux": {
+    "copy": {
+      "title": "Game launch guide",
+      "securityTitle": "Steam handles your sign-in",
+      "securityDetail": "Steam handles sign-in, updates and Proton. Enter credentials only in Valve’s client. This guide receives fixed launcher status labels.",
+      "visibilityDetail": "This guide stays above Steam without taking keyboard focus. It hides when the game starts. Closing it does not stop setup or the game.",
+      "stages": [
+        "Prepare",
+        "Steam",
+        "Start game"
+      ],
+      "showLabel": "Show launch guide",
+      "retryLabel": "Try Play again",
+      "continueLabel": "Close guide",
+      "helpLabel": "Report a problem or request",
+      "terminalLabel": "Open Steam"
+    },
+    "phases": {
+      "preparing": {
+        "title": "Preparing your game",
+        "detail": "We are checking the selected game and preparing its separate working copy. Wait here; another Play click is not needed.",
+        "stage": 0,
+        "error": false
+      },
+      "prefix": {
+        "title": "Preparing Windows compatibility",
+        "detail": "Steam manages this game’s Proton environment and first-run dependencies. Wait for Steam to finish its setup.",
+        "stage": 0,
+        "error": false
+      },
+      "steam-install": {
+        "title": "Installing Windows Steam",
+        "detail": "The official Valve installer is running in this game’s environment. It may open an installer or update window. This is separate from Mac Steam.",
+        "stage": 1,
+        "error": false
+      },
+      "steam-update": {
+        "title": "Steam is updating",
+        "detail": "Steam is downloading or checking its client files. Leave its update window open and wait. The launcher will request the selected game afterwards.",
+        "stage": 1,
+        "error": false
+      },
+      "starting": {
+        "title": "Starting Steam and your game",
+        "detail": "The launcher has handed the selected game to your Linux Steam client. Steam handles game updates, Proton and first-run setup. Check its window if launch pauses.",
+        "stage": 1,
+        "error": false
+      },
+      "steam-signin": {
+        "title": "Check the Steam window",
+        "detail": "If Steam asks, sign in and complete Steam Guard there. If you already see your library and updates have finished, select this game and click Steam’s Play button once. That is safe in this game’s prepared environment.",
+        "stage": 1,
+        "error": false
+      },
+      "playing": {
+        "title": "Your game has started",
+        "detail": "The game process is running. This guide hides so you can play.",
+        "stage": 2,
+        "error": false
+      },
+      "closed": {
+        "title": "Game closed",
+        "detail": "Return to the launcher for your next game. Steam may remain open in this game’s environment.",
+        "stage": 2,
+        "error": false
+      },
+      "failed": {
+        "title": "The game did not start",
+        "detail": "Check Steam for a sign-in prompt, unfinished update or an error dialog. Close a failed game window before retrying Play in the launcher. Use the issues link if the problem persists.",
+        "stage": 2,
+        "error": true
+      }
+    },
+    "permission": null,
+    "library": "Steam’s library may appear before the game. Wait for client updates, sign in if asked, then use Play for the selected game if it has not started. To switch games, return to the launcher so it selects the matching environment."
+  }
+}
