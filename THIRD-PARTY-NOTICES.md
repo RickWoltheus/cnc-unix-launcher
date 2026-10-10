@@ -24,3 +24,21 @@ or third-party files included with the package.
   [the ClamAV project](https://github.com/Cisco-Talos/clamav).
 
 Keep the relevant notices when redistributing the launcher or third-party parts.
+
+## Experimental C&C 3 runtime
+
+The C&C 3 profiles download pinned original Sikarugir Wine and Template archives
+on macOS. Installation retains the D9VK license and extracts the open-source
+runtime libraries, GStreamer and Kosmickrisp driver. It does not install
+Sikarugir’s SDK/launcher/Creator or Apple’s proprietary D3DMetal. Component
+licenses and source links are listed in [sage-notice.txt](manifests/sage-notice.txt);
+these downloads are not bundled or relicensed in launcher releases. On Linux,
+the user installs Valve’s proprietary Steam client and Steam manages Proton
+and its component licenses. [Proton source](https://github.com/ValveSoftware/Proton).
+
+The project-owned Steam browser helper is MIT-licensed, with its C source and
+rebuild instructions packaged alongside the executable. Its Wine compatibility
+approach follows [notpop/steam-on-m1-wine](https://github.com/notpop/steam-on-m1-wine).
+Valve’s original browser executable is backed up locally and is never bundled
+in this project’s releases. Single-process Chromium reduces browser process
+isolation; see [the C&C 3 guide](docs/cnc3.md).

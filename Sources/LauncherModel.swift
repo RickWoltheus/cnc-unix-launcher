@@ -121,12 +121,13 @@ final class LauncherModel: ObservableObject {
         SetupPolicy.shared.isComplete(index, facts: setupFacts)
     }
     private var setupFacts: [String: Bool] {
-        ["platform": systemSupported, "selected": GameInfo.catalog.contains { $0.id == selectedGame },
+        ["platform": systemSupported && (!game.isSage || ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 26), "selected": GameInfo.catalog.contains { $0.id == selectedGame },
          "engine": gameEngineReady, "steam": steam, "assets": gameAssetsReady]
     }
 
     func stepHelp(_ index: Int) -> String {
         if !systemSupported { return "This launcher needs Apple Silicon and macOS 15 or later." }
+        if game.isSage && ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 26 { return "C&C 3 currently requires macOS Tahoe 26 or later." }
         if index >= 2 && (!gameEngineReady || !steam) { return "Prepare your Mac before signing into Steam." }
         if index == 3 && !gameAssetsReady { return "Finish Steam sign-in and validate the game download first." }
         return "Open this step."

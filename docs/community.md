@@ -55,6 +55,12 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [GNU Bash](https://www.gnu.org/software/bash/) | Shared installation and launch scripts | [Contributors / team](https://www.gnu.org/software/bash/) |
 | [Apple / Rosetta 2 / macOS frameworks](https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment) | Apple Silicon compatibility for SteamCMD and Wine; SwiftUI/AppKit and macOS system tooling | [Contributors / team](https://developer.apple.com/) |
 | [ClamAV](https://github.com/Cisco-Talos/clamav) | Optional local antivirus scanner and signed virus definitions | [Contributors / team](https://github.com/Cisco-Talos/clamav/graphs/contributors) |
+| [Sikarugir / Gcenx](https://github.com/Sikarugir-App/Sikarugir) | Separate macOS C&C 3 Wine engine, D9VK and runtime libraries | [Contributors / team](https://github.com/Sikarugir-App/Sikarugir/graphs/contributors) |
+| [DXVK / D9VK](https://github.com/doitsujin/dxvk) | DirectX 9 rendering used by Sikarugir and Proton | [Contributors / team](https://github.com/doitsujin/dxvk/graphs/contributors) |
+| [Mesa / Kosmickrisp](https://gitlab.freedesktop.org/mesa/mesa) | Vulkan to Metal driver for experimental Mac C&C 3 rendering | [Contributors / team](https://gitlab.freedesktop.org/mesa/mesa/-/graphs/main) |
+| [Valve / Proton](https://github.com/ValveSoftware/Proton) | Steam-managed Windows game compatibility for Linux C&C 3 | [Contributors / team](https://github.com/ValveSoftware/Proton/graphs/contributors) |
+| [DXMT](https://github.com/3Shain/dxmt) | DirectX 10/11 to Metal renderer used by the Windows Steam interface | [Contributors / team](https://github.com/3Shain/dxmt/graphs/contributors) |
+| [steam-on-m1-wine / notpop](https://github.com/notpop/steam-on-m1-wine) | Steam browser compatibility research and documented CEF workaround | [Contributors / team](https://github.com/notpop/steam-on-m1-wine/graphs/contributors) |
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 

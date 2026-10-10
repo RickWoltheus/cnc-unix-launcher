@@ -4,6 +4,7 @@ FLATPAK="${GX_FLATPAK:-flatpak}"
 platform_supported() { [[ "$(uname -m)" == x86_64 ]]; }
 platform_requirement_message() { echo 'Linux preview requires an x86_64 Linux desktop with Vulkan support.'; }
 dependencies_ready() {
+  if sage_profile "$PROFILE"; then sage_steam_ready; return; fi
   command -v "$FLATPAK" >/dev/null && command -v curl >/dev/null && command -v file >/dev/null && command -v zip >/dev/null &&
     [[ -e /lib/ld-linux.so.2 || -e /lib32/ld-linux.so.2 || -e /lib/i386-linux-gnu/ld-linux.so.2 ]] &&
     { ! compatibility_profile "$PROFILE" || compatibility_dependencies_ready; }
@@ -61,6 +62,7 @@ launch_engine() {
     "$(app_id "$ENGINE")" "$@"
 }
 install_linux_tools() {
+  if sage_profile "$PROFILE"; then fail 'Install the native Linux Steam client from your distribution, open it and return to the launcher. Steam supplies Proton and its graphics dependencies.'; fi
   [[ -f /etc/os-release ]] || fail 'Cannot identify this Linux distribution.'
   source /etc/os-release
   case "${ID:-} ${ID_LIKE:-}" in

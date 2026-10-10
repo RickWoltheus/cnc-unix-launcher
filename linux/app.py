@@ -278,6 +278,9 @@ class LauncherWindow(QMainWindow):
             layout.addWidget(row)
         self.prepare_button = self.primary("PREPARE MY LINUX DESKTOP →", self.prepare)
         layout.addWidget(self.prepare_button)
+        self.sage_steam_button = QPushButton("OPEN STEAM SETUP →")
+        self.sage_steam_button.clicked.connect(lambda: self.run_actions([("sage-steam", self.state.selected_game)]))
+        layout.addWidget(self.sage_steam_button)
         note = QLabel("If Linux tools are missing, a terminal opens to install Flatpak and Valve’s 32-bit support. Your distribution may ask for your administrator password there.")
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -286,19 +289,21 @@ class LauncherWindow(QMainWindow):
     def make_steam(self):
         layout = self.page()
         self.title(layout, "Step 3", "Bring your Steam copy.", "One local sign-in, then Steam downloads and checks your owned files.")
+        self.steam_instruction_labels = []
         for text in ["1  Sign in locally with your Steam account login name, not your display name.", "2  Enter your password and newest Steam Guard code only in the Steam terminal.", "3  Keep it open until the download finishes. Play unlocks after validation."]:
             label = QLabel(text)
             label.setWordWrap(True)
             label.setMargin(12)
             layout.addWidget(label)
+            self.steam_instruction_labels.append(label)
         self.signin_button = self.primary("SIGN IN TO STEAM →", self.signin)
         layout.addWidget(self.signin_button)
-        guide_button = QPushButton(self.state.guide_copy["showLabel"])
-        guide_button.clicked.connect(self.show_steam_guide)
-        layout.addWidget(guide_button)
-        security_note = QLabel(self.state.guide_copy["securityDetail"])
-        security_note.setWordWrap(True)
-        layout.addWidget(security_note)
+        self.steam_guide_button = QPushButton(self.state.guide_copy["showLabel"])
+        self.steam_guide_button.clicked.connect(self.show_steam_guide)
+        layout.addWidget(self.steam_guide_button)
+        self.steam_security_note = QLabel(self.state.guide_copy["securityDetail"])
+        self.steam_security_note.setWordWrap(True)
+        layout.addWidget(self.steam_security_note)
         self.steam_help_title = QLabel("")
         self.steam_help_title.setStyleSheet("color:#efad40; font-weight:bold;")
         layout.addWidget(self.steam_help_title)
@@ -416,7 +421,7 @@ class LauncherWindow(QMainWindow):
         self.steam_help_title.setStyleSheet(f"color:{accent}; font-weight:bold;")
         self.choose_title.setText(self.state.game["title"].upper())
         self.choose_summary.setText(self.state.game["summary"])
-        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else "Experimental Wine + cnc-ddraw using owned Steam files. Gameplay, graphics and Steam launch validation pending." if self.state.compatibility else "Native GeneralsX using your owned Steam assets."))
+        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else self.state.sage_copy["detail"] if self.state.sage else "Experimental Wine + cnc-ddraw using owned Steam files. Gameplay, graphics and Steam launch validation pending." if self.state.compatibility else "Native GeneralsX using your owned Steam assets."))
         tint = QColor(accent)
         self.choose_engine_panel.setStyleSheet(f"QFrame {{ background:rgba({tint.red()},{tint.green()},{tint.blue()},20); border:1px solid {accent}; }} QLabel {{ background:transparent; border:none; }}")
         self.choose_logo.setText(self.state.game["emblem"])
@@ -445,12 +450,19 @@ class LauncherWindow(QMainWindow):
             border = f"border:1px solid {color};" if game == self.state.selected_game else "border:1px solid #354044;"
             button.setStyleSheet(f"QPushButton {{ text-align:left; font-weight:bold; color:{color}; {border} }} QLabel {{ border:none; background:transparent; color:{color}; }}")
         self.continue_button.setEnabled(self.state.can_enter(1))
+        self.sage_steam_button.setVisible(self.state.sage)
+        self.sage_steam_button.setEnabled(self.state.can_enter(1))
+        instructions = (["1  Sign in only in the native Linux Steam client. Install the English game.", "2  In Steam Properties → Compatibility, enable Proton 11 and start the game once to finish setup.", "3  Return here. Play unlocks after Steam files and Proton are detected."] if self.state.sage else ["1  Sign in locally with your Steam account login name, not your display name.", "2  Enter your password and newest Steam Guard code only in the Steam terminal.", "3  Keep it open until the download finishes. Play unlocks after validation."])
+        for label, text in zip(self.steam_instruction_labels, instructions): label.setText(text)
+        self.steam_guide_button.setVisible(not self.state.sage)
+        self.steam_security_note.setText("Steam handles authentication, downloads and Proton updates. Your password and Steam Guard stay in Valve’s client; this launcher does not receive them. Optional archive scans do not cover Steam-managed downloads." if self.state.sage else self.state.guide_copy["securityDetail"])
+        self.signin_button.setText("OPEN STEAM INSTALL →" if self.state.sage else "SIGN IN TO STEAM →")
         self.prepare_button.setEnabled(self.state.can_enter(1))
         self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + ("Compatibility " if self.state.compatibility else "Native ") + self.state.game["engine"] + " engine")
-        self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + "Valve Steam downloader and Linux support")
+        self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + ("Native Linux Steam client" if self.state.sage else "Valve Steam downloader and Linux support"))
         self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and not self.state.steam_starting and self.state.values.get("install") != "busy")
-        self.steam_help_title.setText(self.state.steam_guidance["title"])
-        self.steam_help_detail.setText(self.state.steam_guidance["detail"])
+        self.steam_help_title.setText("Steam Proton setup" if self.state.sage else self.state.steam_guidance["title"])
+        self.steam_help_detail.setText(self.state.sage_copy["prepare"] if self.state.sage else self.state.steam_guidance["detail"])
         self.play_title.setText(self.state.title)
         self.play_summary.setText(self.state.mod["summary"] if self.state.mod else ("OpenRA is ready. Modernized gameplay using your owned Steam assets." if self.state.classic else "Your original game is ready to deploy."))
         self.play_button.setText("GAME RUNNING" if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
@@ -460,7 +472,7 @@ class LauncherWindow(QMainWindow):
         self.graphics.setVisible(not (self.state.classic or self.state.compatibility))
         self.graphics_label.setVisible(not (self.state.classic or self.state.compatibility))
         self.graphics.setToolTip("OpenRA uses its own in-game graphics settings." if self.state.classic else "")
-        self.play_note.setText("Experimental Wine support. Windowed 1280×720 upscaling; borderless fullscreen. Firestorm is available in Tiberian Sun’s menu. CnCNet is not installed yet." if self.state.compatibility else "OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
+        self.play_note.setText(self.state.sage_copy["play"] if self.state.sage else "Experimental Wine support. Windowed 1280×720 upscaling; borderless fullscreen. Firestorm is available in Tiberian Sun’s menu. CnCNet is not installed yet." if self.state.compatibility else "OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
         self.mod_section.setVisible(bool(self.state.available_mods))
         for profile, button in self.profile_buttons.items():
             visible = profile == "original" or any(mod["id"] == profile for mod in self.state.available_mods)
@@ -515,7 +527,7 @@ class LauncherWindow(QMainWindow):
                 self.play_after_steam = False
                 self.start_game()
         process.finished.connect(finished)
-        process.start("/bin/bash", [str(self.backend), "status"])
+        process.start("/bin/bash", [str(self.backend), "status", self.state.selected_game])
 
     def run_actions(self, actions, play_after=False):
         if self.state.busy or self.state.game_running:
@@ -583,6 +595,7 @@ class LauncherWindow(QMainWindow):
             self.open_terminal("Linux dependencies", ["linux-tools", self.state.selected_game])
         else:
             self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
+        if self.state.sage: self.notice.setText(self.state.sage_copy["prepare"])
 
     def show_security(self):
         dialog = SecuritySetupWindow(self)
@@ -603,6 +616,9 @@ class LauncherWindow(QMainWindow):
 
     def signin(self):
         if not self.state.can_enter(2) or self.state.steam_active or self.state.steam_starting or self.state.values.get("install") == "busy":
+            return
+        if self.state.sage:
+            self.run_actions([("steam-login", self.state.steam_profile)])
             return
         self.steam_launch_error = None
         self.state.steam_starting = True
@@ -770,7 +786,7 @@ def main():
         raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
     if "--self-check" in sys.argv:
         state = LauncherState(RESOURCES)
-        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh"):
+        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh", "sage.sh", "steam-webhelper.sh"):
             subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
         if len(state.mods) != 7 or len(state.policy["steps"]) != 4:
             raise SystemExit("Packaged catalog or setup policy is incomplete.")

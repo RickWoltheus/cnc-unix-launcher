@@ -421,3 +421,172 @@ SHA-256 digests match the local Mac and Linux packages. The publication used the
 user's personal GitHub account and personal SSH alias; global authentication
 settings were not changed. This remains a community preview with the validation
 limits described above.
+
+## C&C 3 development branch — 2026-10-08
+
+Added experimental Tiberium Wars and Kane’s Wrath profiles. Mac uses a separate
+Sikarugir Wine 11/D9VK/Kosmickrisp runtime and requires macOS Tahoe 26+. Linux
+hands installation and play to the native Steam client and configured Proton.
+Red Alert 3/Uprising remain follow-up work. The public v0.3.0 release is unchanged.
+
+Headless Mac app compilation, ad-hoc signature verification and model checks
+passed. Real pinned Sikarugir/Template archives were extracted through the backend
+in a disposable installation; their hashes match GitHub’s published digests.
+Preparation created no prefix. Synthetic English SkuDef/game fixtures exercised
+both Mac profile copies and dummy launch arguments without executing EA code.
+The existing 2D Wine integration regression suite also passed against the pinned
+Wine/cnc-ddraw archives with synthetic assets and fake Steam.
+
+A separate x86_64 headless Vulkan probe loaded the Template Vulkan loader and
+Kosmickrisp ICD on the M3 Pro host. `vkCreateInstance` returned 0 and physical
+device enumeration returned 0 with one device. The sandbox initially prevented
+device discovery; the same probe outside it succeeded. This opened no game or
+window and does not establish successful D3D9 rendering.
+
+Twenty Linux state/offscreen UI tests, synthetic Steam library/Proton selection
+checks, shared backend/security tests and Wine lifecycle fixtures passed in an
+OrbStack x86_64 container. Lifecycle fixtures include the versioned C&C 3 `.dat`
+path. Linux packaging and packaged resource/Qt import self-check passed. No real
+Linux Steam client, Proton game or desktop GPU was tested.
+
+The independent security reviewer checked both pinned archives and their member
+and link paths: no absolute paths, parent escapes or escaping links were found.
+Both install inputs use the shared checksum/optional local-scan gate. A privacy
+finding was corrected: Linux Steam handoff output is discarded instead of saved
+in launcher logs. No credentials were entered or captured. This audit does not
+certify upstream binaries or imply that a Wine prefix is a security sandbox.
+
+Real C&C 3/Kane’s Wrath startup, Steam ownership/registration behavior on Mac,
+campaign/skirmish/Global Conquest, video/audio/input, save/load, fullscreen,
+performance and repeated launches remain pending manual gameplay testing.
+See [the manual checklist](cnc3.md). No EA game was launched for this PR.
+
+## C&C 3 prefix setup repair — 2026-10-09
+
+The user's first manual launch failed during prefix initialization, before the
+game started. Sikarugir Wine 11 requires `SikarugirAppWine11=1` when running
+Windows processes outside its wrapper. That flag was missing from our integration.
+The requirement is visible in the pinned engine's Unix ntdll binary. A clean,
+temporary real prefix reproduced exit 1 without the flag and completed wineboot
+with exit 0 when the flag was supplied. No EA executable was run in that probe.
+
+The Mac launch environment now supplies the flag for both prefix creation and
+game startup. A shell Wine fixture exercises the actual backend initialization
+path and rejects either handoff if the flag is absent. This regression check
+passed, as did the synthetic C&C 3 setup/launch checks. Actual gameplay remains
+pending the user's next manual test; Linux's Steam/Proton handoff is unchanged.
+
+## C&C 3 Steam authentication repair — 2026-10-09
+
+After prefix repair, the user reached the game's “Failed to initialize Steam”
+dialog. Directly starting the Steam edition's versioned executable without a
+Windows Steam session was an incomplete Mac launch flow. Mac C&C 3 profiles now
+install Valve’s official Windows Steam bootstrap through the shared hash/scan
+gate, register the existing owned working copy with that client, and launch with
+Steam's `-applaunch`. Credentials are entered only in Valve’s window; client
+stdout/stderr is discarded. Startup supervision allows time for updates/sign-in
+and recognizes the game's managed Windows C: path as well as Unix/Z: paths.
+Steam stays open after game exit. Linux retains its native Steam handoff.
+
+A shell Steam/Wine fixture checks installer gating, the retained Sikarugir flag,
+owned-copy registration and Steam launch arguments without running a real Steam
+client or EA game. Real Windows Steam sign-in, client rendering and successful
+C&C 3 gameplay remain pending manual testing. Valve-managed client updates are
+outside the launcher's pinned archive/local-scan coverage.
+
+## Windows Steam black-window investigation — 2026-10-09
+
+The user reported a black, repeatedly restarting Steam window. The Mac runtime
+contained only the D3D9 lane used by C&C 3; Steam’s web interface also needs a
+usable D3D11 lane. The same pinned Template archive supplies open-source DXMT.
+Installation now retains its license, installs only d3d10core/d3d11/dxgi/winemetal
+DLLs and the Unix winemetal library, and applies those DLLs to both prefix
+architectures. The pinned Sikarugir winemac driver exports macdrv functions.
+The runtime version marker includes DXMT so incomplete old installs fail readiness.
+
+Actual runtime repair on this Mac and synthetic installer/prefix checks passed.
+Only this C&C 3 profile’s Steam/Wine services were stopped for the repair.
+The shutdown command required the bundled native-library search path, as does
+normal launch. Steam’s real interface rendering and game launch are still
+awaiting manual verification; this is a candidate fix, not a confirmed result.
+
+## Steam browser process workaround — 2026-10-09
+
+The user's next test remained black after adding DXMT. That renderer change
+did not establish a fix. Steam helper diagnostics showed repeated browser
+crashes and no single-process flag. The published steam-on-m1-wine workaround
+adds `--disable-gpu --single-process` directly to the original CEF executable.
+A small project-owned MIT helper implements that forwarding without a shell,
+argument logging, credential handling or networking. Valve’s original browser
+executable is preserved locally and not redistributed. Source/rebuild instructions
+and the bundled executable hash are packaged with the launcher. Reduced browser
+process isolation is disclosed in the main README and C&C 3 guide.
+
+Synthetic tests passed for hash-before-scan, original preservation, repeated
+installation, Steam update handling and missing/tampered input rejection. A real
+Wine test with a synthetic Windows child confirmed both flags, quoted Unicode
+argument forwarding and exit-code propagation (37 expected, 37 returned).
+An independent security review found no confirmed blocker and requested the
+user-facing isolation disclosure, which was added. Steam was opened alone with
+the workaround in the user's profile; no game launch argument was supplied.
+Its real UI outcome is awaiting the user's confirmation. No sign-in input or
+raw Steam arguments were captured. Successful C&C 3 gameplay remains unproven.
+
+## Renderer loading and working Steam comparison — 2026-10-09
+
+The browser-process workaround did not resolve the user's black window. A
+headless D3D11 device probe exposed feature level 9.3 on both engines. Module
+tracing showed Wine loading its original built-in d3d11/dxgi implementation and
+a WineD3D OpenGL framebuffer error. The DXMT prefix DLLs carry the Wine built-in
+marker and were redirected to the engine's original PE DLLs. Installation now
+places DXMT's PE DLLs in both engine architecture directories as well as its Unix
+library. The same Wine 11 probe then returned success with feature level 11.0,
+and reported maximum support 11.1. Readiness now compares engine and renderer
+d3d11 DLLs to catch that incomplete integration. Steam UI success on Wine 11
+still has not been demonstrated.
+
+An isolated, hash-verified Sikarugir 10.0_6 comparison used a fresh prefix and
+only Steam program files, excluding account data and games. The user reported
+that Steam displayed and they signed in. The login-state file existed only in
+that comparison prefix (contents were not read). Steam then displayed a service
+maintenance prompt; Cancel was recommended for this test. The working engine
+and newly signed-in prefix were moved locally to `compatibility/cnc3/wine10-test`
+to preserve the user's setup outside /tmp. The existing owned C&C 3 working copy
+and original Steam manifest were registered there, and only its Steam library
+page was opened. No game launch was issued by the agent. This remains a manual
+gameplay experiment, not a shipped fallback or a confirmed playable result.
+
+## C&C 3 gameplay confirmation — 2026-10-09
+
+The user subsequently launched C&C 3 through the launcher with the local
+Wine 10 comparison profile, windowed mode and Wine's built-in D3D9 renderer.
+They confirmed that the game works and that in-game performance is fine.
+They reported slow menus and intermittent graphical glitches, mostly in menus.
+Those menu issues remain unresolved; this does not establish release readiness
+or verify Kane's Wrath. The working comparison profile still needs a repeatable
+installation path before it can be offered to other users.
+
+## D9VK comparison and repeatable setup — 2026-10-09
+
+After reporting intermittent textured triangles during gameplay as well as menu
+corruption, the user tested the older D9VK/MoltenVK renderer and reported that
+it works. The pinned installer now uses WS12WineSikarugir10.0_6 and the matching
+Template-1.0.21 legacy D9VK lane. Existing comparison prefixes remain in place.
+This user confirmation applies to C&C 3 on this Mac; it does not certify every
+graphics setting, multiplayer, Kane's Wrath or Linux gameplay.
+
+Clean preparation was checked using the actual pinned Wine 10 and Template
+archives in an isolated installation root. Both engine architecture DLLs matched
+the selected renderer. Synthetic first-launch fixtures passed prefix setup,
+official Steam installer handoff, browser helper repair, Steam registration and
+actual process lifecycle checks. This does not verify a fresh real Steam login.
+Backend, security gates, model and Wine lifecycle checks passed.
+## Fresh Steam browser setup blocker — 2026-10-09
+
+The first real RA3 attempt stopped before the game launch with “This Steam
+compatibility helper requires a 64-bit Steam browser.” The fresh Valve client
+contained both cef.win7 (32-bit) and cef.win7x64 (64-bit). Helper installation
+now leaves 32-bit components unchanged and patches only supported 64-bit PEs.
+A mixed-architecture fixture passed preservation and repair checks. Retrying
+the actual RA3 launch reached the Windows Steam handoff; game startup and
+gameplay remain unconfirmed.

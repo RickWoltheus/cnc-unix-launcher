@@ -1,3 +1,5 @@
 ra2	game.exe	ra2.ini	ra2.mix,language.mix
 yuri	gamemd.exe	ra2md.ini	ra2.mix,ra2md.mix,langmd.mix
 ts	game.exe	sun.ini	tibsun.mix,expand01.mix
+cnc3	CNC3.exe	Options.ini	-	sage
+kw	CNC3EP1.exe	Options.ini	-	sage
