@@ -1,6 +1,6 @@
 # C&C 3 and Kane’s Wrath — experimental development support
 
-These profiles are not included in the published v0.3.0 download. C&C 3 and
+These profiles are included in the v0.4.0 prerelease. C&C 3 and
 Red Alert 3 were tested by the user on macOS 26 with excellent performance;
 RA3 also ran well at Ultra High settings. Kane’s Wrath and Linux gameplay
 remain unverified. This is original Windows-game compatibility, using owned

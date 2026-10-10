@@ -22,10 +22,10 @@ and credentials under your control.
 
 The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
-Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The development branch adds
-experimental C&C 3, Kane’s Wrath and Red Alert 3 support: free Wine + mtld3d
+Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The v0.4.0 prerelease adds
+C&C 3, Kane’s Wrath and Red Alert 3 support: free Wine + mtld3d
 Metal rendering on Apple Silicon with macOS 15+,
-native Steam + Proton on Linux. These additions are not in the v0.3.0 download.
+native Steam + Proton on Linux. Kane’s Wrath and Linux gameplay remain experimental.
 See [C&C 3 setup and testing](docs/cnc3.md) and the separate
 [experimental Red Alert 3 profile](docs/ra3.md). The experimental Mac Steam browser
 helper uses single-process Chromium for Wine compatibility, reducing browser
@@ -56,7 +56,7 @@ Fresh-machine setup, live Linux gameplay and the full game/mod catalog still nee
 broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
 for the evidence and remaining checks.
 
-**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
+**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
 
 ## Screenshots
 
@@ -113,7 +113,7 @@ sandbox and GPU/gameplay tests remain pending.
 
 For the current community preview:
 
-1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.3.0/CnC-Unix-Launcher-macOS-arm64.zip).
+1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-macOS-arm64.zip).
 2. Extract it, and move **C&C Unix Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively

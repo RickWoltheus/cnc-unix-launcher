@@ -1,6 +1,6 @@
 # Red Alert 3 — experimental development support
 
-This profile is not included in the published v0.3.0 release. The user confirmed
+This profile is included in the v0.4.0 prerelease. The user confirmed
 excellent performance at Ultra High settings on macOS 26 with mtld3d Metal
 rendering. Linux gameplay remains unverified. It shares the runtime and launch
 guide documented in [C&C 3 setup](cnc3.md), with its own Steam app (17480),
