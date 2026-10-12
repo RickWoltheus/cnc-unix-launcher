@@ -40,7 +40,7 @@ sage_steam_binary() {
     [[ ! -x "$path" ]] || { printf '%s\n' "$path"; return; }
   done
 }
-sage_steam_ready() { [[ -n "$(sage_steam_binary)" && -n "$(sage_steam_root)" ]]; }
+sage_steam_ready() { [[ -n "$(sage_steam_binary)" ]]; }
 sage_libraries() {
   local root
   root="$(sage_steam_root)"; [[ -n "$root" ]] || return 0
@@ -87,7 +87,7 @@ sage_proton_ready() {
 }
 sage_engine_ready() {
   sage_supported || return 1
-  if [[ "$PLATFORM" == linux ]]; then sage_steam_ready && sage_proton_ready "${1:-$PROFILE}"; return; fi
+  if [[ "$PLATFORM" == linux ]]; then sage_steam_ready; return; fi
   if sage_mtld3d_profile "${1:-$PROFILE}"; then
     sage_metal_runtime_ready && return 0
     local metal_root="$ROOT/compatibility/${1:-$PROFILE}/mtld3d-test"
@@ -143,6 +143,7 @@ sage_assets_ready() {
   compatibility_select "$id"; folder="$COMPAT_GAME"; appid="$(compatibility_metadata "$id" 5)"
   [[ -d "$folder" ]] || return 1
   if [[ "$PLATFORM" == linux ]]; then
+    sage_proton_ready "$id" || return 1
     manifest="$(dirname "$(dirname "$folder")")/appmanifest_$appid.acf"
     [[ "$(awk -F '"' '$2=="StateFlags" {print $4}' "$manifest" 2>/dev/null)" == 4 ]] || return 1
   else steam_manifest_ready "$folder" "$appid" || return 1; fi
@@ -159,8 +160,8 @@ sage_install() {
   sage_supported || fail 'These games require Apple Silicon and macOS 15 or later. Older games keep their existing requirements.'
   if [[ "$PLATFORM" == linux ]]; then
     sage_steam_ready || fail 'Install and open the native Linux Steam client, then use Open Steam setup.'
-    sage_proton_ready "$PROFILE" || fail 'In Steam, enable Proton for this game in Properties → Compatibility, then install it and start it once to download Proton. Return here afterwards.'
-    echo 'Steam manages Proton and its updates. Set this game to Proton 11 in Steam Properties → Compatibility.'; return
+    sage_open_steam "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)"
+    echo 'Steam manages Proton and its updates. Enable Proton in this game’s Properties → Compatibility, then install the game in Steam.'; return
   fi
   compatibility_package sage-metal-wine
   download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"

@@ -165,6 +165,14 @@ class WidgetChecks(unittest.TestCase):
         self.assertEqual(self.window.state.launch_phase, "starting")
         process.waitForFinished(3000)
 
+    def test_fresh_proton_setup_opens_steam_before_game_install(self):
+        self.window.state.selected_game = "cnc3"
+        self.window.state.update("platform=ready\nsteam=ready\ndependencies=ready\nwine_dependencies=ready\ncnc3_engine=missing\ncnc3_assets=missing\ninstall=idle")
+        calls = []
+        self.window.run_actions = lambda actions, **kwargs: calls.append(actions)
+        self.window.prepare()
+        self.assertEqual(calls, [[("sage-steam", "cnc3")]])
+
     def tearDown(self):
         self.window.state.game_running = False
         self.window.state.busy = False
