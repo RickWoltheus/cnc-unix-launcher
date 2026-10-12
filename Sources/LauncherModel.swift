@@ -36,12 +36,14 @@ final class LauncherModel: ObservableObject {
     private var pendingNativePlay = false
     @Published var busy = false
     @Published var gameRunning = false
+    @Published var stoppingLaunch = false
     @Published var launchGuideProfile: String?
     @Published var launchGuidePhase = "preparing"
     @Published var launchGuideRequest = UUID()
     private var launchGuidePID: Int32?
     private var wineSessionObserved = false
     private var activeLaunchID: UUID?
+    private var recoveryProfile: String?
     @Published var recovery: RecoveryAdvice?
     @Published var steamDownloadStatus = "idle"
     @Published var steamSessionRunning = false
@@ -377,9 +379,35 @@ final class LauncherModel: ObservableObject {
         }
     }
 
+    func stopLaunch() {
+        guard !stoppingLaunch, !busy || gameRunning else { return }
+        stoppingLaunch = true
+        busy = true
+        let profile = activeLaunchID == nil ? activeProfile : (recoveryProfile ?? activeProfile)
+        let script = backend
+        status = "Stopping game and its Steam session…"
+        Task {
+            defer { stoppingLaunch = false; busy = false }
+            do {
+                let message = try await Task.detached { try Self.run(script, arguments: ["stop", profile]) }.value
+                activeLaunchID = nil
+                launchGuidePID = nil
+                launchGuidePhase = "closed"
+                gameRunning = false
+                wineSessionObserved = false
+                busy = false
+                recovery = nil
+                status = message.trimmingCharacters(in: .whitespacesAndNewlines)
+                refresh()
+            } catch { status = error.localizedDescription }
+        }
+    }
+
     func play(_ profile: String) {
+        guard !stoppingLaunch else { return }
         guard canEnterStep(3) else { return }
         busy = true
+        recoveryProfile = profile
         recovery = nil
         if game.isSage { launchGuidePhase = "preparing"; launchGuidePID = nil; launchGuideProfile = profile; launchGuideRequest = UUID() }
         let script = backend

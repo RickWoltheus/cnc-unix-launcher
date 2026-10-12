@@ -56,7 +56,7 @@ Fresh-machine setup, live Linux gameplay and the full game/mod catalog still nee
 broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
 for the evidence and remaining checks.
 
-**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
+**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.1/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.1/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
 
 ## Screenshots
 
@@ -113,7 +113,7 @@ sandbox and GPU/gameplay tests remain pending.
 
 For the current community preview:
 
-1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.0/CnC-Unix-Launcher-macOS-arm64.zip).
+1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.1/CnC-Unix-Launcher-macOS-arm64.zip).
 2. Extract it, and move **C&C Unix Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively
@@ -302,6 +302,12 @@ Failed installs preserve the previous engine or mod folder. Re-running setup
 reuses checksum-verified downloads. Downloads can take several minutes.
 
 ## Troubleshooting
+
+If a game fails to start and the controls stay greyed out, choose **Stop & retry**
+in the footer or launch guide. Confirm, then retry Play. This stops the selected
+game and its tracked launch processes; unsaved progress may be lost. Installed
+files and saves are kept. For Linux Proton games, it also asks Steam to close,
+which can interrupt other Steam games or downloads.
 
 - **No subscription:** Steam accepted the login but did not find the required
   license. Check the account and Zero Hour ownership. No extra subscription is

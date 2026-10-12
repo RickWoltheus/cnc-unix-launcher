@@ -52,6 +52,10 @@ class SteamGuideWindow(QDialog):
         self.retry_button.clicked.connect(launcher.open_game_steam if launch else launcher.signin)
         if launch: self.retry_button.setText(self.copy["terminalLabel"])
         layout.addWidget(self.retry_button)
+        if launch:
+            self.stop_button = QPushButton("Stop & retry")
+            self.stop_button.clicked.connect(launcher.stop_launch)
+            layout.addWidget(self.stop_button)
         self.continue_button = QPushButton(self.copy["continueLabel"])
         self.continue_button.clicked.connect(self.close if launch else self.continue_to_play)
         layout.addWidget(self.continue_button)
@@ -63,6 +67,7 @@ class SteamGuideWindow(QDialog):
     def refresh(self):
         state = self.launcher.state
         if self.launch_mode:
+            self.stop_button.setEnabled(not self.launcher.stopping_launch)
             guidance = state.launch_guide["phases"].get(state.launch_phase, state.launch_guide["phases"]["preparing"])
             accent = "#" + state.game["accent"]
             self.game_title.setText(next(game["title"] for game in state.games if game["id"] == state.launch_profile))

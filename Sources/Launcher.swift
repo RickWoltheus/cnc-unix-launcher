@@ -379,6 +379,7 @@ struct LauncherView: View {
                 Link("Bugs & feature requests", destination: ProductInfo.shared.issuesURL)
             }.menuStyle(.borderlessButton).frame(width: 70).disabled(model.busy || model.gameRunning)
             Button(showDetails ? "Hide details" : "Details") { showDetails.toggle() }.buttonStyle(.plain)
+            LaunchStopButton(model: model)
             Spacer()
             Text(model.updateStatus).lineLimit(1).font(.system(size: 10)).foregroundStyle(CommandTheme.muted)
             if let url = model.updateURL { Link("Download update", destination: url).font(.system(size: 11)) }
