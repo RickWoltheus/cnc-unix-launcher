@@ -70,14 +70,19 @@ compatibility_clear_marker() {
   local marker="$ROOT/.compatibility-running"
   if [[ "$(head -n 1 "$marker" 2>/dev/null)" == "$$" ]]; then rm -f "$marker"; fi
 }
+launch_process_identity() { ps -p "$1" -o uid= -o lstart= 2>/dev/null; }
 compatibility_stop_helper() {
-  local client="$1" attempt
+  local client="$1" attempt identity
+  identity="$(launch_process_identity "$client")"
+  [[ -n "$identity" ]] || return 0
+  [[ "$(launch_process_identity "$client")" == "$identity" ]] || return 0
   kill "$client" 2>/dev/null || true
   for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    [[ "$(launch_process_identity "$client")" == "$identity" ]] || break
     kill -0 "$client" 2>/dev/null || break
     sleep 0.1
   done
-  kill -0 "$client" 2>/dev/null && kill -KILL "$client" 2>/dev/null || true
+  [[ "$(launch_process_identity "$client")" == "$identity" ]] && kill -0 "$client" 2>/dev/null && kill -KILL "$client" 2>/dev/null || true
   wait "$client" 2>/dev/null || true
 }
 compatibility_reset_prefix() {

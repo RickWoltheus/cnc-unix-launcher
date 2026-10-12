@@ -67,6 +67,13 @@ Closing it leaves the terminal session running; reopen it from Help.
 Updates remain manual. Check updates finds newer Linux archives; Download update
 opens the release page. Game/mod upgrades come from reviewed launcher manifests.
 
+If Play stalls or controls remain disabled, use **Stop & retry** in the footer
+or game launch guide. Confirm to stop the tracked launch and selected game,
+then retry Play. Unsaved progress may be lost; installed files and saves are
+kept. For Proton profiles this also asks native Steam to close, which can
+interrupt other Steam games or downloads. Wine cleanup targets only the
+selected profile's prefix.
+
 ## Build and headless checks
 
 For a reproducible x86_64 Linux build using Docker:

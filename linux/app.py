@@ -67,6 +67,8 @@ class LauncherWindow(QMainWindow):
         self.output = ""
         self.image_labels = {}
         self.update_url = None
+        self.stopping_launch = False
+        self.launch_generation = 0
         self.media_loaded = False
         self.load_media = load_media
         self.settings = QSettings("GeneralsXLauncher", "Linux")
@@ -195,6 +197,9 @@ class LauncherWindow(QMainWindow):
         detail_button = QPushButton("Details")
         detail_button.clicked.connect(lambda: self.details.setVisible(not self.details.isVisible()))
         footer.addWidget(detail_button)
+        self.stop_button = QPushButton("Stop & retry")
+        self.stop_button.clicked.connect(self.stop_launch)
+        footer.addWidget(self.stop_button)
         footer.addStretch()
         self.update_label = QLabel("Reviewed engine and mod versions")
         footer.addWidget(self.update_label)
@@ -471,6 +476,8 @@ class LauncherWindow(QMainWindow):
         self.play_summary.setText(self.state.mod["summary"] if self.state.mod else ("OpenRA is ready. Modernized gameplay using your owned Steam assets." if self.state.classic else "Your original game is ready to deploy."))
         self.play_button.setText(("STARTING…" if self.state.sage and self.state.launch_phase != "playing" else "GAME RUNNING") if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
         self.play_button.setEnabled(self.state.can_enter(3))
+        self.stop_button.setEnabled(not self.stopping_launch and (not self.state.busy or self.state.game_running))
+        if self.stopping_launch: self.play_button.setEnabled(False)
         self.launch_guide_button.setVisible(self.state.sage and self.state.launch_profile == self.state.profile)
         self.fullscreen.setEnabled(not self.state.busy and not self.state.game_running)
         self.graphics.setEnabled(not (self.state.classic or self.state.compatibility) and not self.state.busy and not self.state.game_running)
@@ -684,10 +691,51 @@ class LauncherWindow(QMainWindow):
                 self.state.launch_owner = int(process.processId())
         process.started.connect(started)
 
+    def stop_launch(self):
+        if self.stopping_launch or (self.state.busy and not self.state.game_running): return
+        profile = self.state.launch_profile or self.state.profile
+        detail = "Stop the selected game and its launch processes? Unsaved progress may be lost. Installed files and saves are kept."
+        if self.state.sage:
+            detail += " This also closes native Steam and may interrupt other Steam games or downloads."
+        if QMessageBox.question(self, "Stop & retry", detail) != QMessageBox.StandardButton.Yes: return
+        self.stopping_launch = True
+        self.state.busy = True
+        self.launch_generation += 1
+        self.stop_button.setText("Stopping…")
+        self.notice.setText("Stopping game and its Steam session…")
+        process = QProcess(self)
+        process.setProcessEnvironment(self.environment())
+        process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        def finished(code, status):
+            message = bytes(process.readAllStandardOutput()).decode(errors="replace")
+            if code == 0:
+                self.worker = None
+                self.state.game_running = False
+                self.state.busy = False
+                self.state.launch_owner = None
+                self.state.launch_phase = "closed"
+                self.state.wine_session_observed = False
+                if self.launch_guide: self.launch_guide.hide()
+            self.stopping_launch = False
+            self.state.busy = False
+            self.stop_button.setText("Stop & retry")
+            self.notice.setText(message.strip() or "Could not stop the game. Close its windows and retry.")
+            process.deleteLater()
+            self.read_status()
+            self.refresh_view()
+        process.finished.connect(finished)
+        process.errorOccurred.connect(lambda error: finished(-1, None) if error == QProcess.ProcessError.FailedToStart else None)
+        process.start("/bin/bash", [str(self.backend), "stop", profile])
+        self.refresh_view()
+
     def start_game(self):
+        if self.stopping_launch: return
         if self.state.game_running: return
+        self.launch_generation += 1
+        generation = self.launch_generation
         self.state.game_running = True
         profile = self.state.profile
+        self.state.launch_profile = profile
         if self.state.sage:
             self.state.launch_profile = profile
             self.state.launch_owner = None
@@ -701,6 +749,7 @@ class LauncherWindow(QMainWindow):
         process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         def graphics_done(code, status):
             process.deleteLater()
+            if generation != self.launch_generation: return
             if code != 0:
                 self.state.game_running = False
                 if self.state.launch_profile == profile: self.state.launch_phase = "failed"
@@ -711,7 +760,7 @@ class LauncherWindow(QMainWindow):
             self.worker = game
             game.setProcessEnvironment(self.environment())
             def closed(code, status):
-                if self.worker is not game:
+                if self.worker is not game or generation != self.launch_generation:
                     game.deleteLater()
                     return
                 self.state.game_running = False

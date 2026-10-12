@@ -13,7 +13,7 @@ from state import LauncherState
 from app import LauncherWindow
 from community import CommunityWindow
 from security_setup import SecuritySetupWindow
-from PySide6.QtWidgets import QApplication, QLineEdit, QPushButton, QLabel
+from PySide6.QtWidgets import QApplication, QLineEdit, QPushButton, QLabel, QMessageBox
 from PySide6.QtCore import Qt, QProcess
 
 
@@ -173,7 +173,33 @@ class WidgetChecks(unittest.TestCase):
         self.window.prepare()
         self.assertEqual(calls, [[("sage-steam", "cnc3")]])
 
+    def test_stop_remains_available_during_stalled_launch(self):
+        self.window.state.game_running = True
+        self.window.state.busy = True
+        self.window.refresh_view()
+        self.assertTrue(self.window.stop_button.isEnabled())
+        self.assertFalse(self.window.play_button.isEnabled())
+
+    def test_stop_during_graphics_preparation_prevents_late_launch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            launched = folder / "launched"
+            backend = folder / "backend.sh"
+            backend.write_text('case "$1" in graphics) sleep .3 ;; launch) touch "' + str(launched) + '" ;; stop) echo "Launch stopped." ;; status) echo "install=idle" ;; esac\n')
+            self.window.backend = backend
+            self.window.start_game()
+            with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                self.window.stop_launch()
+            deadline = time.monotonic() + 1
+            while time.monotonic() < deadline:
+                QApplication.processEvents()
+                time.sleep(.01)
+            self.assertFalse(launched.exists())
+            self.assertFalse(self.window.state.game_running)
+            self.assertFalse(self.window.stopping_launch)
+
     def tearDown(self):
+        self.window.stopping_launch = False
         self.window.state.game_running = False
         self.window.state.busy = False
         self.window.close()

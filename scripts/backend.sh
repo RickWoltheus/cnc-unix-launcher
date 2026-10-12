@@ -41,6 +41,7 @@ source "$RESOURCES/scripts/settings.sh"
 source "$RESOURCES/scripts/online.sh"
 source "$RESOURCES/scripts/compatibility.sh"
 source "$RESOURCES/scripts/sage.sh"
+source "$RESOURCES/scripts/launch-session.sh"
 source "$RESOURCES/scripts/steam-webhelper.sh"
 source "$RESOURCES/scripts/security.sh"
 if compatibility_profile "$PROFILE"; then GAME="$(compatibility_directory "$PROFILE")"; fi
@@ -124,6 +125,12 @@ if [[ "$ACTION" == status ]]; then
   exit 0
 fi
 
+if [[ "$ACTION" == stop ]]; then
+  compatibility_profile "$PROFILE" || classic_profile "$PROFILE" || native_profile "$PROFILE" || [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || select_mod "$PROFILE"
+  stop_launch "$PROFILE"
+  exit 0
+fi
+
 if [[ "$ACTION" == game-steam ]]; then
   sage_profile "$PROFILE" || fail 'This game does not use the Steam launch guide.'
   if [[ "$PLATFORM" == linux ]]; then sage_open_steam "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)"
@@ -143,6 +150,7 @@ fi
 
 if [[ "$ACTION" == launch ]]; then
   [[ ! -d "$ROOT/.install-lock" ]] || fail 'An installation or Steam download is still running. Wait for it to finish before playing.'
+  launch_session_register "$PROFILE"
   if compatibility_profile "$PROFILE"; then compatibility_launch "$@"; fi
   if native_profile "$PROFILE"; then
     if compatibility_running || pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'Quit the running game before switching profiles.'; fi

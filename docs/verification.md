@@ -1,5 +1,21 @@
 # Verification before release
 
+## Launch recovery — 2026-10-12
+
+Both frontends expose a confirmed Stop & retry action in the footer and game
+launch guide. Recovery retains installed data and saves, but can lose unsaved
+progress. Linux Proton recovery asks native Steam to close, potentially
+interrupting other Steam activity. macOS Wine cleanup stays prefix-scoped.
+
+`tests/launch-recovery.sh` passed on macOS and Linux with synthetic processes:
+owned parent/child cleanup, detached-game cleanup, wrong-profile isolation,
+stale owner rejection, reused detached PID protection, stale launch-lock cleanup,
+and repeated recovery. Linux UI tests cover enabled recovery during a stalled
+launch and cancellation during graphics preparation preventing a late launch.
+Mac model tests, existing Wine lifecycle/Sage checks and the ARM64 build passed.
+No real game, Steam authentication or existing installation was used in these
+recovery checks. Real Wine/Proton shutdown behavior remains a manual check.
+
 ## Isolated Ubuntu desktop checks — 2026-10-12
 
 An isolated Ubuntu 24.04.5 x86_64 OrbStack machine on Apple Silicon used only

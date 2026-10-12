@@ -141,6 +141,7 @@ struct GameLaunchGuideView: View {
             HStack {
                 Button(guide.copy.terminalLabel) { model.openGameSteam() }
                     .disabled(message.stage == 0 || model.launchGuidePhase == "steam-install")
+                LaunchStopButton(model: model)
                 Spacer()
                 Button(guide.copy.continueLabel, action: onClose)
             }
