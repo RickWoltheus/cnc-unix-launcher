@@ -17,6 +17,6 @@ PLIST
 xcrun swiftc -parse-as-library "$REPO/Sources/LauncherModel.swift" "$REPO/Sources/ProductInfo.swift" \
   "$REPO/Sources/RecoveryAdvice.swift" "$REPO/Sources/SteamGuidance.swift" \
   "$REPO/Sources/SetupPolicy.swift" "$REPO/Sources/GameInfo.swift" "$REPO/Sources/Theme.swift" \
-  "$REPO/Sources/SteamGuide.swift" "$REPO/tests/SteamGuideChecks.swift" \
+  "$REPO/Sources/SteamGuide.swift" "$REPO/Sources/LaunchRecovery.swift" "$REPO/tests/SteamGuideChecks.swift" \
   -o "$APP/Contents/MacOS/SteamGuideChecks"
 "$APP/Contents/MacOS/SteamGuideChecks"
