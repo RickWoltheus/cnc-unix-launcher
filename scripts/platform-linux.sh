@@ -62,17 +62,26 @@ launch_engine() {
     "$(app_id "$ENGINE")" "$@"
 }
 install_linux_tools() {
-  if sage_profile "$PROFILE"; then fail 'Install the native Linux Steam client from your distribution, open it and return to the launcher. Steam supplies Proton and its graphics dependencies.'; fi
   [[ -f /etc/os-release ]] || fail 'Cannot identify this Linux distribution.'
   source /etc/os-release
   case "${ID:-} ${ID_LIKE:-}" in
     *ubuntu*|*debian*|*linuxmint*|*pop*)
+      if sage_profile "$PROFILE"; then
+        printf 'Install the native Steam client. Steam handles sign-in, Proton and game downloads.\n'
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install -y steam-installer
+        sage_steam_ready || fail 'Steam installation is incomplete. Check the package manager output above.'
+        echo 'Steam installed. Return to the launcher and use Open Steam setup.'
+        return
+      fi
       printf 'Install Flatpak, download tools and 32-bit support for Valve SteamCMD.\n'
       sudo apt-get update
       sudo apt-get install -y flatpak curl file zip unzip xz-utils lib32gcc-s1 lib32stdc++6
       if compatibility_profile "$PROFILE"; then sudo apt-get install -y wine wine64 libwine libgl1 libvulkan1 procps; fi
       ;;
-    *) fail 'Automatic dependency setup supports Ubuntu/Debian-based desktops. Install Flatpak, curl, file, zip and 32-bit glibc/libstdc++ through your distribution, then retry.' ;;
+    *) if sage_profile "$PROFILE"; then fail 'Install the native Steam client from your distribution, then return here.'; fi
+       fail 'Automatic dependency setup supports Ubuntu/Debian-based desktops. Install Flatpak, curl, file, zip and 32-bit glibc/libstdc++ through your distribution, then retry.' ;;
   esac
   dependencies_ready || fail 'Linux dependencies are still incomplete.'
   echo 'Linux dependencies installed. Return to the launcher.'

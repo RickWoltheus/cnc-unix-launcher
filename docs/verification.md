@@ -1,5 +1,38 @@
 # Verification before release
 
+## Isolated Ubuntu desktop checks — 2026-10-12
+
+An isolated Ubuntu 24.04.5 x86_64 OrbStack machine on Apple Silicon used only
+the project mount and a separate test installation. Xvfb with Openbox supplied
+the desktop. Its llvmpipe CPU renderer has no GPU passthrough; these checks do
+not establish hardware rendering performance or general Linux compatibility.
+
+- The packaged startup script identified missing desktop libraries on the fresh
+  system. Its actual Ubuntu package installation made preflight and packaged Qt
+  self-check pass. The packaged launcher and synthetic Steam guide rendered
+  under Openbox with unfinished steps locked.
+- The backend installed native Steam and its i386 dependencies through Ubuntu's
+  package manager. No Steam sign-in was attempted. Actual GeneralsX 1.0.2 Flatpak
+  and pinned OpenRA installation succeeded; Generals gameplay was not tested.
+- The user's owned Tiberian Dawn files were copied locally into the isolated
+  installation and imported using OpenRA. No third-party game-data download was
+  used. OpenRA rendered its first-run setup screen; simulated mouse input
+  advanced through the setup screens to the main menu. Telemetry was declined
+  during testing. Subsequent automated clicks did not yet reach single-player
+  setup, so match play and save/load remain unverified. The VM lacks an audio
+  device, so audio remains unverified too.
+- The actual Linux SteamCMD bootstrap passed download verification and extraction,
+  but `steamcmd.sh +quit` crashed loading Steam API (exit 139). This requires
+  reproduction on native x86_64 Linux before attributing it to the launcher or
+  to OrbStack emulation. SteamCMD authentication/download is not verified.
+- Fresh Steam/Proton preparation previously required Proton before opening Steam
+  setup. The Linux fix opens setup first and keeps Play blocked until Proton and
+  owned files are ready. All 23 Linux UI tests and Linux/macOS Sage readiness
+  fixture tests passed. Fixture tests did not launch Steam or games.
+
+Linux remains experimental. Native GPU gameplay, real Steam sign-in, Generals
+and mods, Wine/Proton profiles, Wayland and other distributions remain untested.
+
 ## Passed on 2026-10-06
 
 Headless validation ran on an Apple M3 Pro, macOS 26.0.1. No launcher window,

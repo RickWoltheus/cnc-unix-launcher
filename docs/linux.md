@@ -115,6 +115,12 @@ Use **Open Steam setup** in Prepare Linux, then **Open Steam install** in the
 download step. Credentials stay in Valve’s client. No SteamCMD password window
 is used for these games on Linux. See [C&C 3 setup](cnc3.md).
 
+On Ubuntu/Debian, Prepare Linux can install the native `steam-installer` package
+and its 32-bit dependencies. Your distribution must make that package available
+in its configured repositories. Steam setup can open before Proton is installed;
+Play remains blocked until the selected Proton runtime and owned game files are
+ready. Other distributions require installing native Steam separately.
+
 After Play, a nonmodal launch guide explains Steam/Proton startup and sign-in.
 It hides when the game process is detected. macOS microphone instructions are
 omitted on Linux. Update details remain in Steam; the guide does not inspect

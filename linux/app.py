@@ -600,6 +600,8 @@ class LauncherWindow(QMainWindow):
         if not self.state.tools_ready:
             self.waiting_dependencies = True
             self.open_terminal("Linux dependencies", ["linux-tools", self.state.selected_game])
+        elif self.state.sage:
+            self.run_actions([("sage-steam", self.state.selected_game)])
         else:
             self.run_actions([("engine", self.state.selected_game), ("steam", self.state.selected_game)])
         if self.state.sage: self.notice.setText(self.state.sage_copy["prepare"])

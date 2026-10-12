@@ -50,6 +50,10 @@ for profile in cnc3 kw ra3; do
     [[ "$(sage_config "$folder" "$profile")" == "$folder/ra3_English_1.10.SKUDef" ]]
     [[ "$(sage_executable "$folder" "$(sage_config "$folder" "$profile")")" == "$folder/RetailExe/1.10/$executable" || "$(uname -s)" == Darwin ]]
   fi
+  printf '"CompatToolMapping"\n{\n}\n' > "$GX_STEAM_ROOT/config/config.vdf"
+  sage_engine_ready "$profile"
+  if sage_assets_ready "$profile"; then echo 'Play readiness accepted without installed/selected Proton.'; exit 1; fi
+  printf '"CompatToolMapping"\n{\n"%s"\n{\n"name" "proton_11"\n}\n}\n' "$appid" > "$GX_STEAM_ROOT/config/config.vdf"
   sage_assets_ready "$profile"
   # The launcher copy is untouched on Linux; Steam owns files and prefix updates.
   sage_engine_ready() { return 0; }
