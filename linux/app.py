@@ -693,7 +693,7 @@ class LauncherWindow(QMainWindow):
 
     def stop_launch(self):
         if self.stopping_launch or (self.state.busy and not self.state.game_running): return
-        profile = self.state.launch_profile or self.state.profile
+        profile = (self.state.launch_profile or self.state.profile) if self.state.game_running else self.state.profile
         detail = "Stop the selected game and its launch processes? Unsaved progress may be lost. Installed files and saves are kept."
         if self.state.sage:
             detail += " This also closes native Steam and may interrupt other Steam games or downloads."

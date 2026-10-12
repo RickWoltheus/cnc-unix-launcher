@@ -383,7 +383,7 @@ final class LauncherModel: ObservableObject {
         guard !stoppingLaunch, !busy || gameRunning else { return }
         stoppingLaunch = true
         busy = true
-        let profile = recoveryProfile ?? activeProfile
+        let profile = activeLaunchID == nil ? activeProfile : (recoveryProfile ?? activeProfile)
         let script = backend
         status = "Stopping game and its Steam session…"
         Task {
