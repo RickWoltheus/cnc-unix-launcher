@@ -430,7 +430,7 @@ class LauncherWindow(QMainWindow):
         self.steam_help_title.setStyleSheet(f"color:{accent}; font-weight:bold;")
         self.choose_title.setText(self.state.game["title"].upper())
         self.choose_summary.setText(self.state.game["summary"])
-        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else self.state.sage_copy["detail"] if self.state.sage else "Experimental Wine + cnc-ddraw using owned Steam files. Gameplay, graphics and Steam launch validation pending." if self.state.compatibility else "Native GeneralsX using your owned Steam assets."))
+        self.choose_engine.setText(f'POWERED BY {self.state.game["engine"].upper()}\n\n' + ("Original C&C engine through Vanilla Conquer using owned Steam files. Original rules and missions; separate settings and saves from OpenRA. Gameplay remains experimental." if self.state.original else "Native OpenRA using owned Steam assets. Rules, balance and missions differ from the original games." if self.state.classic else self.state.sage_copy["detail"] if self.state.sage else "Experimental Wine + cnc-ddraw using owned Steam files. Gameplay, graphics and Steam launch validation pending." if self.state.compatibility else "Native GeneralsX using your owned Steam assets."))
         tint = QColor(accent)
         self.choose_engine_panel.setStyleSheet(f"QFrame {{ background:rgba({tint.red()},{tint.green()},{tint.blue()},20); border:1px solid {accent}; }} QLabel {{ background:transparent; border:none; }}")
         self.choose_logo.setText(self.state.game["emblem"])
@@ -473,7 +473,8 @@ class LauncherWindow(QMainWindow):
         self.steam_help_title.setText("Steam Proton setup" if self.state.sage else self.state.steam_guidance["title"])
         self.steam_help_detail.setText(self.state.sage_copy["prepare"] if self.state.sage else self.state.steam_guidance["detail"])
         self.play_title.setText(self.state.title)
-        self.play_summary.setText(self.state.mod["summary"] if self.state.mod else ("OpenRA is ready. Modernized gameplay using your owned Steam assets." if self.state.classic else "Your original game is ready to deploy."))
+        self.profile_buttons["original"].setText("OpenRA base game" if self.state.game["engine"] == "OpenRA" else "Original game")
+        self.play_summary.setText(self.state.mod["summary"] if self.state.mod else ("Vanilla Conquer: original rules and missions using your owned Steam files." if self.state.original else "OpenRA is ready. Modernized gameplay using your owned Steam assets." if self.state.classic else "Your original game is ready to deploy."))
         self.play_button.setText(("STARTING…" if self.state.sage and self.state.launch_phase != "playing" else "GAME RUNNING") if self.state.game_running else ("INSTALL & PLAY →" if self.state.needs_install else "PLAY →"))
         self.play_button.setEnabled(self.state.can_enter(3))
         self.stop_button.setEnabled(not self.stopping_launch and (not self.state.busy or self.state.game_running))
@@ -483,8 +484,8 @@ class LauncherWindow(QMainWindow):
         self.graphics.setEnabled(not (self.state.classic or self.state.compatibility) and not self.state.busy and not self.state.game_running)
         self.graphics.setVisible(not (self.state.classic or self.state.compatibility))
         self.graphics_label.setVisible(not (self.state.classic or self.state.compatibility))
-        self.graphics.setToolTip("OpenRA uses its own in-game graphics settings." if self.state.classic else "")
-        self.play_note.setText(self.state.sage_copy["play"] if self.state.sage else "Experimental Wine support. Windowed 1280×720 upscaling; borderless fullscreen. Firestorm is available in Tiberian Sun’s menu. CnCNet is not installed yet." if self.state.compatibility else "OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
+        self.graphics.setToolTip("Use the engine’s in-game settings." if self.state.classic else "")
+        self.play_note.setText("Vanilla Conquer keeps the original rules and missions. Use its in-game settings. OpenRA mods belong to the OpenRA entries." if self.state.original else self.state.sage_copy["play"] if self.state.sage else "Experimental Wine support. Windowed 1280×720 upscaling; borderless fullscreen. Firestorm is available in Tiberian Sun’s menu. CnCNet is not installed yet." if self.state.compatibility else "OpenRA uses its own graphics settings. Windowed mode uses 1280×720; fullscreen follows the desktop." if self.state.classic else "Windowed mode uses 1280×720; Balanced is recommended. Zero Hour mod support is experimental.")
         self.mod_section.setVisible(bool(self.state.available_mods))
         for profile, button in self.profile_buttons.items():
             visible = profile == "original" or any(mod["id"] == profile for mod in self.state.available_mods)
@@ -873,7 +874,7 @@ def main():
         raise SystemExit("Use the native SwiftUI launcher on macOS. This UI is for Linux.")
     if "--self-check" in sys.argv:
         state = LauncherState(RESOURCES)
-        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "compatibility.sh", "sage.sh", "steam-webhelper.sh"):
+        for name in ("downloads.sh", "security.sh", "backend.sh", "platform-linux.sh", "steam-status.sh", "classic.sh", "original.sh", "build-original.sh", "compatibility.sh", "launch-session.sh", "sage.sh", "steam-webhelper.sh"):
             subprocess.run(["/bin/bash", "-n", str(RESOURCES / "scripts" / name)], check=True)
         if len(state.mods) != 7 or len(state.policy["steps"]) != 4:
             raise SystemExit("Packaged catalog or setup policy is incomplete.")

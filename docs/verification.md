@@ -1,5 +1,28 @@
 # Verification before release
 
+## Original-engine options — 2026-10-13
+
+Separate Vanilla Conquer sidebar entries preserve the existing OpenRA games and
+mod catalog. Source revision and SDL2 archives are SHA-256 pinned before build;
+portable runtimes carry their licenses and corresponding source. Native ARM64
+Mac and x86_64 Linux engines compiled successfully. The Mac app’s bundled runtime
+passed integrity checks after signing and copying into an isolated installation.
+
+Both engines rendered original intro movies using the user's owned Steam files
+in isolated direct-engine checks. The packaged backend then imported both Steam
+downloads, including the Red Alert disc layout. A bounded packaged Red Alert
+check rendered its startup screen; Stop & retry closed that test. These checks
+did not validate a full campaign, expansion, save/load, audio or multiplayer.
+No copyrighted game data was downloaded from third-party sources or bundled.
+
+Synthetic Original-mode integration tests passed on Mac and Linux: existing
+Steam import, linked source-directory lookup, disc mapping, separate settings
+and saves, repeated imports and corrupt runtime rejection. Mac model checks
+passed; all 26 Linux UI checks passed, including per-engine prerequisite gating
+and an empty OpenRA mod catalog for Original entries. Linux packaged preflight,
+self-check and virtual X11 launcher/guide smoke checks passed. This is not Linux
+hardware gameplay evidence. Original gameplay remains experimental.
+
 ## Launch recovery — 2026-10-12
 
 Both frontends expose a confirmed Stop & retry action in the footer and game

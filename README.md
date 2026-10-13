@@ -20,7 +20,8 @@ dependency installation. The goal is
 to take most routine technical work off your hands, while keeping those approvals
 and credentials under your control.
 
-The current catalog covers C&C/Tiberian Dawn and Red Alert through OpenRA,
+The development catalog offers C&C/Tiberian Dawn and Red Alert through either
+Original (Vanilla Conquer) or OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
 Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The v0.4.0 prerelease adds
 C&C 3, Kane’s Wrath and Red Alert 3 support: free Wine + mtld3d
@@ -179,6 +180,13 @@ and fall back to text emblems when artwork is unavailable.
 
 ## Classic games
 
+Tiberian Dawn and Red Alert each offer **Original (Vanilla Conquer)** and
+**OpenRA** as separate sidebar choices. Original mode runs a native port of the
+original engine using your Steam files; OpenRA reimagines rules, balance and
+missions. Their settings and saves are separate, and OpenRA mods remain in the
+OpenRA choices. Original-mode gameplay is experimental. See the
+[classic-game setup](docs/classic-games.md) for asset mapping and test limits.
+
 C&C and Red Alert use owned English Ultimate Collection assets through OpenRA.
 OpenRA changes rules, balance and missions; it is not the original Windows game.
 Red Alert setup also downloads your owned C&C copy for the required desert tileset.
@@ -187,8 +195,8 @@ remain pending. See [classic game setup](docs/classic-games.md).
 
 ## Native classic mods
 
-C&C offers **Combined Arms 1.09** and **Tiberian Dawn HD playtest-20260222**;
-Red Alert offers Combined Arms. Each uses its own pinned OpenRA runtime and
+C&C · OpenRA offers **Combined Arms 1.09** and **Tiberian Dawn HD playtest-20260222**;
+Red Alert · OpenRA offers Combined Arms. Each uses its own pinned OpenRA runtime and
 isolated profile. Select the mod and use the single Install & Play button.
 
 Combined Arms uses owned C&C and Red Alert Steam assets. Tiberian Dawn HD needs

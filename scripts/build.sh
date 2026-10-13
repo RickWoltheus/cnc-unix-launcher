@@ -2,6 +2,7 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 IFS=$'\t' read -r PRODUCT_NAME PRODUCT_VERSION PRODUCT_REPO MAC_ARCHIVE LINUX_ARCHIVE EXECUTABLE < "$REPO/manifests/product.tsv"
+bash "$REPO/scripts/build-original.sh"
 APP="$REPO/dist/$PRODUCT_NAME.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/scripts" "$APP/Contents/Resources/manifests" "$APP/Contents/Resources/resources"
 xcrun swiftc -parse-as-library -O -target arm64-apple-macos15.0 \
@@ -18,6 +19,9 @@ cp "$REPO/scripts/sage.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/scripts/launch-session.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/scripts/compatibility.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/scripts/classic.sh" "$APP/Contents/Resources/scripts/"
+cp "$REPO/scripts/original.sh" "$APP/Contents/Resources/scripts/"
+cp "$REPO/scripts/build-original.sh" "$APP/Contents/Resources/scripts/"
+ditto "$REPO/resources/original-runtime" "$APP/Contents/Resources/resources/original-runtime"
 cp "$REPO"/manifests/*.txt "$APP/Contents/Resources/manifests/"
 cp "$REPO/scripts/steam-status.sh" "$APP/Contents/Resources/scripts/"
 cp "$REPO/manifests/steam-webhelper.sha256" "$APP/Contents/Resources/manifests/"

@@ -12,9 +12,16 @@ or third-party files included with the package.
   See [linux/THIRD-PARTY.md](linux/THIRD-PARTY.md), bundled `licenses/`, and the
   retained package metadata. Qt libraries are dynamically linked and unmodified.
 - **Downloaded engines, runtimes and mods:** retain their publishers' licenses.
-  They are not bundled into the launcher download. See [community credits](docs/community.md)
+  Apart from the Vanilla Conquer runtime below, they are not bundled into the launcher download. See [community credits](docs/community.md)
   and [compatibility notices](manifests/compatibility-notice.txt) for sources and
   relevant attribution.
+- **Bundled Vanilla Conquer and SDL2:** Vanilla Conquer is GPL-3.0-or-later with
+  the additional terms in its upstream `License.txt`; SDL2 uses the zlib license.
+  They run as separate executables, without linking into the MIT launcher.
+  Pinned corresponding source archives, the build script, checksums and licenses
+  are included under `resources/original-runtime/` in the packaged resources.
+  The engine package contains no EA game data. Build sources are recorded in
+  [manifests/original-sources.tsv](manifests/original-sources.tsv).
 - **SteamCMD:** proprietary Valve software, downloaded separately from Valve.
 - **Game assets and branding:** belong to EA and their respective rights holders.
   A legally owned Steam copy is required. Original game data is not provided by

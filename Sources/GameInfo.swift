@@ -30,7 +30,8 @@ struct GameInfo: Identifiable {
         return copy["macos"] ?? [:]
     }()
     var usesGeneralsGraphics: Bool { engine == "GeneralsX" }
-    var isClassic: Bool { engine == "OpenRA" }
+    var isOriginal: Bool { engine == "Vanilla Conquer" }
+    var isClassic: Bool { engine == "OpenRA" || isOriginal }
     var color: Color {
         let value = UInt32(hex, radix: 16) ?? 0xEFAD40
         return Color(red: Double((value >> 16) & 255) / 255,

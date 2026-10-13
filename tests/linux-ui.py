@@ -52,6 +52,19 @@ class StateChecks(unittest.TestCase):
             self.state.values[game + "_assets"] = "ready"
             self.assertTrue(self.state.can_enter(3))
 
+    def test_original_options_are_separate_from_openra(self):
+        for game in ("cnc-original", "ra-original"):
+            self.state.selected_game = game
+            self.assertTrue(self.state.original)
+            self.assertEqual(self.state.available_mods, [])
+            self.state.update("platform=ready\nsteam=ready\ninstall=idle\ncnc_engine=ready\ncnc_assets=ready\nra_engine=ready\nra_assets=ready")
+            self.assertFalse(self.state.can_enter(2))
+            self.state.values[game + "_engine"] = "ready"
+            self.assertTrue(self.state.can_enter(2))
+            self.assertFalse(self.state.can_enter(3))
+            self.state.values[game + "_assets"] = "ready"
+            self.assertTrue(self.state.can_enter(3))
+
     def test_launch_guide_uses_current_process_and_steam_client(self):
         self.state.selected_game = "cnc3"
         self.state.launch_profile = "cnc3"

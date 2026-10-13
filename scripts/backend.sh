@@ -29,13 +29,14 @@ select_mod() {
 }
 if [[ "$PROFILE" == base ]]; then ENGINE="$ROOT/engine-base/GeneralsX.app"; GAME="$ROOT/Generals"; fi
 source "$RESOURCES/scripts/downloads.sh"
-find_game_file() { find "$1" -maxdepth 1 -type f -iname "$2" -print | head -n 1; }
+find_game_file() { find -H "$1" -maxdepth 1 -type f -iname "$2" -print | head -n 1; }
 steam_manifest_ready() {
   local manifest="$1/steamapps/appmanifest_$2.acf"
   [[ -f "$manifest" ]] && [[ "$(awk '$1=="\"StateFlags\"" {gsub(/"/,"",$2); print $2}' "$manifest")" == 4 ]]
 }
 source "$RESOURCES/scripts/platform-$PLATFORM.sh"
 source "$RESOURCES/scripts/classic.sh"
+source "$RESOURCES/scripts/original.sh"
 source "$RESOURCES/scripts/native-mods.sh"
 source "$RESOURCES/scripts/settings.sh"
 source "$RESOURCES/scripts/online.sh"
@@ -48,6 +49,7 @@ if compatibility_profile "$PROFILE"; then GAME="$(compatibility_directory "$PROF
 if classic_profile "$PROFILE"; then
   GAME="$ROOT/$(classic_directory "$PROFILE")"; ENGINE="$(classic_engine_path "$PROFILE")"
 fi
+if original_profile "$PROFILE"; then GAME="$ROOT/$(classic_directory "$(original_source_id "$PROFILE")")"; fi
 if native_profile "$PROFILE"; then
   native_select "$PROFILE"; ENGINE="$NATIVE_ENGINE"
   if [[ "$NATIVE_SOURCE" == remastered ]]; then GAME="$ROOT/Remastered"; else GAME="$ROOT/RedAlert"; fi
@@ -60,6 +62,7 @@ assets_ready() {
   if compatibility_profile "$game"; then compatibility_assets_ready "$game"; return; fi
   if native_profile "$game"; then native_ready "$game"; return; fi
   if classic_profile "$game"; then classic_raw_ready "$folder" "$game" && classic_content_ready "$game"; return; fi
+  if original_profile "$game"; then original_assets_ready "$game"; return; fi
   local archives=(INIZH.big TexturesZH.big W3DZH.big MapsZH.big)
   if [[ "$game" == base ]]; then appid=2229870; archives=(INI.big Textures.big W3D.big Maps.big); fi
   steam_manifest_ready "$folder" "$appid" || return 1
@@ -99,6 +102,10 @@ if [[ "$ACTION" == status ]]; then
     classic_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
     assets_ready "$ROOT/$(classic_directory "$game")" "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
+  for game in cnc-original ra-original; do
+    original_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
+    original_assets_ready "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
+  done
   while IFS=$'\t' read -r id rest; do
     native_engine_ready "$id" && echo "native_engine_$id=ready" || echo "native_engine_$id=missing"
     native_ready "$id" && echo "$id=ready" || echo "$id=missing"
@@ -108,7 +115,7 @@ if [[ "$ACTION" == status ]]; then
     compatibility_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
     compatibility_assets_ready "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
-  for game in vanilla base cnc ra combined-arms tdhd ra2 yuri ts cnc3 kw ra3; do
+  for game in vanilla base cnc ra cnc-original ra-original combined-arms tdhd ra2 yuri ts cnc3 kw ra3; do
     state=idle
     if [[ -f "$ROOT/steam-$game.status" ]]; then state="$(cat "$ROOT/steam-$game.status")"; fi
     case "$state" in waiting|installing-rosetta|waiting-password|awaiting-guard|updating-steam|downloading|validating|complete|incomplete|wrong-password|wrong-account|wrong-code|expired-code|rate-limited|no-license|network-error) ;; *) state=idle ;; esac
@@ -126,7 +133,7 @@ if [[ "$ACTION" == status ]]; then
 fi
 
 if [[ "$ACTION" == stop ]]; then
-  compatibility_profile "$PROFILE" || classic_profile "$PROFILE" || native_profile "$PROFILE" || [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || select_mod "$PROFILE"
+  compatibility_profile "$PROFILE" || classic_profile "$PROFILE" || original_profile "$PROFILE" || native_profile "$PROFILE" || [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || select_mod "$PROFILE"
   stop_launch "$PROFILE"
   exit 0
 fi
@@ -151,17 +158,18 @@ fi
 if [[ "$ACTION" == launch ]]; then
   [[ ! -d "$ROOT/.install-lock" ]] || fail 'An installation or Steam download is still running. Wait for it to finish before playing.'
   launch_session_register "$PROFILE"
+  if original_profile "$PROFILE"; then original_launch "$@"; fi
   if compatibility_profile "$PROFILE"; then compatibility_launch "$@"; fi
   if native_profile "$PROFILE"; then
-    if compatibility_running || pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'Quit the running game before switching profiles.'; fi
+    if compatibility_running || launcher_native_running; then fail 'Quit the running game before switching profiles.'; fi
     native_launch "$@"
   fi
   if classic_profile "$PROFILE"; then
-    if compatibility_running || pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
+    if compatibility_running || launcher_native_running; then fail 'A game is already running. Quit it before switching games.'; fi
     classic_launch "$@"
   fi
   [[ "$PROFILE" == vanilla || "$PROFILE" == base ]] || select_mod "$PROFILE"
-  if compatibility_running || pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'A game is already running. Quit it before switching games.'; fi
+  if compatibility_running || launcher_native_running; then fail 'A game is already running. Quit it before switching games.'; fi
   if ! engine_ready "$ENGINE"; then
     repair_profile=vanilla
     [[ "$PROFILE" != base ]] || repair_profile=base
@@ -189,7 +197,7 @@ if [[ "$ACTION" == launch ]]; then
 fi
 
 platform_supported || fail "$(platform_requirement_message)"
-if compatibility_running || pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1; then fail 'Quit the game before installing, downloading assets, or changing settings.'; fi
+if compatibility_running || launcher_native_running; then fail 'Quit the game before installing, downloading assets, or changing settings.'; fi
 mkdir -p "$ROOT" "$CACHE"
 LOCK="$ROOT/.install-lock"
 if ! mkdir "$LOCK" 2>/dev/null; then
@@ -219,6 +227,7 @@ case "$ACTION" in
   security-update) security_update ;;
   security-scan-cache) security_scan_cache ;;
   graphics)
+    if original_profile "$PROFILE"; then echo 'Original mode uses its own game settings. Display mode is applied at launch.'; exit 0; fi
     if compatibility_profile "$PROFILE"; then echo "Display mode is applied at launch; graphics settings stay in the game."; exit 0; fi
     if classic_profile "$PROFILE" || native_profile "$PROFILE"; then echo 'OpenRA uses its own graphics settings. Display mode is applied at launch.'; exit 0; fi
     if pgrep -x GeneralsXZH >/dev/null 2>&1; then fail 'Quit Zero Hour before changing graphics settings.'; fi
@@ -243,7 +252,8 @@ case "$ACTION" in
     echo 'Graphics preset saved; previous options backed up.'
     ;;
   engine)
-    if compatibility_profile "$PROFILE"; then compatibility_install
+    if original_profile "$PROFILE"; then original_install
+    elif compatibility_profile "$PROFILE"; then compatibility_install
     elif classic_profile "$PROFILE"; then classic_install; else engine_install; fi
     ;;
   steam)
@@ -259,12 +269,15 @@ case "$ACTION" in
       if sage_assets_ready "$PROFILE"; then echo complete; else echo idle; fi > "$ROOT/steam-$PROFILE.status"
       steam_finished=1; exit 0
     fi
-    [[ "$PROFILE" == vanilla || "$PROFILE" == base || "$PROFILE" == cnc || "$PROFILE" == ra ]] || native_profile "$PROFILE" || compatibility_profile "$PROFILE" || fail 'Choose a game for Steam downloads.'
+    [[ "$PROFILE" == vanilla || "$PROFILE" == base || "$PROFILE" == cnc || "$PROFILE" == ra ]] || original_profile "$PROFILE" || native_profile "$PROFILE" || compatibility_profile "$PROFILE" || fail 'Choose a game for Steam downloads.'
     appid=2732960; title='Zero Hour'
     if compatibility_profile "$PROFILE"; then
       appid="$(compatibility_metadata "$PROFILE" 5)"; title="$(compatibility_metadata "$PROFILE" 2)"
     fi
     if [[ "$PROFILE" == base ]]; then appid=2229870; title=Generals; fi
+    if original_profile "$PROFILE"; then
+      appid="$(compatibility_metadata "$PROFILE" 5)"; title="$(compatibility_metadata "$PROFILE" 2)"
+    fi
     if classic_profile "$PROFILE"; then
       appid="$(awk -F '\t' -v id="$PROFILE" '$1==id {print $5}' "$RESOURCES/manifests/games.tsv")"
       title="$(classic_app_title "$PROFILE")"
@@ -306,7 +319,8 @@ case "$ACTION" in
     esac
     printf 'validating\n' > "$ROOT/steam-$PROFILE.status"
     if native_profile "$PROFILE"; then native_finish
-    elif classic_profile "$PROFILE"; then classic_import; fi
+    elif classic_profile "$PROFILE"; then classic_import
+    elif original_profile "$PROFILE"; then original_import; fi
     assets_ready "$GAME" "$PROFILE" || fail "Steam files are incomplete. No subscription means this account lacks the $title license. Retry after checking ownership."
     steam_finished=1
     printf 'complete\n' > "$ROOT/steam-$PROFILE.status"
@@ -323,6 +337,10 @@ case "$ACTION" in
   import-classic)
     classic_profile "$PROFILE" || fail 'Choose C&C or Red Alert for this import.'
     classic_import
+    ;;
+  import-original)
+    original_profile "$PROFILE" || fail 'Choose an Original game for this import.'
+    original_import
     ;;
   mod)
     select_mod "$PROFILE"

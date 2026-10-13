@@ -1,4 +1,5 @@
 #!/bin/bash
+launcher_native_running() { pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64|vanillatd|vanillara)' >/dev/null 2>&1; }
 compatibility_profile() { awk -F '\t' -v id="$1" '$1==id {found=1} END {exit !found}' "$RESOURCES/manifests/compatibility.tsv"; }
 compatibility_metadata() { awk -F '\t' -v id="$1" -v column="$2" '$1==id {print $column}' "$RESOURCES/manifests/games.tsv"; }
 compatibility_directory() { printf '%s/%s\n' "$ROOT" "$(compatibility_metadata "$1" 6)"; }
@@ -302,7 +303,7 @@ compatibility_launch() {
   if sage_profile "$PROFILE"; then sage_launch "$@"; exit $?; fi
   local full=false width=1280 height=720 binary argument profile="$PROFILE"
   compatibility_running && fail 'A Wine game is already running. Quit it before switching games.'
-  pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1 && fail 'Quit the running game before switching games.'
+  launcher_native_running && fail 'Quit the running game before switching games.'
   compatibility_engine_ready || fail 'Prepare the Wine runtime before playing.'
   compatibility_assets_ready "$profile" || fail 'Download and validate the selected Steam game first.'
   shift 2

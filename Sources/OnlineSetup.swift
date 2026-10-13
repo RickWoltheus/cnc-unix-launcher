@@ -10,6 +10,7 @@ struct OnlineCopy: Decodable {
     let title: String
     let description: String
     let openra: Family
+    let original: Family
     let generals: Family
     let compatibility: Family
     let sage: Family
@@ -25,11 +26,11 @@ struct OnlineCopy: Decodable {
 struct OnlineSetupView: View {
     @ObservedObject var model: LauncherModel
     @State private var hosting = false
-    private var openra: Bool { model.game.isClassic || model.selectedModInfo?.native == true }
+    private var openra: Bool { model.game.engine == "OpenRA" || model.selectedModInfo?.native == true }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             if let copy = OnlineCopy.shared {
-                let family = model.game.isSage ? copy.sage : model.game.isCompatibility ? copy.compatibility : openra ? copy.openra : copy.generals
+                let family = model.game.isOriginal ? copy.original : model.game.isSage ? copy.sage : model.game.isCompatibility ? copy.compatibility : openra ? copy.openra : copy.generals
                 Text(copy.title + " · " + model.activeTitle).font(.title2.bold())
                 Text(copy.description).font(.callout).fixedSize(horizontal: false, vertical: true)
                 Text(family.title).font(.headline).foregroundStyle(model.game.color)
@@ -39,7 +40,7 @@ struct OnlineSetupView: View {
                 Text(family.hosting).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 if openra { Toggle(copy.hostingLabel, isOn: $hosting).font(.callout) }
                 Button(copy.prepareLabel) { model.prepareOnline(hosting: openra && hosting) }
-                    .buttonStyle(.borderedProminent).disabled(model.game.isCompatibility || !model.canEnterStep(3) || model.activeNeedsInstall)
+                    .buttonStyle(.borderedProminent).disabled(model.game.isOriginal || model.game.isCompatibility || !model.canEnterStep(3) || model.activeNeedsInstall)
                 Text(model.status).font(.caption).fixedSize(horizontal: false, vertical: true)
                 Text(copy.resultNote).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Link("Engine multiplayer instructions", destination: family.source).font(.caption)

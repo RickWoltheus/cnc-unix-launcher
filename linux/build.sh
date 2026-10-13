@@ -3,6 +3,7 @@ set -euo pipefail
 [[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]] || { echo 'Build this package on x86_64 Linux.' >&2; exit 1; }
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 IFS=$'\t' read -r PRODUCT_NAME PRODUCT_VERSION PRODUCT_REPO MAC_ARCHIVE LINUX_ARCHIVE EXECUTABLE < "$REPO/manifests/product.tsv"
+bash "$REPO/scripts/build-original.sh"
 python3 -m PyInstaller --noconfirm --clean --onedir --name "$EXECUTABLE" \
   --distpath "$REPO/dist/linux" --workpath "$REPO/.build/linux" --specpath "$REPO/.build/linux" \
   --add-data "$REPO/scripts:share/scripts" --add-data "$REPO/resources:share/resources" \

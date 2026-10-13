@@ -25,7 +25,7 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [TheSuperHackers / GeneralsGameCode](https://github.com/TheSuperHackers/GeneralsGameCode) | Upstream engine preservation and modernization | [Contributors / team](https://github.com/TheSuperHackers/GeneralsGameCode/graphs/contributors) |
 | [Fighter19 & feliwir](https://github.com/Fighter19) | Early SDL3, DXVK and OpenAL work credited by GeneralsX | [Contributors / team](https://github.com/feliwir) |
 | [GeneralsOnline / NGMP](https://github.com/GeneralsOnlineDevelopmentTeam/GameClient) | GeneralsOnline team — multiplayer protocol, client and services integrated by GeneralsX | [Contributors / team](https://github.com/GeneralsOnlineDevelopmentTeam/GameClient/graphs/contributors) |
-| [OpenRA](https://github.com/OpenRA/OpenRA) | Native C&C and Red Alert engines and Steam content import | [Contributors / team](https://github.com/OpenRA/OpenRA/graphs/contributors) |
+| [OpenRA](https://github.com/OpenRA/OpenRA) | Reimagined C&C-inspired games and Steam content import | [Contributors / team](https://github.com/OpenRA/OpenRA/graphs/contributors) |
 | [Combined Arms](https://github.com/Inq8/CAmod) | Inq8 and contributors — OpenRA overhaul | [Contributors / team](https://github.com/Inq8/CAmod/graphs/contributors) |
 | [Tiberian Dawn HD](https://github.com/OpenRA/TiberianDawnHD) | OpenRA contributors — Remastered artwork integration | [Contributors / team](https://github.com/OpenRA/TiberianDawnHD/graphs/contributors) |
 | [Wine](https://www.winehq.org/) | WineHQ contributors — Windows compatibility runtime | [Contributors / team](https://gitlab.winehq.org/wine/wine/-/blob/master/AUTHORS) |
@@ -64,6 +64,8 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [mtld3d / athei](https://github.com/athei/mtld3d) | DirectX 9 to Metal renderer used by C&C 3 and Red Alert 3 on Mac | [Contributors / team](https://github.com/athei/mtld3d/graphs/contributors) |
 | [athei / wine-build](https://github.com/athei/wine-build) | Free Wine runtime packaging and compatibility patches built from CrossOver-derived Wine sources | [Contributors / team](https://github.com/athei/wine-build/graphs/contributors) |
 | [Apple Game Porting Toolkit / D3DMetal](https://developer.apple.com/games/game-porting-toolkit/) | Proprietary DirectX 11/12 translation included by the upstream Wine bundle for compatible applications | [Contributors / team](https://github.com/apple/game-porting-toolkit) |
+| [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer) | TheAssemblyArmada and contributors — native ports of the original Tiberian Dawn and Red Alert engines | [Contributors / team](https://github.com/TheAssemblyArmada/Vanilla-Conquer/graphs/contributors) |
+| [SDL2](https://github.com/libsdl-org/SDL) | SDL contributors — cross-platform window, input and audio support for Vanilla Conquer | [Contributors / team](https://github.com/libsdl-org/SDL/graphs/contributors) |
 
 [C&C Unix Launcher contributors](https://github.com/RickWoltheus/cnc-unix-launcher/graphs/contributors).
 

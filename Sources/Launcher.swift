@@ -176,7 +176,7 @@ struct LauncherView: View {
                 GameLogo(game: model.game, width: 200, height: 110)
                 VStack(alignment: .leading, spacing: 9) {
                     Text("POWERED BY \(model.game.engine.uppercased())").font(.system(size: 12, weight: .bold)).tracking(1.5).foregroundStyle(accent)
-                    Text(model.game.isCompatibility ? model.game.compatibilityDetail : model.game.isClassic ? "A native OpenRA experience using your owned Steam assets. Rules, balance and missions can differ from the original releases." : "A native engine for your owned Steam game. No Windows VM or paid compatibility software.")
+                    Text(model.game.isOriginal ? "The original C&C engine through Vanilla Conquer, using your owned Steam files. Original campaigns and rules; separate settings and saves from OpenRA. Experimental until gameplay checks pass." : model.game.isCompatibility ? model.game.compatibilityDetail : model.game.isClassic ? "A native OpenRA experience using your owned Steam assets. Rules, balance and missions can differ from the original releases." : "A native engine for your owned Steam game. No Windows VM or paid compatibility software.")
                         .font(.system(size: 14)).foregroundStyle(CommandTheme.muted).fixedSize(horizontal: false, vertical: true)
                 }
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading).background(CommandTheme.panel)
@@ -281,7 +281,7 @@ struct LauncherView: View {
                 Button("Set up another game") { step = 0 }.buttonStyle(.plain).foregroundStyle(CommandTheme.muted)
             }.font(.system(size: 12)).disabled(model.gameRunning || model.busy)
             if !model.availableMods.isEmpty { modLibrary }
-            Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : (model.game.isCompatibility ? model.game.compatibilityPlayNote : model.game.isClassic ? "OpenRA uses its own graphics settings. Windowed mode starts at 1280×720; fullscreen follows your desktop." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match."))
+            Text(model.gameRunning ? "Save and quit normally before switching games or installing a mod." : (model.game.isOriginal ? "Vanilla Conquer keeps the original rules and missions. Display mode is applied at launch; use the in-game menu for game settings. OpenRA mods are available in the OpenRA entries." : model.game.isCompatibility ? model.game.compatibilityPlayNote : model.game.isClassic ? "OpenRA uses its own graphics settings. Windowed mode starts at 1280×720; fullscreen follows your desktop." : "Windowed mode uses 1280×720. Balanced graphics is recommended for a smooth first match."))
                 .font(.system(size: 11)).foregroundStyle(CommandTheme.muted)
             VStack(alignment: .leading, spacing: 6) {
                 Text("Missing your favourite mod?").font(.system(size: 13, weight: .semibold))
@@ -308,7 +308,7 @@ struct LauncherView: View {
                             }.frame(width: 140, height: 100)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(model.game.title).font(.system(size: 12, weight: .bold)).frame(height: 30, alignment: .topLeading)
-                                Text("ORIGINAL GAME").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(accent)
+                                Text(model.game.engine == "OpenRA" ? "OPENRA BASE GAME" : "ORIGINAL GAME").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(accent)
                             }.padding(12).frame(width: 140, alignment: .leading)
                         }.background(CommandTheme.panel).clipShape(RoundedRectangle(cornerRadius: 4))
                             .overlay(RoundedRectangle(cornerRadius: 4).stroke(model.selectedMod == model.selectedGame ? accent : CommandTheme.line, lineWidth: 1))

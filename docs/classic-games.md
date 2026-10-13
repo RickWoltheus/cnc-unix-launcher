@@ -1,4 +1,29 @@
-# C&C and Red Alert through OpenRA
+# C&C and Red Alert: Original or OpenRA
+
+The sidebar keeps separate **Original (Vanilla Conquer)** and **OpenRA** options.
+Original mode uses the native original engine, rules and campaigns. OpenRA
+reimagines the games with different rules, balance and missions, and keeps its
+existing mod catalog. Settings, saves and imported content are separate.
+
+Original mode is experimental. The pinned upstream README does not officially
+support Ultimate Collection data; this launcher prepares that owned Steam
+layout rather than downloading replacement data. Both original engines reached
+their intro movies on an Apple Silicon Mac. Full campaign, expansion, save/load,
+audio and network compatibility still need gameplay checks.
+
+Choose an Original sidebar entry and use Prepare. The bundled native engine
+requires no compiler or Homebrew on the player's Mac. Existing owned Steam files
+are imported automatically; otherwise use the usual guided Steam download.
+Red Alert Original only needs Red Alert's Steam download, whereas OpenRA Red
+Alert additionally needs C&C's desert tileset.
+
+Original files live under `original-cnc-original/` or `original-ra-original/`,
+with writable settings and saves in `user/`. Red Alert's `MAIN1.MIX` through
+`MAIN4.MIX` are copied to `allied/`, `soviet/`, `counterstrike/` and `aftermath/`
+as `MAIN.MIX`. The raw Steam downloads stay unchanged. OpenRA content stays in
+`openra-support/`. Original multiplayer is not automated or tested here.
+
+## OpenRA
 
 The launcher installs pinned OpenRA **release-20250330** for Tiberian Dawn and
 Red Alert. Mac uses the official universal disk image's ARM64 runtime; Linux
@@ -10,8 +35,7 @@ executable or a promise of complete original campaign/expansion parity. Multipla
 requires compatible OpenRA releases/mods; original Windows clients cannot join.
 Generals and Zero Hour continue to use GeneralsX, with mods offered only for Zero Hour.
 
-Vanilla Conquer was considered, but its upstream README explicitly marks Ultimate
-Collection data as unsupported. OpenRA's pinned Steam installer mappings document
+OpenRA's pinned Steam installer mappings document
 support for the English Ultimate Collection data used here:
 
 - [C&C Steam mapping](https://github.com/OpenRA/OpenRA/blob/release-20250330/mods/cnc-content/installer/steam.yaml)
