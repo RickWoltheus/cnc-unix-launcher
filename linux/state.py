@@ -71,7 +71,11 @@ class LauncherState:
 
     @property
     def classic(self):
-        return self.game["engine"] == "OpenRA"
+        return self.game["engine"] in ("OpenRA", "Vanilla Conquer")
+
+    @property
+    def original(self):
+        return self.game["engine"] == "Vanilla Conquer"
 
     @property
     def compatibility(self):

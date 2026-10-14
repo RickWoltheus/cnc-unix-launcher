@@ -1,5 +1,7 @@
-cnc	Command & Conquer	Tiberian Dawn	OpenRA	2229830	TiberianDawn	B4CB59	C&C	The original battlefield, rebuilt with OpenRA. Modernized gameplay, campaigns and skirmish.
-ra	Red Alert	Allied vs Soviet	OpenRA	2229840	RedAlert	F06455	RA	Cold War strategy through OpenRA. Includes Steam expansion content; gameplay differs from the original.
+cnc	C&C · OpenRA	Tiberian Dawn · reimagined	OpenRA	2229830	TiberianDawn	B4CB59	C&C	OpenRA reimagines Tiberian Dawn with different rules, balance and missions. Choose Original for Vanilla Conquer.
+ra	Red Alert · OpenRA	Allied vs Soviet · reimagined	OpenRA	2229840	RedAlert	F06455	RA	Cold War strategy through OpenRA. Includes Steam expansion content; gameplay differs from the original.
+cnc-original	C&C · Original	Tiberian Dawn · experimental	Vanilla Conquer	2229830	TiberianDawn	B4CB59	C&C	Original rules and campaigns through native Vanilla Conquer. Uses your owned Steam files; settings and saves stay separate from OpenRA.
+ra-original	Red Alert · Original	Original + expansions · experimental	Vanilla Conquer	2229840	RedAlert	F06455	RA	Original Red Alert through native Vanilla Conquer, including owned Counterstrike and Aftermath assets. Separate settings and saves; gameplay validation pending.
 base	Generals	USA · China · GLA	GeneralsX	2229870	Generals	77B3DF	G	The 2003 classic, running through the native GeneralsX engine.
 vanilla	Zero Hour	Generals + expansion	GeneralsX	2732960	GeneralsZH	EFAD40	ZH	Campaigns, skirmish, Generals Challenge and five curated community mods.
 ra2	Red Alert 2	Allied vs Soviet · experimental	Wine	2229850	RedAlert2	ED5552	RA2	Original Windows campaigns and skirmish through free Wine + cnc-ddraw. Experimental; gameplay validation pending.

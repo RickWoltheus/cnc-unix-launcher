@@ -30,7 +30,7 @@
     },
     {
       "name": "OpenRA",
-      "role": "Native C&C and Red Alert engines and Steam content import",
+      "role": "Reimagined C&C-inspired games and Steam content import",
       "url": "https://github.com/OpenRA/OpenRA",
       "contributorsURL": "https://github.com/OpenRA/OpenRA/graphs/contributors"
     },
@@ -261,6 +261,18 @@
       "role": "Proprietary DirectX 11/12 translation included by the upstream Wine bundle for compatible applications",
       "url": "https://developer.apple.com/games/game-porting-toolkit/",
       "contributorsURL": "https://github.com/apple/game-porting-toolkit"
+    },
+    {
+      "name": "Vanilla Conquer",
+      "role": "TheAssemblyArmada and contributors — native ports of the original Tiberian Dawn and Red Alert engines",
+      "url": "https://github.com/TheAssemblyArmada/Vanilla-Conquer",
+      "contributorsURL": "https://github.com/TheAssemblyArmada/Vanilla-Conquer/graphs/contributors"
+    },
+    {
+      "name": "SDL2",
+      "role": "SDL contributors — cross-platform window, input and audio support for Vanilla Conquer",
+      "url": "https://github.com/libsdl-org/SDL",
+      "contributorsURL": "https://github.com/libsdl-org/SDL/graphs/contributors"
     }
   ],
   "supportTitle": "Consider supporting these projects too",

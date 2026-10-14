@@ -10,6 +10,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Check community credits and support documentation
         run: python3 scripts/community-docs.py --check
+      - name: Install original-engine build tools
+        run: brew install cmake
       - name: Check backend behavior
         run: |
           bash tests/backend.sh
@@ -17,6 +19,7 @@ jobs:
           bash tests/security.sh
           bash tests/sage.sh
           bash tests/launch-recovery.sh
+          bash tests/original.sh
           bash tests/sage-launch-guide.sh
           bash tests/sage-open-steam.sh
           bash tests/steam-webhelper.sh
@@ -50,6 +53,7 @@ jobs:
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/ini-settings.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/sage.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/launch-recovery.sh
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/original.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/sage-launch-guide.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/steam-webhelper.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/backend.sh

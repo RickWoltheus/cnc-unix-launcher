@@ -343,7 +343,7 @@ sage_mac_environment() {
 sage_launch() {
   local profile="$PROFILE" full=false width=1280 height=720 argument folder config executable binary result=0 attempt seen=0
   compatibility_running && fail 'A game is already running. Quit it before switching games.'
-  pgrep -x '(GeneralsX(ZH)?|OpenRA|apphost-arm64)' >/dev/null 2>&1 && fail 'Quit the running game before switching games.'
+  launcher_native_running && fail 'Quit the running game before switching games.'
   sage_engine_ready "$profile" || fail 'Prepare the DirectX 9 runtime first. Mac requires macOS 15+; Linux requires Steam and Proton.'
   sage_assets_ready "$profile" || fail 'Install and validate the English Steam game first.'
   shift 2

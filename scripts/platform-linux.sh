@@ -5,6 +5,11 @@ platform_supported() { [[ "$(uname -m)" == x86_64 ]]; }
 platform_requirement_message() { echo 'Linux preview requires an x86_64 Linux desktop with Vulkan support.'; }
 dependencies_ready() {
   if sage_profile "$PROFILE"; then sage_steam_ready; return; fi
+  if original_profile "$PROFILE"; then
+    command -v curl >/dev/null && command -v file >/dev/null && command -v zip >/dev/null &&
+      [[ -e /lib/ld-linux.so.2 || -e /lib32/ld-linux.so.2 || -e /lib/i386-linux-gnu/ld-linux.so.2 ]] && original_dependencies_ready
+    return
+  fi
   command -v "$FLATPAK" >/dev/null && command -v curl >/dev/null && command -v file >/dev/null && command -v zip >/dev/null &&
     [[ -e /lib/ld-linux.so.2 || -e /lib32/ld-linux.so.2 || -e /lib/i386-linux-gnu/ld-linux.so.2 ]] &&
     { ! compatibility_profile "$PROFILE" || compatibility_dependencies_ready; }
@@ -73,6 +78,13 @@ install_linux_tools() {
         sudo apt-get install -y steam-installer
         sage_steam_ready || fail 'Steam installation is incomplete. Check the package manager output above.'
         echo 'Steam installed. Return to the launcher and use Open Steam setup.'
+        return
+      fi
+      if original_profile "$PROFILE"; then
+        sudo apt-get update
+        sudo apt-get install -y curl file zip unzip xz-utils lib32gcc-s1 lib32stdc++6 libsdl2-2.0-0 libopenal1
+        dependencies_ready || fail 'Original-engine dependencies are still incomplete.'
+        echo 'Original-engine and SteamCMD dependencies installed. Return to the launcher.'
         return
       fi
       printf 'Install Flatpak, download tools and 32-bit support for Valve SteamCMD.\n'

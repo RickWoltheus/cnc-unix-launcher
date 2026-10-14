@@ -45,6 +45,11 @@ musl-based distributions and Linux ARM are outside this package's target.
 
 ## Paths and differences
 
+Original Tiberian Dawn/Red Alert use the bundled native Vanilla Conquer engine
+instead of Flatpak or OpenRA. Prepare Linux installs SDL/OpenAL runtime
+dependencies through apt when needed. Their settings and saves remain separate
+from OpenRA; original-engine gameplay and multiplayer are still experimental.
+
 Data defaults to `${XDG_DATA_HOME:-~/.local/share}/generalsx-launcher/` and can be
 overridden by `GX_INSTALL_ROOT`. Game settings/saves live in
 `user-data/GeneralsX/Generals/` or `user-data/GeneralsX/GeneralsZH/` inside that
@@ -90,8 +95,8 @@ The archive lands in `dist/`. Developer installs can use a virtual environment
 and `linux/requirements.txt`, then `python3 linux/app.py`.
 
 The Qt package retains dynamically loaded shared libraries and Python distribution
-license notices; see `linux/THIRD-PARTY.md`. No engine, game data or mod archives
-are bundled in the launcher release.
+license notices; see `linux/THIRD-PARTY.md`. Vanilla Conquer and SDL2 are bundled
+with corresponding source and licenses. No game data or mod archives are bundled.
 
 Container/offscreen checks do not prove a real desktop, terminal handoff, Flatpak
 sandbox operation or GPU rendering. Those require a Linux desktop VM/machine.

@@ -43,5 +43,15 @@
     ],
     "hosting": "No router or firewall changes are made. Automatic online preparation is disabled.",
     "source": "https://cnc-online.net/"
+  },
+  "original": {
+    "title": "Original-engine multiplayer (experimental)",
+    "steps": [
+      "Use the same Vanilla Conquer engine build for both players. OpenRA uses a different multiplayer protocol.",
+      "Use the engine’s in-game LAN menu.",
+      "LAN connectivity and original Windows-client interoperability have not been verified by this launcher."
+    ],
+    "hosting": "Automatic host/router setup is not provided for Original mode.",
+    "source": "https://github.com/TheAssemblyArmada/Vanilla-Conquer"
   }
 }
