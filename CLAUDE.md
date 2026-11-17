@@ -15,7 +15,8 @@ Regenerate `docs/community.md` with `scripts/community-docs.py --write` after
 reviewing the preview; `--check` verifies it. Both frontends use the same links.
 
 Keep download verification in `scripts/downloads.sh` and optional scan controls
-in `scripts/security.sh`. Every downloaded or cached install input must pass SHA-256
+in `scripts/security.sh`. Pin every download in a manifest and maintain pins,
+mirrors and update PRs with `scripts/pins.py`; see `docs/downloads.md`. Every downloaded or cached install input must pass SHA-256
 before any scan, extraction or execution. Scanning stays local and must fail closed
 on missing/stale definitions, errors, detections or reported coverage limits.
 Propagate the scan preference to GUI tasks, launches and local terminal scripts

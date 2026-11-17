@@ -1,0 +1,5 @@
+macos	11\.0_[0-9]+
+linux	11\.0(\.[0-9]+)?
+sdl2	release-2\.[0-9.]+
+openra-	release-[0-9]+
+ddraw	v[0-9.]+
