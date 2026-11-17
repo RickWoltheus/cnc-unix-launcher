@@ -8,13 +8,19 @@ Steam assets.
 
 ## Mac
 
-Requires Apple Silicon, macOS 15+, Rosetta 2 and an owned Steam copy of the game.
-The installer pins [athei’s free Wine build](https://github.com/athei/wine-build)
-and [mtld3d](https://github.com/athei/mtld3d), which renders DirectX 9 through
-Metal. The Wine bundle also includes DXMT and Apple’s proprietary D3DMetal for
-other DirectX paths. Their supplied licenses are retained; the whole bundle is
-not open source. No paid compatibility application is required. Older 2D game
-runtimes remain separate.
+New installs require Apple Silicon, macOS 26.4+ and an owned Steam copy of the
+game. The installer pins [Mach9](https://github.com/athei/mach9)’s free arm64
+Wine, which includes [mtld3d](https://github.com/athei/mtld3d) to render
+DirectX 9 through Metal and FEX to run the game’s x86 code, so Rosetta is not
+needed. All of its components are open source; their licenses are listed in
+[the runtime notice](../manifests/sage-notice.txt). No paid compatibility
+application is required. Older 2D game runtimes remain separate.
+
+Installs made before Mach9 (Wine cx-26.3.0-7 with mtld3d 0.12.0, macOS 15+ with
+Rosetta) keep working, and **Repair game engine** keeps that runtime instead of
+replacing it: its publisher removed the archive, so it could not be restored.
+Mach9 games use a new `compatibility/<game>/mach9/prefix`, copied from the
+earlier Metal prefix, which stays in place for rollback.
 
 1. Select the game and choose **Prepare my Mac**. Archives pass SHA-256 and the
    optional local scan before extraction. Preparation opens no game or Wine prefix.
@@ -36,7 +42,8 @@ Graphics quality is configured in the game. The guide contains fixed progress
 labels and optional-permission advice; it does not inspect login fields or
 claim it can observe whether you answered a macOS permission prompt.
 
-New prefixes and saves live under `compatibility/<game>/metal/prefix`.
+New prefixes and saves live under `compatibility/<game>/mach9/prefix`
+(`metal/prefix` for installs made before Mach9).
 Existing tested `mtld3d-test/prefix` paths are retained. Migration from an older
 Wine prefix copies it locally and leaves the source in place. Runtime repair
 retains prefixes and keeps the older compatibility runtime available.

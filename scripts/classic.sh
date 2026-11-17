@@ -34,8 +34,7 @@ classic_install() {
   title="$(classic_app_title "$id")"
   mkdir -p "$WORK/classic"
   if [[ "$PLATFORM" == macos ]]; then
-    archive=OpenRA-release-20250330.dmg
-    download "$archive" "https://github.com/OpenRA/OpenRA/releases/download/release-20250330/$archive" 2a78cd58603fd06ed6006ae5916065455a7ac7c1290dba1d06c0292bad4238ab
+    download_package engine-packages.tsv openra-macos; archive="$PACKAGE_ARCHIVE"
     mkdir -p "$WORK/mount"
     hdiutil attach -readonly -nobrowse -mountpoint "$WORK/mount" "$CACHE/$archive"
     mounted_classic="$WORK/mount"
@@ -46,10 +45,7 @@ classic_install() {
     file "$WORK/classic/OpenRA - $title.app/Contents/MacOS/apphost-arm64" | grep -q arm64 || fail 'OpenRA archive is missing its ARM64 runtime.'
   else
     command -v curl >/dev/null && command -v file >/dev/null || fail 'Install curl and file before installing OpenRA.'
-    archive="OpenRA-${title// /-}-x86_64.AppImage"
-    checksum=b3d202d1bf701be5989c41c256d19bd2b1788694df01e343ade865cf1190706b
-    [[ "$id" != ra ]] || checksum=3cb71c7428188c8526dd8916993fc16fa17ba5f28a35968a8267f3db9f2186fe
-    download "$archive" "https://github.com/OpenRA/OpenRA/releases/download/release-20250330/$archive" "$checksum"
+    download_package engine-packages.tsv "openra-linux-$id"; archive="$PACKAGE_ARCHIVE"
     cp "$CACHE/$archive" "$WORK/classic/engine.AppImage"
     chmod +x "$WORK/classic/engine.AppImage"
     (cd "$WORK/classic"; ./engine.AppImage --appimage-extract > /dev/null)

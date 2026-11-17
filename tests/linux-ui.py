@@ -156,6 +156,8 @@ class StateChecks(unittest.TestCase):
         self.state.values["steam_download_vanilla"] = "no-license"
         self.assertEqual(self.state.steam_guidance["title"], "This Steam account does not own the game")
         self.assertEqual(self.state.recovery_for("Checksum mismatch")["title"], "The download did not match")
+        self.assertEqual(self.state.recovery_for("curl: (22) The requested URL returned error: 404\nDownload removed: wine.tar.xz is no longer published")["title"], "A required download was removed")
+        self.assertEqual(self.state.recovery_for("curl: (6) Could not resolve host\nDownload failed for wine.tar.xz")["title"], "The download server is unavailable")
 
 
 class WidgetChecks(unittest.TestCase):

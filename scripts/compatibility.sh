@@ -15,9 +15,9 @@ compatibility_select() {
   if sage_profile "$1" && [[ "$PLATFORM" == macos ]]; then COMPAT_PREFIX="$(sage_mac_prefix "$1")"; fi
 }
 compatibility_package() {
-  local row
-  row="$(awk -F '\t' -v id="$1" '$1==id {print}' "$RESOURCES/manifests/compatibility-packages.tsv")"
-  IFS=$'\t' read -r unused COMPAT_VERSION COMPAT_ARCHIVE COMPAT_URL COMPAT_SHA COMPAT_BINARY <<< "$row"
+  package_row compatibility-packages.tsv "$1"
+  COMPAT_VERSION="$PACKAGE_VERSION" COMPAT_ARCHIVE="$PACKAGE_ARCHIVE" COMPAT_URL="$PACKAGE_URL"
+  COMPAT_SHA="$PACKAGE_SHA" COMPAT_BINARY="$PACKAGE_BINARY"
 }
 compatibility_wine() { compatibility_package "$PLATFORM"; printf '%s/wine-runtime/%s\n' "$ROOT" "$COMPAT_BINARY"; }
 compatibility_game_pids() {

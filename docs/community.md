@@ -62,8 +62,8 @@ Project contributor/team pages credit the people behind each project. Upstream c
 | [DXMT](https://github.com/3Shain/dxmt) | DirectX 10/11 to Metal renderer used by the Windows Steam interface | [Contributors / team](https://github.com/3Shain/dxmt/graphs/contributors) |
 | [steam-on-m1-wine / notpop](https://github.com/notpop/steam-on-m1-wine) | Steam browser compatibility research and documented CEF workaround | [Contributors / team](https://github.com/notpop/steam-on-m1-wine/graphs/contributors) |
 | [mtld3d / athei](https://github.com/athei/mtld3d) | DirectX 9 to Metal renderer used by C&C 3 and Red Alert 3 on Mac | [Contributors / team](https://github.com/athei/mtld3d/graphs/contributors) |
-| [athei / wine-build](https://github.com/athei/wine-build) | Free Wine runtime packaging and compatibility patches built from CrossOver-derived Wine sources | [Contributors / team](https://github.com/athei/wine-build/graphs/contributors) |
-| [Apple Game Porting Toolkit / D3DMetal](https://developer.apple.com/games/game-porting-toolkit/) | Proprietary DirectX 11/12 translation included by the upstream Wine bundle for compatible applications | [Contributors / team](https://github.com/apple/game-porting-toolkit) |
+| [athei / Mach9](https://github.com/athei/mach9) | Free arm64 Wine runtime with built-in mtld3d, FEX and DXMT, used by C&C 3, Kane’s Wrath and Red Alert 3 on Mac | [Contributors / team](https://github.com/athei/mach9/graphs/contributors) |
+| [FEX](https://github.com/FEX-Emu/FEX) | x86 emulation inside Mach9’s arm64 Wine, so the Windows games and Steam run without Rosetta | [Contributors / team](https://github.com/FEX-Emu/FEX/graphs/contributors) |
 | [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer) | TheAssemblyArmada and contributors — native ports of the original Tiberian Dawn and Red Alert engines | [Contributors / team](https://github.com/TheAssemblyArmada/Vanilla-Conquer/graphs/contributors) |
 | [SDL2](https://github.com/libsdl-org/SDL) | SDL contributors — cross-platform window, input and audio support for Vanilla Conquer | [Contributors / team](https://github.com/libsdl-org/SDL/graphs/contributors) |
 

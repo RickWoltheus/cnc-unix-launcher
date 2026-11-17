@@ -15,7 +15,7 @@ struct GameInfo: Identifiable {
     var isCompatibility: Bool { engine == "Wine" }
     var isSage: Bool { Self.sageIDs.contains(id) }
     var compatibilityDetail: String { isSage ? Self.sageCopy["detail", default: "Experimental C&C 3 support."] : "Free Wine + cnc-ddraw runs the original Windows game. Experimental: campaign, graphics and Steam launch behavior still need gameplay testing. On Apple Silicon, Wine runs through Rosetta 2." }
-    var compatibilityPreparation: String { isSage ? Self.sageCopy["prepare", default: "Requires macOS Tahoe 26+."] : "Pinned Wine 11.0 + cnc-ddraw; Rosetta is checked before Steam sign-in." }
+    var compatibilityPreparation: String { isSage ? Self.sageCopy["prepare", default: "Requires macOS 26.4+."] : "Pinned Wine 11.0 + cnc-ddraw; Rosetta is checked before Steam sign-in." }
     var compatibilityPlayNote: String { isSage ? Self.sageCopy["play", default: "Gameplay validation pending."] : "Experimental Wine support. Windowed mode uses 1280×720 upscaling; fullscreen uses borderless cnc-ddraw. Tiberian Sun includes Firestorm in its menu. CnCNet is not installed by this launcher yet." }
     private static let sageIDs: Set<String> = {
         guard let root = Bundle.main.resourceURL, let text = try? String(contentsOf: root.appendingPathComponent("manifests/compatibility.tsv"), encoding: .utf8) else { return [] }

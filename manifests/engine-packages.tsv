@@ -1,0 +1,9 @@
+generalsx-macos-vanilla	1.0.2	GeneralsXZH-1.0.2.zip	https://github.com/fbraz3/GeneralsX/releases/download/1.0.2/macOS-GeneralsXZH.zip	92930b71c232eb289cf743eb8cdc4081020a870dfdaa2adad553bec2798ac568	GeneralsXZH.app
+generalsx-macos-base	1.0.2	GeneralsX-1.0.2.zip	https://github.com/fbraz3/GeneralsX/releases/download/1.0.2/macOS-GeneralsX.zip	d5e0d6ff0af760cb157f1602a67ef59212797e4c80cc8a3e4ad1ee4a3a5ef0f2	GeneralsX.app
+generalsx-linux-vanilla	1.0.2	GeneralsXZH-1.0.2.flatpak	https://github.com/fbraz3/GeneralsX/releases/download/1.0.2/Linux-GeneralsXZH.flatpak	0d7212559c239c29db4117096ebcb7bdc8fdb8c4825c931cc3d4093a3e2f85c2	GeneralsXZH
+generalsx-linux-base	1.0.2	GeneralsX-1.0.2.flatpak	https://github.com/fbraz3/GeneralsX/releases/download/1.0.2/Linux-GeneralsX.flatpak	73ed661306dbb5faac90b1cdcf6ecae47245ac69a1070d0f9e04e05345085451	GeneralsX
+openra-macos	release-20250330	OpenRA-release-20250330.dmg	https://github.com/OpenRA/OpenRA/releases/download/release-20250330/OpenRA-release-20250330.dmg	2a78cd58603fd06ed6006ae5916065455a7ac7c1290dba1d06c0292bad4238ab	OpenRA.app
+openra-linux-cnc	release-20250330	OpenRA-Tiberian-Dawn-x86_64.AppImage	https://github.com/OpenRA/OpenRA/releases/download/release-20250330/OpenRA-Tiberian-Dawn-x86_64.AppImage	b3d202d1bf701be5989c41c256d19bd2b1788694df01e343ade865cf1190706b	OpenRA
+openra-linux-ra	release-20250330	OpenRA-Red-Alert-x86_64.AppImage	https://github.com/OpenRA/OpenRA/releases/download/release-20250330/OpenRA-Red-Alert-x86_64.AppImage	3cb71c7428188c8526dd8916993fc16fa17ba5f28a35968a8267f3db9f2186fe	OpenRA
+steamcmd-macos	rolling	steamcmd-bootstrap.tar.gz	https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz	8ecc17c8988e5acadcc78e631c48490f76150f2dfaa6cf8d7b4b67b097bd753b	steamcmd.sh
+steamcmd-linux	rolling	steamcmd-linux-bootstrap.tar.gz	https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz	cebf0046bfd08cf45da6bc094ae47aa39ebf4155e5ede41373b579b8f1071e7c	steamcmd.sh

@@ -1,7 +1,7 @@
 {
   "macos": {
-    "detail": "Free Wine + mtld3d runs the original DirectX 9 game through Apple Metal. Requires Apple Silicon, Rosetta 2 and macOS 15+. C&C 3 and RA3 were manually tested on one Mac; Kane’s Wrath remains experimental.",
-    "prepare": "Pinned, free Wine build + mtld3d Metal renderer in a separate runtime. Existing game profiles and older compatibility engines are retained.",
+    "detail": "Free Wine with mtld3d (Mach9) runs the original DirectX 9 game through Apple Metal. New installs require Apple Silicon and macOS 26.4+; no Rosetta. C&C 3 and RA3 were manually tested on one Mac with the previous runtime; Kane’s Wrath and the Mach9 runtime remain experimental.",
+    "prepare": "Pinned, free Mach9 Wine with its built-in mtld3d Metal renderer in a separate runtime. Existing game profiles, prefixes and older compatibility engines are retained.",
     "play": "Play opens a launch guide and this game’s Windows Steam client. Wait for client updates and sign in there if asked. The launcher requests the game; if the library appears without starting it, use Steam’s Play button for this game once. macOS may ask about microphone access for voice chat. Graphics quality stays in the game. Mods and C&C:Online are not installed yet."
   },
   "linux": {

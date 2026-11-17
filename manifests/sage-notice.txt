@@ -1,14 +1,16 @@
 DirectX 9 game compatibility runtime
-Wine build: https://github.com/athei/wine-build (LGPL Wine sources)
-Wine sources: https://github.com/athei/wine
-mtld3d: https://github.com/athei/mtld3d (zlib license retained)
-DXMT: https://github.com/3Shain/dxmt (licenses retained in upstream bundle)
-Apple Game Porting Toolkit / D3DMetal: https://developer.apple.com/games/game-porting-toolkit/
-D3DMetal is proprietary, free to use under Apple's supplied license. The upstream
-Wine bundle includes its Redistributables and license. The launcher downloads
-that original pinned bundle; it does not include the runtime in launcher releases.
-This is a free Wine build from CrossOver-derived open-source sources; no paid
-CrossOver application or license is required. The pinned build has no x87sidecar.
+Mac (new installs): Mach9 Wine bundle, https://github.com/athei/mach9 (Zlib)
+  Wine sources: https://github.com/athei/wine (LGPL-2.1-or-later)
+  mtld3d: https://github.com/athei/mtld3d (Zlib)
+  DXMT: https://github.com/3Shain/dxmt (Zlib)
+  FEX: https://github.com/FEX-Emu/FEX (MIT); Mesa (MIT); vkd3d-proton and GStreamer (LGPL)
+  Exact component commits are listed in each Mach9 release's notes.
+This free Wine build is open source and needs no paid application or Rosetta.
+It is downloaded unmodified from its publisher, or from this project's mirror of
+the same SHA-256 when the publisher no longer offers it.
+Mac (earlier installs): athei/wine-build cx-26.3.0-7 with mtld3d 0.12.0. That bundle
+also contained Apple's proprietary D3DMetal under Apple's license. It is no longer
+downloaded; existing installs keep working.
 Linux: Valve Steam manages Proton, dependencies, game files, prefixes and updates.
 Proton sources and licenses: https://github.com/ValveSoftware/Proton
 Valve's Steam client is proprietary. Credentials stay in Valve's window.

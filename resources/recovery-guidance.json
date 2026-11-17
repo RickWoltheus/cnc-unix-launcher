@@ -78,6 +78,13 @@
     },
     {
       "containsAny": [
+        "download removed"
+      ],
+      "title": "A required download was removed",
+      "message": "Its publisher no longer offers the file this launcher version pins. Use Check updates to get a fixed version, or report it on GitHub. Nothing was installed."
+    },
+    {
+      "containsAny": [
         "could not resolve",
         "failed to connect",
         "curl:"

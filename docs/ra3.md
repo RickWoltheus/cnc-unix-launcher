@@ -2,7 +2,8 @@
 
 This profile is included in the v0.4.0 prerelease. The user confirmed
 excellent performance at Ultra High settings on macOS 26 with mtld3d Metal
-rendering. Linux gameplay remains unverified. It shares the runtime and launch
+rendering on the previous Wine runtime; Mach9, which new installs use, still
+needs the same check. Linux gameplay remains unverified. It shares the runtime and launch
 guide documented in [C&C 3 setup](cnc3.md), with its own Steam app (17480),
 working copy and prefix.
 
