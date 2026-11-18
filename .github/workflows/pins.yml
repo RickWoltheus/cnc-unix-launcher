@@ -1,0 +1,94 @@
+name: Pinned downloads
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'manifests/**'
+      - 'scripts/pins.py'
+      - 'scripts/downloads.sh'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check pin consistency
+        run: python3 scripts/pins.py lint
+      - name: Check every pin still downloads with its SHA-256
+        run: python3 scripts/pins.py check
+  checksums:
+    # Valve updates its unversioned installers in place. The bot verifies the new file
+    # by downloading it, runs the download tests and merges; nothing else changes.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Merge changed checksums of rolling installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: automation/rolling-checksums
+        run: |
+          python3 scripts/pins.py updates --kind rolling --apply --report "$RUNNER_TEMP/rolling.md"
+          cat "$RUNNER_TEMP/rolling.md" >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- manifests; then exit 0; fi
+          python3 scripts/pins.py lint
+          bash tests/downloads.sh
+          python3 scripts/pins.py check --only steamcmd- sage-steam
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C "$BRANCH"
+          git commit --quiet -am 'Update checksums of Valve installers'
+          git push --force origin "$BRANCH"
+          { echo "Valve replaced an installer at its unchanged URL. The new file was downloaded and verified here."; echo; cat "$RUNNER_TEMP/rolling.md"; echo; echo 'Players get the new checksum with the next launcher release.'; } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head "$BRANCH" --title 'Update checksums of Valve installers' --body-file "$RUNNER_TEMP/body.md" || true
+          gh pr merge "$BRANCH" --squash --delete-branch
+  updates:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Propose newer upstream releases as a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: automation/pin-updates
+        run: |
+          python3 scripts/pins.py updates --kind release --apply --report "$RUNNER_TEMP/updates.md"
+          cat "$RUNNER_TEMP/updates.md" >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- manifests; then exit 0; fi
+          python3 scripts/pins.py lint
+          {
+            echo 'Newer upstream files for pinned downloads. Checksums come from the publisher'"'"'s release digest or a fresh download.'
+            echo
+            cat "$RUNNER_TEMP/updates.md"
+            echo
+            echo 'Before merging:'
+            echo '- [ ] Update the files listed as naming the old version.'
+            echo '- [ ] Check that "Build native launchers" passed on this branch (started automatically).'
+            echo '- [ ] Test the affected games on real hardware; keep untested gameplay labeled experimental.'
+            echo
+            echo 'After merging: run `python3 scripts/pins.py mirror --upload`.'
+            echo
+            echo 'This branch is regenerated from main every week, so put manual fixes on a branch of your own.'
+          } > "$RUNNER_TEMP/body.md"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C "$BRANCH"
+          git commit --quiet -am 'Update pinned downloads'
+          git push --force origin "$BRANCH"
+          if [[ "$(gh pr view "$BRANCH" --json state --jq .state 2>/dev/null)" == OPEN ]]; then
+            gh pr edit "$BRANCH" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --base main --head "$BRANCH" --title 'Update pinned downloads' --body-file "$RUNNER_TEMP/body.md"
+          fi
+          # Pull requests opened with this token start no workflows themselves; tests run on dispatch.
+          gh workflow run build.yml --ref "$BRANCH"

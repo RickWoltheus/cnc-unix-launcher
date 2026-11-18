@@ -34,13 +34,21 @@ Keep the relevant notices when redistributing the launcher or third-party parts.
 
 ## C&C 3 and Red Alert 3 compatibility runtime
 
-Mac profiles download pinned original archives from athei/wine-build and
-athei/mtld3d. Wine is LGPL; mtld3d uses the zlib license. Sources and notices
-are linked in [the runtime notice](manifests/sage-notice.txt). The upstream Wine
-bundle also contains open-source DXMT and proprietary Apple D3DMetal
-Redistributables, with their supplied licenses retained. Downloading this bundle
-is separate from the launcher release; runtime archives and EA game files are
+New Mac installs download the pinned, unmodified Mach9 Wine bundle from
+athei/mach9: Wine (LGPL) with mtld3d, DXMT (zlib), FEX, Mesa (MIT),
+vkd3d-proton and GStreamer (LGPL). Sources and notices are linked in
+[the runtime notice](manifests/sage-notice.txt). Earlier installs used the
+athei/wine-build cx-26.3.0-7 bundle, which also contained proprietary Apple
+D3DMetal; it is no longer downloaded. Runtime archives and EA game files are
 not packaged in our app ZIP. No paid CrossOver application is installed.
+
+## Download mirror
+
+When a publisher removes a pinned open-source file, the launcher falls back to an
+unmodified copy in this repository's `download-mirror` release, accepted only with
+the same SHA-256. That release also holds the corresponding source archives and
+lists each file's license; see [pinned downloads](docs/downloads.md). Valve
+installers and mod files are never mirrored.
 
 Windows Steam comes from Valve’s official bootstrap. Valve manages subsequent
 client and game updates outside the launcher’s pinned download/scanner coverage.

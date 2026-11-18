@@ -24,15 +24,10 @@ prepare_steam_login() {
 
 }
 engine_install() {
-    engine_name=GeneralsXZH; engine_directory=engine
-    checksum=92930b71c232eb289cf743eb8cdc4081020a870dfdaa2adad553bec2798ac568
-    if [[ "$PROFILE" == base ]]; then
-      engine_name=GeneralsX; engine_directory=engine-base
-      checksum=d5e0d6ff0af760cb157f1602a67ef59212797e4c80cc8a3e4ad1ee4a3a5ef0f2
-    fi
-    archive="$engine_name-1.0.2.zip"
-    download "$archive" "https://github.com/fbraz3/GeneralsX/releases/download/1.0.2/macOS-$engine_name.zip" "$checksum"
-    ditto -x -k "$CACHE/$archive" "$WORK/engine"
+    engine_name=GeneralsXZH; engine_directory=engine; pin=generalsx-macos-vanilla
+    if [[ "$PROFILE" == base ]]; then engine_name=GeneralsX; engine_directory=engine-base; pin=generalsx-macos-base; fi
+    download_package engine-packages.tsv "$pin"
+    ditto -x -k "$CACHE/$PACKAGE_ARCHIVE" "$WORK/engine"
     [[ -x "$WORK/engine/$engine_name.app/Contents/MacOS/run.sh" ]] || fail 'Engine archive is missing its launcher.'
     file "$WORK/engine/$engine_name.app/Contents/Resources/bin/$engine_name" | grep -q arm64 || fail 'Engine is not ARM64.'
     xattr -dr com.apple.quarantine "$WORK/engine/$engine_name.app" 2>/dev/null || true
@@ -45,11 +40,9 @@ engine_install() {
 
 }
 steam_install() {
-    download steamcmd-bootstrap.tar.gz \
-      https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz \
-      8ecc17c8988e5acadcc78e631c48490f76150f2dfaa6cf8d7b4b67b097bd753b
+    download_package engine-packages.tsv steamcmd-macos
     mkdir -p "$WORK/steamcmd/MacOS"
-    tar -xzf "$CACHE/steamcmd-bootstrap.tar.gz" -C "$WORK/steamcmd/MacOS"
+    tar -xzf "$CACHE/$PACKAGE_ARCHIVE" -C "$WORK/steamcmd/MacOS"
     [[ -x "$WORK/steamcmd/MacOS/steamcmd.sh" ]] || fail 'SteamCMD bootstrap is incomplete.'
     if [[ ! -d "$ROOT/steamcmd" ]]; then mv "$WORK/steamcmd" "$ROOT/steamcmd"; fi
     echo 'SteamCMD installed. Valve updates it on first run.'

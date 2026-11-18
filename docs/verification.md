@@ -778,3 +778,65 @@ legacy Wine lifecycle, backend, security and helper checks passed. Linux gamepla
 Kane's Wrath gameplay and fresh real-user Steam authentication remain unverified.
 The updated guide has headless UI/fixture evidence; a real-client update and
 permission-prompt walkthrough remains useful follow-up evidence.
+
+## Removed Wine archive, Mach9 runtime and download resilience — 2026-11-15
+
+A player reported that Mac preparation failed with `curl: (22) ... 404`. The pinned
+`athei/wine-build` cx-26.3.0-7 archive had been deleted upstream; the repository
+became `athei/mach9`, which now only publishes arm64 builds. The old archive could
+not be rebuilt: its dependency and Game Porting Toolkit mirrors are also gone, and
+D3DMetal is not redistributable. No local copy existed.
+
+New Mac installs pin the Mach9 v0.3.1 Wine bundle (SHA-256 matching GitHub's
+published digest). It includes mtld3d and FEX, needs no Rosetta and is built for
+macOS 26.4 (`minos 26.4`), so preparation now requires 26.4. Existing cx-26.3.0-7
+installs keep their runtime, prefixes and rule format on macOS 15+. Mach9 uses
+`compatibility/<game>/mach9/prefix`, copied from the previous prefix, which stays.
+Its rule is `exe=<game>;d3d9=mtld3d` without the old `v=3` header.
+
+Headless checks on macOS 26.0.1: the real Mach9 archive installed through the
+backend (with the 26.4 gate overridden for the fixture) and passed synthetic Steam
+installation, prefix migration with a preserved sentinel save, and handoff for
+C&C 3, Kane's Wrath and RA3; Open Steam used the right prefix and rule for both
+runtimes. `tests/sage.sh` had not been running that fixture, because the wrapper
+it exports short-circuited the launch; it now runs it. A local HTTP server test
+covered publisher success, 404 with and without a mirror, replaced upstream files
+and unreachable servers. All macOS CI checks passed.
+
+Not verified: Mach9 Wine running Windows Steam, sign-in, or any gameplay. This
+Mac runs macOS 26.0.1, below Mach9's minimum. C&C 3, Kane's Wrath and RA3 on Mach9
+stay experimental until a real launch on macOS 26.4+.
+
+Pins now live only in manifests. `scripts/pins.py check` found every pin
+downloadable with a matching checksum on 2026-11-15; `updates` found GeneralsX
+1.0.6 and Tiberian Dawn HD playtest-20261026, which were not applied here.
+Against v0.5.0's manifests, the same check reports the removed Wine archive.
+
+An independent review found that Repair game engine would fail below macOS 26.4,
+and would replace the old runtime with Mach9 above it, for players whose old
+runtime could no longer be restored. Repair now keeps a complete old runtime;
+a fixture covers 26.3 and 26.4. Mach9 migration also starts from an
+`mtld3d-test` prefix, also with a fixture; removing either fix fails its test.
+Mirror copies are named by SHA-256, so releases find copies uploaded after they
+shipped. Bump logic (stable Wine lines, prereleases, version markers, source
+links) has unit tests on copies of the real manifests.
+
+The release smoke workflow's Mac steps were run locally against the published
+v0.5.0 assets: SHA256SUMS, signature and bundled backend status passed. The
+`macos-26` runtime smoke test could not run here (macOS 26.0.1); its first CI
+run is its first execution.
+
+## macOS 26.4 gate and v0.6.0 — 2026-11-18
+
+On this Mac (macOS 26.0.1) the pinned Mach9 Wine stops at launch: dyld cannot
+find `_posix_spawnattr_set_4k_page_size_np`, which macOS 26.4 added. Status now
+reports `unsupported` for C&C 3, Kane's Wrath and RA3 below 26.4 when no runtime
+is installed; both apps name the requirement and the Mac's version and disable
+Prepare before any download. An installed old runtime still reports ready.
+Fixtures cover 26.0.1, 26.3 (old runtime) and 26.4; Mac model, backend and
+Linux UI tests passed. The PR's `macos-26` CI run is the only Mach9 execution;
+no Steam client or game has run on Mach9.
+
+mtld3d 0.15.5 on the pinned stock Wine 11.0 under Rosetta loaded and finished
+Wine's D3D9 device tests on 26.0.1, but could not attach its Metal layer to
+windows, so it is not an older-macOS route. Older Macs are asked to update.

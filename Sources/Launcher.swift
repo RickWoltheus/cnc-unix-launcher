@@ -199,13 +199,13 @@ struct LauncherView: View {
     private var prepareMac: some View {
         VStack(alignment: .leading, spacing: 22) {
             BriefingTitle(eyebrow: "Step 2", title: "We’ll handle the setup.", subtitle: "No Homebrew, Windows install or paid compatibility software needed.")
-            ReadinessRow(title: model.game.isCompatibility ? "Wine compatibility runtime" : "Native game engine", detail: model.game.isCompatibility ? model.game.compatibilityPreparation : "A verified Apple Silicon build of \(model.game.engine).", ready: model.gameEngineReady)
+            ReadinessRow(title: model.game.isCompatibility ? "Wine compatibility runtime" : "Native game engine", detail: model.gameEngineUnsupported ? model.engineRequirement : model.game.isCompatibility ? model.game.compatibilityPreparation : "A verified Apple Silicon build of \(model.game.engine).", ready: model.gameEngineReady)
             ReadinessRow(title: "Steam downloader", detail: "Valve’s tool downloads the game you own.", ready: model.steam)
             if !model.busy {
                 Button(model.gameEngineReady && model.steam ? "CONTINUE TO STEAM →" : "PREPARE MY MAC →") {
                     if model.canEnterStep(2) { step = model.canEnterStep(3) ? 3 : 2 }
                     else { model.prepare() }
-                }.buttonStyle(CommandButton()).disabled(!model.canEnterStep(1)).accessibilityIdentifier("install-engine")
+                }.buttonStyle(CommandButton()).disabled(!model.canEnterStep(1) || model.gameEngineUnsupported).accessibilityIdentifier("install-engine")
             }
         }
     }

@@ -62,10 +62,17 @@ struct ModelChecks {
         precondition(SteamGuidance.forStatus("no-license").title == "This Steam account does not own the game")
         precondition(RecoveryAdvice.forMessage("ERROR No subscription").title == "Steam could not find your game")
         precondition(RecoveryAdvice.forMessage("Checksum mismatch").title == "The download did not match")
+        precondition(RecoveryAdvice.forMessage("curl: (22) The requested URL returned error: 404\nDownload removed: wine.tar.xz is no longer published").title == "A required download was removed")
+        precondition(RecoveryAdvice.forMessage("curl: (6) Could not resolve host\nDownload failed for wine.tar.xz").title == "The download server is unavailable")
         precondition(RecoveryAdvice.forMessage("VK_ERROR_INCOMPATIBLE_DRIVER").title == "The graphics runtime needs repair")
         precondition(GameInfo.catalog.contains { $0.id == "cnc3" && $0.isSage && $0.compatibilityDetail.contains("Metal") })
         precondition(GameInfo.catalog.contains { $0.id == "kw" && $0.isSage })
         precondition(GameInfo.catalog.contains { $0.id == "ra3" && $0.isSage && $0.steamID == "17480" })
+        model.selectedGame = "cnc3"
+        model.unsupportedEngines = ["cnc3"]
+        precondition(model.gameEngineUnsupported && model.engineRequirement.contains("macOS 26.4") && model.engineRequirement.contains("This Mac runs macOS"))
+        precondition(model.stepHelp(1) == model.engineRequirement)
+        model.unsupportedEngines = []
         for id in ["cnc", "ra", "cnc-original", "ra-original", "ra2", "yuri", "ts", "cnc3", "kw", "ra3"] {
             model.selectedGame = id
             precondition(model.activeProfile == id)

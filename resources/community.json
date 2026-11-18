@@ -251,16 +251,16 @@
       "contributorsURL": "https://github.com/athei/mtld3d/graphs/contributors"
     },
     {
-      "name": "athei / wine-build",
-      "role": "Free Wine runtime packaging and compatibility patches built from CrossOver-derived Wine sources",
-      "url": "https://github.com/athei/wine-build",
-      "contributorsURL": "https://github.com/athei/wine-build/graphs/contributors"
+      "name": "athei / Mach9",
+      "role": "Free arm64 Wine runtime with built-in mtld3d, FEX and DXMT, used by C&C 3, Kane’s Wrath and Red Alert 3 on Mac",
+      "url": "https://github.com/athei/mach9",
+      "contributorsURL": "https://github.com/athei/mach9/graphs/contributors"
     },
     {
-      "name": "Apple Game Porting Toolkit / D3DMetal",
-      "role": "Proprietary DirectX 11/12 translation included by the upstream Wine bundle for compatible applications",
-      "url": "https://developer.apple.com/games/game-porting-toolkit/",
-      "contributorsURL": "https://github.com/apple/game-porting-toolkit"
+      "name": "FEX",
+      "role": "x86 emulation inside Mach9’s arm64 Wine, so the Windows games and Steam run without Rosetta",
+      "url": "https://github.com/FEX-Emu/FEX",
+      "contributorsURL": "https://github.com/FEX-Emu/FEX/graphs/contributors"
     },
     {
       "name": "Vanilla Conquer",

@@ -3,18 +3,27 @@ sage_profile() { [[ "$(awk -F '\t' -v id="$1" '$1==id {print $5}' "$RESOURCES/ma
 sage_wine10_profile() {
   [[ "$PLATFORM" == macos && "$(cat "$ROOT/compatibility/$1/.runtime-choice" 2>/dev/null)" == wine10-test ]]
 }
+# Installs of the x86_64 runtime keep working; its archive is no longer published.
+SAGE_LEGACY_METAL=cx-26.3.0-7+mtld3d-0.12.0
+sage_metal_version() { package_row compatibility-packages.tsv sage-metal-wine; printf 'mach9-%s\n' "$PACKAGE_VERSION"; }
+sage_metal_installed() { cat "$ROOT/sage-metal-runtime/.version" 2>/dev/null || true; }
+sage_metal_mach9() { [[ "$(sage_metal_installed)" == mach9-* ]]; }
 sage_metal_runtime_ready() {
-  [[ -x "$ROOT/sage-metal-runtime/wine/bin/wine" &&
-     "$(cat "$ROOT/sage-metal-runtime/.version" 2>/dev/null)" == cx-26.3.0-7+mtld3d-0.12.0 &&
-     -s "$ROOT/sage-metal-runtime/wine/lib/wine/d3d9/mtld3d/i386-windows/d3d9.dll" &&
-     -s "$ROOT/sage-metal-runtime/wine/lib/wine/d3d9/mtld3d/x86_64-unix/mtld3d.so" ]]
+  local runtime="$ROOT/sage-metal-runtime" version unix=aarch64-unix
+  version="$(sage_metal_installed)"
+  if [[ "$version" == "$SAGE_LEGACY_METAL" ]]; then unix=x86_64-unix
+  elif [[ "$version" != "$(sage_metal_version)" ]]; then return 1; fi
+  [[ -x "$runtime/wine/bin/wine" &&
+     -s "$runtime/wine/lib/wine/d3d9/mtld3d/i386-windows/d3d9.dll" &&
+     -s "$runtime/wine/lib/wine/d3d9/mtld3d/$unix/mtld3d.so" ]]
 }
 sage_mtld3d_profile() {
   [[ "$PLATFORM" == macos ]] && { sage_metal_runtime_ready || [[ "$(cat "$ROOT/compatibility/$1/.runtime-choice" 2>/dev/null)" == mtld3d-test ]]; }
 }
 sage_mac_prefix() {
   if sage_mtld3d_profile "$1"; then
-    if [[ -d "$ROOT/compatibility/$1/mtld3d-test/prefix" ]]; then printf '%s/compatibility/%s/mtld3d-test/prefix\n' "$ROOT" "$1"
+    if sage_metal_runtime_ready && sage_metal_mach9; then printf '%s/compatibility/%s/mach9/prefix\n' "$ROOT" "$1"
+    elif [[ -d "$ROOT/compatibility/$1/mtld3d-test/prefix" ]]; then printf '%s/compatibility/%s/mtld3d-test/prefix\n' "$ROOT" "$1"
     else printf '%s/compatibility/%s/metal/prefix\n' "$ROOT" "$1"; fi
   elif sage_wine10_profile "$1"; then printf '%s/compatibility/%s/wine10-test/prefix\n' "$ROOT" "$1"
   else printf '%s/compatibility/%s/prefix\n' "$ROOT" "$1"; fi
@@ -27,6 +36,13 @@ sage_mac_wine() {
   else printf '%s/sage-runtime/wine/wswine.bundle/bin/wine\n' "$ROOT"; fi
 }
 sage_supported() { [[ "$PLATFORM" == linux || "$(sw_vers -productVersion | cut -d. -f1)" -ge 15 ]]; }
+# New installs get Mach9, whose arm64 Wine is built for macOS 26.4. Installed runtimes keep working.
+sage_install_supported() {
+  [[ "$PLATFORM" == linux ]] && return 0
+  local major minor
+  IFS=. read -r major minor _ <<< "${GX_MACOS_VERSION:-$(sw_vers -productVersion)}.0"
+  (( 10#$major > 26 || (10#$major == 26 && 10#$minor >= 4) ))
+}
 sage_steam_root() {
   local path
   if [[ -n "${GX_STEAM_ROOT:-}" ]]; then printf '%s\n' "$GX_STEAM_ROOT"; return; fi
@@ -92,7 +108,7 @@ sage_engine_ready() {
     sage_metal_runtime_ready && return 0
     local metal_root="$ROOT/compatibility/${1:-$PROFILE}/mtld3d-test"
     [[ -x "$(sage_mac_wine "${1:-$PROFILE}")" &&
-       "$(cat "$metal_root/.version" 2>/dev/null)" == cx-26.3.0-7+mtld3d-0.12.0 &&
+       "$(cat "$metal_root/.version" 2>/dev/null)" == "$SAGE_LEGACY_METAL" &&
        -s "$metal_root/wine/lib/wine/d3d9/mtld3d/i386-windows/d3d9.dll" &&
        -s "$metal_root/wine/lib/wine/d3d9/mtld3d/x86_64-unix/mtld3d.so" ]]; return
   fi
@@ -157,29 +173,22 @@ sage_open_steam() {
   "$binary" "$1" > /dev/null 2>&1 < /dev/null &
 }
 sage_install() {
-  sage_supported || fail 'These games require Apple Silicon and macOS 15 or later. Older games keep their existing requirements.'
+  # Repair must not replace a working runtime that can no longer be downloaded.
+  if [[ "$PLATFORM" == macos && "$(sage_metal_installed)" == "$SAGE_LEGACY_METAL" ]] && sage_metal_runtime_ready; then
+    echo 'The installed Metal runtime (Wine cx-26.3.0-7) is complete and kept. Its archive is no longer published.'; return
+  fi
+  sage_install_supported || fail 'These games require Apple Silicon and macOS 26.4 or later. Older games keep their existing requirements.'
   if [[ "$PLATFORM" == linux ]]; then
     sage_steam_ready || fail 'Install and open the native Linux Steam client, then use Open Steam setup.'
     sage_open_steam "steam://nav/games/details/$(compatibility_metadata "$PROFILE" 5)"
     echo 'Steam manages Proton and its updates. Enable Proton in this game’s Properties → Compatibility, then install the game in Steam.'; return
   fi
-  compatibility_package sage-metal-wine
-  download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"
+  download_package compatibility-packages.tsv sage-metal-wine
   mkdir -p "$WORK/metal"
-  tar -xJf "$CACHE/$COMPAT_ARCHIVE" -C "$WORK/metal"
-  [[ -x "$WORK/metal/wine/bin/wine" ]] || fail 'The Metal-compatible Wine engine is incomplete.'
-  compatibility_package sage-metal-renderer
-  download "$COMPAT_ARCHIVE" "$COMPAT_URL" "$COMPAT_SHA"
-  mkdir -p "$WORK/renderer"
-  tar -xJf "$CACHE/$COMPAT_ARCHIVE" -C "$WORK/renderer"
-  local architecture
-  for architecture in i386-windows x86_64-windows x86_64-unix; do
-    cp -R "$WORK/renderer/wine/$architecture/"* "$WORK/metal/wine/lib/wine/d3d9/mtld3d/$architecture/"
-  done
-  cp -R "$WORK/renderer/prefix-markers" "$WORK/metal/"
-  cp "$WORK/renderer/LICENSE" "$WORK/metal/mtld3d-LICENSE"
+  tar -xJf "$CACHE/$PACKAGE_ARCHIVE" -C "$WORK/metal"
+  [[ -x "$WORK/metal/wine/bin/wine" && -s "$WORK/metal/wine/lib/wine/d3d9/mtld3d/aarch64-unix/mtld3d.so" ]] || fail 'The Metal-compatible Wine engine is incomplete.'
   cp "$RESOURCES/manifests/sage-notice.txt" "$WORK/metal/NOTICE.txt"
-  printf 'cx-26.3.0-7+mtld3d-0.12.0\n' > "$WORK/metal/.version"
+  sage_metal_version > "$WORK/metal/.version"
   xattr -dr com.apple.quarantine "$WORK/metal" 2>/dev/null || true
   [[ ! -d "$ROOT/sage-metal-runtime" ]] || mv "$ROOT/sage-metal-runtime" "$WORK/previous-metal"
   if ! mv "$WORK/metal" "$ROOT/sage-metal-runtime"; then
@@ -190,7 +199,8 @@ sage_install() {
   echo 'Wine and Metal renderer prepared. No Steam client, game or Wine prefix was started.'
 }
 sage_prepare_metal_prefix() {
-  local binary="$1" profile="$2" old_prefix old_wine architecture destination version=cx-26.3.0-7+mtld3d-0.12.0
+  local binary="$1" profile="$2" old_prefix old_wine architecture destination version
+  version="$(sage_metal_installed)"; [[ -n "$version" ]] || version="$SAGE_LEGACY_METAL"
   [[ "$(cat "$COMPAT_PREFIX/.metal-version" 2>/dev/null)" != "$version" ]] || return 0
   if [[ ! -d "$COMPAT_PREFIX" ]]; then
     old_prefix="$ROOT/compatibility/$profile/prefix"
@@ -199,15 +209,22 @@ sage_prepare_metal_prefix() {
       old_prefix="$ROOT/compatibility/$profile/wine10-test/prefix"
       old_wine="$ROOT/compatibility/$profile/wine10-test/engine/wswine.bundle/bin/wine"
     fi
+    # A Mach9 prefix starts as a copy of the x86_64 Metal prefix the game last used, which stays for rollback.
+    if sage_metal_mach9; then
+      for candidate in mtld3d-test/prefix metal/prefix; do
+        [[ -d "$ROOT/compatibility/$profile/$candidate" ]] || continue
+        old_prefix="$ROOT/compatibility/$profile/$candidate"; old_wine=''; break
+      done
+    fi
     mkdir -p "$(dirname "$COMPAT_PREFIX")"
     if [[ -d "$old_prefix" ]]; then
-      WINEPREFIX="$old_prefix" DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib" "$(dirname "$old_wine")/wineserver" -k >/dev/null 2>&1 || true
+      [[ -z "$old_wine" ]] || WINEPREFIX="$old_prefix" DYLD_FALLBACK_LIBRARY_PATH="$ROOT/sage-runtime/Frameworks:/usr/lib" "$(dirname "$old_wine")/wineserver" -k >/dev/null 2>&1 || true
       copy_tree "$old_prefix" "$WORK/metal-prefix"
       mv "$WORK/metal-prefix" "$COMPAT_PREFIX"
     fi
   fi
   "$binary" wineboot -u > "$ROOT/logs/$profile.log" 2>&1 || fail 'Game prefix initialization failed. Check its profile log.'
-  if sage_metal_runtime_ready; then
+  if sage_metal_runtime_ready && [[ -d "$ROOT/sage-metal-runtime/prefix-markers" ]]; then
     for destination in syswow64 system32; do
       copy_file "$ROOT/sage-metal-runtime/prefix-markers/$destination/mtld3d.dll" "$COMPAT_PREFIX/drive_c/windows/$destination/mtld3d.dll"
     done
@@ -336,7 +353,8 @@ sage_mac_environment() {
     [[ "${3:-false}" == true ]] || export DXVK_FORCE_WINDOWED=1
     if sage_mtld3d_profile "$profile"; then
       unset DYLD_FALLBACK_LIBRARY_PATH GST_PLUGIN_PATH MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS DXVK_ASYNC DXVK_LOG_PATH DXVK_FORCE_WINDOWED
-      printf -v WINE_COMPATDB 'v=3\nname=cnc-game-metal;exe=%s;d3d9=mtld3d' "$(basename "$executable")"
+      if sage_metal_mach9; then printf -v WINE_COMPATDB 'exe=%s;d3d9=mtld3d' "$(basename "$executable")"
+      else printf -v WINE_COMPATDB 'v=3\nname=cnc-game-metal;exe=%s;d3d9=mtld3d' "$(basename "$executable")"; fi
       export WINE_COMPATDB
     fi
  }
@@ -344,7 +362,7 @@ sage_launch() {
   local profile="$PROFILE" full=false width=1280 height=720 argument folder config executable binary result=0 attempt seen=0
   compatibility_running && fail 'A game is already running. Quit it before switching games.'
   launcher_native_running && fail 'Quit the running game before switching games.'
-  sage_engine_ready "$profile" || fail 'Prepare the DirectX 9 runtime first. Mac requires macOS 15+; Linux requires Steam and Proton.'
+  sage_engine_ready "$profile" || fail 'Prepare the DirectX 9 runtime first. Mac requires macOS 26.4+ to prepare it; Linux requires Steam and Proton.'
   sage_assets_ready "$profile" || fail 'Install and validate the English Steam game first.'
   shift 2
   compatibility_parse_display "$@"

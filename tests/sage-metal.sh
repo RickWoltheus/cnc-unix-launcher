@@ -1,23 +1,25 @@
 #!/bin/bash
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-[[ "$(uname -s)" == Darwin && $# -ge 2 ]] || { echo 'Provide pinned Wine and mtld3d archives on Mac.'; exit 1; }
+[[ "$(uname -s)" == Darwin && $# -ge 1 ]] || { echo 'Provide the pinned Mach9 Wine archive on Mac.'; exit 1; }
 TEST_ROOT="$(mktemp -d)"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 export GX_INSTALL_ROOT="$TEST_ROOT/Install With Spaces"
+# Preparation is gated on macOS 26.4; the launches below use synthetic Wine.
+export GX_MACOS_VERSION=26.4
 ROOT="$GX_INSTALL_ROOT"
 mkdir -p "$ROOT/downloads" "$ROOT/wine-runtime"
 printf 'old engine retained' > "$ROOT/wine-runtime/retained"
-cp "$1" "$ROOT/downloads/wine-cx-26.3.0-7-macos-x86_64.tar.xz"
-cp "$2" "$ROOT/downloads/mtld3d-0.12.0.tar.xz"
+cp "$1" "$ROOT/downloads/$(awk -F '\t' '$1=="sage-metal-wine" {print $3}' "$REPO/manifests/compatibility-packages.tsv")"
 bash "$REPO/scripts/backend.sh" engine cnc3
 [[ ! -d "$ROOT/compatibility/cnc3" ]]
 [[ "$(cat "$ROOT/wine-runtime/retained")" == 'old engine retained' ]]
-for architecture in i386-windows x86_64-windows; do
+for architecture in i386-windows aarch64-windows; do
  [[ -s "$ROOT/sage-metal-runtime/wine/lib/wine/d3d9/mtld3d/$architecture/d3d9.dll" ]]
 done
-[[ -s "$ROOT/sage-metal-runtime/mtld3d-LICENSE" ]]
-if [[ $# -ge 3 ]]; then cp "$3" "$ROOT/downloads/SteamSetup-2026-10-09.exe"; fi
+[[ -s "$ROOT/sage-metal-runtime/wine/lib/wine/d3d9/mtld3d/aarch64-unix/mtld3d.so" && -s "$ROOT/sage-metal-runtime/NOTICE.txt" ]]
+[[ "$(cat "$ROOT/sage-metal-runtime/.version")" == mach9-* ]]
+if [[ $# -ge 2 ]]; then cp "$2" "$ROOT/downloads/$(awk -F '\t' '$1=="sage-steam" {print $3}' "$REPO/manifests/compatibility-packages.tsv")"; fi
 fixture="$ROOT/sage-metal-runtime/wine/bin/wine"
 mv "$fixture" "$fixture.original"
 export GX_METAL_FIXTURE_ROOT="$ROOT"
@@ -50,6 +52,10 @@ for id in cnc3 kw ra3; do
    prefix_dir="$ROOT/compatibility/cnc3/wine10-test/prefix"
    mkdir -p "$(dirname "$prefix_dir")"
    printf 'wine10-test\n' > "$ROOT/compatibility/cnc3/.runtime-choice"
+ fi
+ # The tested RA3 setup lived in an mtld3d-test prefix; Mach9 must start from it.
+ [[ "$id" != ra3 ]] || prefix_dir="$ROOT/compatibility/ra3/mtld3d-test/prefix"
+ if [[ "$id" != kw ]]; then
    mkdir -p "$prefix_dir/drive_c/users/test/Saved Games"
    printf 'synthetic save preserved' > "$prefix_dir/drive_c/users/test/Saved Games/sentinel.sav"
  fi
@@ -61,16 +67,17 @@ for id in cnc3 kw ra3; do
  printf 'synthetic CAB' > "$game/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
  printf 'synthetic CAB' > "$game/_CommonRedist/DirectX/Jun2010/Feb2006_d3dx9_29_x86.cab"
  printf 'synthetic CAB' > "$game/_CommonRedist/DirectX/Jun2010/Nov2007_d3dx9_36_x86.cab"
- if [[ $# -lt 3 || "$id" != cnc3 ]]; then printf 'MZsynthetic Steam' > "$steam/steam.exe"; fi
+ if [[ $# -lt 2 || "$id" != cnc3 ]]; then printf 'MZsynthetic Steam' > "$steam/steam.exe"; fi
  python3 "$REPO/tests/fixtures/steam-browser.py" "$steam/bin/cef/cef.win64/steamwebhelper.exe" 'synthetic browser'
  bash "$REPO/scripts/backend.sh" launch "$id" -win
- grep -q "exe=$exe;d3d9=mtld3d" "$ROOT/handoff.txt"
+ grep -qx "exe=$exe;d3d9=mtld3d" "$ROOT/handoff.txt"
  grep -qx "$app" "$ROOT/handoff.txt"
  [[ "$(head -n 1 "$ROOT/launch-$id.status")" == closed ]]
- [[ -s "$ROOT/compatibility/$id/metal/prefix/.metal-version" ]]
- if [[ "$id" == cnc3 ]]; then
-   cmp "$prefix_dir/drive_c/users/test/Saved Games/sentinel.sav" "$ROOT/compatibility/$id/metal/prefix/drive_c/users/test/Saved Games/sentinel.sav"
-   [[ -L "$ROOT/compatibility/$id/metal/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/Owned CNC3" ]]
+ mach9="$ROOT/compatibility/$id/mach9/prefix"
+ [[ -s "$mach9/.metal-version" && -d "$prefix_dir/drive_c" ]]
+ if [[ "$id" != kw ]]; then
+   cmp "$prefix_dir/drive_c/users/test/Saved Games/sentinel.sav" "$mach9/drive_c/users/test/Saved Games/sentinel.sav"
  fi
+ [[ "$id" != cnc3 ]] || [[ -L "$mach9/drive_c/Program Files (x86)/Steam/steamapps/common/Owned CNC3" ]]
 done
-printf 'Clean pinned Metal install, per-game Wine prefix setup, owned dependency repair and Steam handoff passed. Synthetic processes only.\n'
+printf 'Clean pinned Mach9 install, migration from older prefixes (kept for rollback), per-game Wine prefix setup, owned dependency repair and Steam handoff passed. Synthetic processes only.\n'

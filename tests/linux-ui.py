@@ -156,6 +156,8 @@ class StateChecks(unittest.TestCase):
         self.state.values["steam_download_vanilla"] = "no-license"
         self.assertEqual(self.state.steam_guidance["title"], "This Steam account does not own the game")
         self.assertEqual(self.state.recovery_for("Checksum mismatch")["title"], "The download did not match")
+        self.assertEqual(self.state.recovery_for("curl: (22) The requested URL returned error: 404\nDownload removed: wine.tar.xz is no longer published")["title"], "A required download was removed")
+        self.assertEqual(self.state.recovery_for("curl: (6) Could not resolve host\nDownload failed for wine.tar.xz")["title"], "The download server is unavailable")
 
 
 class WidgetChecks(unittest.TestCase):
@@ -185,6 +187,17 @@ class WidgetChecks(unittest.TestCase):
         self.window.run_actions = lambda actions, **kwargs: calls.append(actions)
         self.window.prepare()
         self.assertEqual(calls, [[("sage-steam", "cnc3")]])
+
+    def test_unsupported_engine_blocks_prepare(self):
+        self.window.state.selected_game = "cnc3"
+        self.window.state.update("platform=ready\nsteam=ready\ndependencies=ready\nwine_dependencies=ready\ncnc3_engine=unsupported\ncnc3_assets=missing\ninstall=idle")
+        calls = []
+        self.window.run_actions = lambda actions, **kwargs: calls.append(actions)
+        self.window.refresh_view()
+        self.assertFalse(self.window.prepare_button.isEnabled())
+        self.assertIn("not supported", self.window.engine_row.text())
+        self.window.prepare()
+        self.assertEqual(calls, [])
 
     def test_stop_remains_available_during_stalled_launch(self):
         self.window.state.game_running = True

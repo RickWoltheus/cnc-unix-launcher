@@ -1,9 +1,21 @@
 name: Build native launchers
 on:
   workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
 permissions:
   contents: read
 jobs:
+  mac-runtime:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install the pinned C&C 3 runtime and run D3D9 through mtld3d
+        env:
+          GX_REQUIRE_RUNTIME_SMOKE: '1'
+        run: bash tests/runtime-smoke.sh
   build:
     runs-on: macos-15
     steps:
@@ -14,6 +26,7 @@ jobs:
         run: brew install cmake
       - name: Check backend behavior
         run: |
+          bash tests/downloads.sh
           bash tests/backend.sh
           bash tests/ini-settings.sh
           bash tests/security.sh
@@ -48,6 +61,7 @@ jobs:
       - name: Check Linux UI and shared backend
         run: |
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test python3 tests/linux-ui.py
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/downloads.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/wine-lifecycle.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/security.sh
           docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/ini-settings.sh

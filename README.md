@@ -25,15 +25,14 @@ Original (Vanilla Conquer) or OpenRA,
 Generals and Zero Hour through GeneralsX, and experimental Wine profiles for
 Red Alert 2, Yuri’s Revenge and Tiberian Sun/Firestorm. The v0.4.0 prerelease adds
 C&C 3, Kane’s Wrath and Red Alert 3 support: free Wine + mtld3d
-Metal rendering on Apple Silicon with macOS 15+,
+Metal rendering on Apple Silicon (new installs need macOS 26.4+),
 native Steam + Proton on Linux. Kane’s Wrath and Linux gameplay remain experimental.
 See [C&C 3 setup and testing](docs/cnc3.md) and the separate
 [experimental Red Alert 3 profile](docs/ra3.md). The experimental Mac Steam browser
 helper uses single-process Chromium for Wine compatibility, reducing browser
 process isolation; the guide explains that tradeoff. C&C 3 and RA3 were tested on one Mac with excellent user-reported performance;
-Kane’s Wrath and Linux gameplay remain unverified. The upstream Wine bundle
-also contains proprietary Apple D3DMetal and its license for compatible
-applications; the whole runtime is not open source. C&C 4 is excluded. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
+Kane’s Wrath and Linux gameplay remain unverified, as does the Mach9 runtime
+that replaced the earlier, no longer published one. C&C 4 is excluded. macOS uses SwiftUI; Linux has a separate Qt/PySide6 UI
 with the same guided flow.
 
 Years of work by engine developers, mod teams and open-source maintainers make
@@ -57,7 +56,7 @@ Fresh-machine setup, live Linux gameplay and the full game/mod catalog still nee
 broader testing. Wine profiles remain experimental. See [verification.md](docs/verification.md)
 for the evidence and remaining checks.
 
-**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.1/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.1/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
+**[Download for Apple Silicon Mac](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.6.0/CnC-Unix-Launcher-macOS-arm64.zip)** · **[Download for Linux x86_64](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.6.0/CnC-Unix-Launcher-linux-x86_64.tar.gz)**
 
 ## Screenshots
 
@@ -100,7 +99,8 @@ cannot guarantee the safety of every third-party dependency.
 
 End users do not need Homebrew, Xcode, a compiler, CrossOver, or a VM. SteamCMD
 requires Apple's free Rosetta. OpenRA and GeneralsX run natively as ARM64;
-Wine games also use Rosetta and are not native ports.
+the older Wine games also use Rosetta, C&C 3, Kane’s Wrath and Red Alert 3 run
+through Mach9’s built-in x86 emulation instead, and none of them are native ports.
 
 **Linux preview:** x86_64 Ubuntu 24.04+ / Debian 12+ desktops with Vulkan-capable drivers
 and glibc 2.36 or newer. Intel Macs, macOS 14 and ARM Linux are not supported by these packages.
@@ -114,7 +114,7 @@ sandbox and GPU/gameplay tests remain pending.
 
 For the current community preview:
 
-1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.4.1/CnC-Unix-Launcher-macOS-arm64.zip).
+1. Download [CnC-Unix-Launcher-macOS-arm64.zip](https://github.com/RickWoltheus/cnc-unix-launcher/releases/download/v0.6.0/CnC-Unix-Launcher-macOS-arm64.zip).
 2. Extract it, and move **C&C Unix Launcher.app** to Applications.
 3. Open the app. For the unnotarized preview, use **System Settings → Privacy &
    Security → Open Anyway** after the first blocked launch. You can alternatively

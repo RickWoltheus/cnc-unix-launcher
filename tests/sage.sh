@@ -92,7 +92,8 @@ DIRECTX_FIXTURE
   rm "$COMPAT_GAME/_CommonRedist/DirectX/Jun2010/AUG2007_d3dx9_35_x86.cab"
   if (sage_prepare_directx_helpers "$TEST_ROOT/directx-wine" ra3) >/dev/null 2>&1; then fail 'Missing owned RA3 CAB accepted.'; fi
 )
-if [[ $# -ge 2 ]]; then
-  /bin/bash "$REPO/tests/sage-metal.sh" "$@"
+if [[ $# -ge 1 ]]; then
+  # The real-archive check replaces Wine itself with a synthetic binary instead of using the wrapper.
+  env -u GX_LAUNCH_WRAPPER /bin/bash "$REPO/tests/sage-metal.sh" "$@"
 fi
 printf 'C&C 3 Steam library discovery, Proton selection, versioned startup, path rejection and dummy launches passed. No game or Steam client ran.\n'

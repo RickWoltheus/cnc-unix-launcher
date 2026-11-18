@@ -103,6 +103,10 @@ class LauncherState:
         return self.values.get(key) == "ready"
 
     @property
+    def engine_unsupported(self):
+        return not self.steam_target and self.values.get(self.selected_game + "_engine") == "unsupported"
+
+    @property
     def steam_status(self):
         return self.values.get("steam_download_" + self.steam_profile, "idle")
 

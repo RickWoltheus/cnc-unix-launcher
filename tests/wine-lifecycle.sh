@@ -12,6 +12,7 @@ cleanup() {
   rm -rf "$TEST_ROOT"
 }
 trap cleanup EXIT
+source "$REPO/scripts/downloads.sh"
 source "$REPO/scripts/compatibility.sh"
 source "$REPO/scripts/sage.sh"
 PLATFORM=linux; [[ "$(uname -s)" != Darwin ]] || PLATFORM=macos

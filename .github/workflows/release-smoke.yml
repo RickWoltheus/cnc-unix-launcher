@@ -1,0 +1,77 @@
+name: Release smoke test
+# Tests what players download: on publish, weekly for the newest release, or a chosen tag.
+on:
+  release:
+    types: [published]
+  schedule:
+    - cron: '41 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to test (default newest)
+        required: false
+permissions:
+  contents: read
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          tag="${REQUESTED:-$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --json tagName --jq '[.[] | select(.tagName | startswith("v"))][0].tagName')}"
+          [[ -n "$tag" ]] || { echo 'No release to test.'; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+  mac:
+    needs: tag
+    runs-on: macos-15
+    env:
+      TAG: ${{ needs.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+          path: release-source
+      - name: Check the published Mac app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="$(cut -f4 release-source/manifests/product.tsv)"
+          gh release download "$TAG" --pattern "$archive" --pattern SHA256SUMS.txt --dir "$RUNNER_TEMP/release"
+          (cd "$RUNNER_TEMP/release" && grep "  $archive\$" SHA256SUMS.txt | shasum -a 256 -c -)
+          ditto -x -k "$RUNNER_TEMP/release/$archive" "$RUNNER_TEMP/app"
+          app="$(find "$RUNNER_TEMP/app" -maxdepth 1 -name '*.app' -print -quit)"
+          codesign --verify --deep --strict "$app"
+          GX_INSTALL_ROOT="$RUNNER_TEMP/root" bash "$app/Contents/Resources/scripts/backend.sh" status cnc3
+      - name: Check every download the release pins in its manifests
+        env:
+          PINS_ROOT: release-source
+        run: python3 scripts/pins.py check
+  linux:
+    needs: tag
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ needs.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Download the published Linux archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="$(gh api "repos/$GITHUB_REPOSITORY/contents/manifests/product.tsv?ref=$TAG" -H 'Accept: application/vnd.github.raw' | cut -f5)"
+          gh release download "$TAG" --pattern "$archive" --pattern SHA256SUMS.txt --dir "$RUNNER_TEMP/release"
+          (cd "$RUNNER_TEMP/release" && grep "  $archive\$" SHA256SUMS.txt | sha256sum -c -)
+          mkdir -p dist/linux
+          tar -xzf "$RUNNER_TEMP/release/$archive" -C dist/linux
+      - name: Build isolated Linux environment
+        run: docker build --platform linux/amd64 -t gx-launcher-linux-test -f linux/Dockerfile.test .
+      - name: Run the published launcher's self-checks and virtual display
+        run: |
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash dist/linux/CnCUnixLauncher/start-launcher.sh --check
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test dist/linux/CnCUnixLauncher/CnCUnixLauncher --self-check
+          docker run --rm -v "$PWD:/project" gx-launcher-linux-test bash tests/linux-x11.sh

@@ -30,27 +30,23 @@ options_directory() { echo "$ROOT/user-data/GeneralsX/$1"; }
 prepare_steam_login() { dependencies_ready || fail 'Install Linux dependencies from Prepare Mac/Linux before signing in.'; }
 engine_install() {
   dependencies_ready || fail 'Linux dependencies are missing. Install Flatpak and 32-bit SteamCMD support first.'
-  local name=GeneralsXZH checksum=0d7212559c239c29db4117096ebcb7bdc8fdb8c4825c931cc3d4093a3e2f85c2
-  if [[ "$PROFILE" == base ]]; then
-    name=GeneralsX
-    checksum=73ed661306dbb5faac90b1cdcf6ecae47245ac69a1070d0f9e04e05345085451
-  fi
-  download "$name-1.0.2.flatpak" "https://github.com/fbraz3/GeneralsX/releases/download/1.0.2/Linux-$name.flatpak" "$checksum"
+  local pin=generalsx-linux-vanilla
+  [[ "$PROFILE" != base ]] || pin=generalsx-linux-base
+  download_package engine-packages.tsv "$pin"
   "$FLATPAK" remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  "$FLATPAK" install --user --noninteractive --reinstall -y "$CACHE/$name-1.0.2.flatpak"
+  "$FLATPAK" install --user --noninteractive --reinstall -y "$CACHE/$PACKAGE_ARCHIVE"
   mkdir -p "$ROOT/linux-engines"
   commit="$("$FLATPAK" info --user --show-commit "$(app_id "$ENGINE")")"
   [[ -n "$commit" ]] || fail 'Could not verify the installed Flatpak commit.'
-  printf '1.0.2\n%s\n' "$commit" > "$ROOT/linux-engines/$(app_id "$ENGINE").commit"
+  printf '%s\n%s\n' "$PACKAGE_VERSION" "$commit" > "$ROOT/linux-engines/$(app_id "$ENGINE").commit"
   engine_ready "$ENGINE" || fail 'Flatpak engine installation did not complete.'
   echo 'Native Linux engine installed.'
 }
 steam_install() {
   dependencies_ready || fail 'Linux dependencies are missing. Install 32-bit SteamCMD support first.'
-  download steamcmd-linux-bootstrap.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
-    cebf0046bfd08cf45da6bc094ae47aa39ebf4155e5ede41373b579b8f1071e7c
+  download_package engine-packages.tsv steamcmd-linux
   mkdir -p "$WORK/steamcmd"
-  tar -xzf "$CACHE/steamcmd-linux-bootstrap.tar.gz" -C "$WORK/steamcmd"
+  tar -xzf "$CACHE/$PACKAGE_ARCHIVE" -C "$WORK/steamcmd"
   [[ -x "$WORK/steamcmd/steamcmd.sh" ]] || fail 'SteamCMD bootstrap is incomplete.'
   if [[ ! -d "$ROOT/steamcmd" ]]; then mv "$WORK/steamcmd" "$ROOT/steamcmd"; fi
   echo 'Linux SteamCMD installed; Valve updates it on first run.'
