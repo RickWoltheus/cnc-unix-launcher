@@ -26,6 +26,7 @@ final class LauncherModel: ObservableObject {
     @Published var baseEngine = false
     @Published var baseAssets = false
     @Published var classicEngines: Set<String> = []
+    @Published var unsupportedEngines: Set<String> = []
     @Published var classicAssets: Set<String> = []
     @Published var selectedGame = "vanilla"
     @Published var selectedMod = "vanilla"
@@ -100,6 +101,11 @@ final class LauncherModel: ObservableObject {
     var steamProfile: String { steamTarget ?? selectedGame }
     var steamTitle: String { catalog.first { $0.id == steamProfile }?.title ?? game.title }
     var gameEngineReady: Bool { if let target = steamTarget { return nativeEngines.contains(target) }; return (game.isClassic || game.isCompatibility) ? classicEngines.contains(selectedGame) : (selectedGame == "base" ? baseEngine : engine) }
+    var gameEngineUnsupported: Bool { steamTarget == nil && unsupportedEngines.contains(selectedGame) }
+    var engineRequirement: String {
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return "\(game.unsupportedRequirement) This Mac runs macOS \(version.majorVersion).\(version.minorVersion).\(version.patchVersion)."
+    }
     var gameAssetsReady: Bool {
         let ready = steamTarget.map { installedMods.contains($0) } ?? ((game.isClassic || game.isCompatibility) ? classicAssets.contains(selectedGame) : (selectedGame == "base" ? baseAssets : assets))
         return ready && !steamStarting && !steamSessionRunning && !externalInstallRunning && ["idle", "complete"].contains(steamDownloadStatus)
@@ -133,6 +139,7 @@ final class LauncherModel: ObservableObject {
 
     func stepHelp(_ index: Int) -> String {
         if !systemSupported { return "This launcher needs Apple Silicon and macOS 15 or later." }
+        if index >= 1 && gameEngineUnsupported { return engineRequirement }
         if index >= 2 && (!gameEngineReady || !steam) { return "Prepare your Mac before signing into Steam." }
         if index == 3 && !gameAssetsReady { return "Finish Steam sign-in and validate the game download first." }
         return "Open this step."
@@ -160,6 +167,7 @@ final class LauncherModel: ObservableObject {
                 baseEngine = states.contains("base_engine=ready")
                 baseAssets = states.contains("base_assets=ready")
                 classicEngines = Set(GameInfo.catalog.filter { $0.isClassic || $0.isCompatibility }.map(\.id).filter { states.contains("\($0)_engine=ready") })
+                unsupportedEngines = Set(GameInfo.catalog.filter(\.isCompatibility).map(\.id).filter { states.contains("\($0)_engine=unsupported") })
                 classicAssets = Set(GameInfo.catalog.filter { $0.isClassic || $0.isCompatibility }.map(\.id).filter { states.contains("\($0)_assets=ready") })
                 nativeEngines = Set(catalog.filter { $0.native && states.contains("native_engine_\($0.id)=ready") }.map(\.id))
                 installedMods = Set(catalog.filter { states.contains("\($0.id)=ready") }.map(\.id))
@@ -228,7 +236,7 @@ final class LauncherModel: ObservableObject {
     }
 
     func prepare() {
-        guard canEnterStep(1) else { return }
+        guard canEnterStep(1) && !gameEngineUnsupported else { return }
         perform(["engine", "steam"], success: "Ready for Steam sign-in. Click Download Steam game.")
     }
 

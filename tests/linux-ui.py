@@ -188,6 +188,17 @@ class WidgetChecks(unittest.TestCase):
         self.window.prepare()
         self.assertEqual(calls, [[("sage-steam", "cnc3")]])
 
+    def test_unsupported_engine_blocks_prepare(self):
+        self.window.state.selected_game = "cnc3"
+        self.window.state.update("platform=ready\nsteam=ready\ndependencies=ready\nwine_dependencies=ready\ncnc3_engine=unsupported\ncnc3_assets=missing\ninstall=idle")
+        calls = []
+        self.window.run_actions = lambda actions, **kwargs: calls.append(actions)
+        self.window.refresh_view()
+        self.assertFalse(self.window.prepare_button.isEnabled())
+        self.assertIn("not supported", self.window.engine_row.text())
+        self.window.prepare()
+        self.assertEqual(calls, [])
+
     def test_stop_remains_available_during_stalled_launch(self):
         self.window.state.game_running = True
         self.window.state.busy = True

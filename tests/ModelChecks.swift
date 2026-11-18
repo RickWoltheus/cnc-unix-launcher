@@ -68,6 +68,11 @@ struct ModelChecks {
         precondition(GameInfo.catalog.contains { $0.id == "cnc3" && $0.isSage && $0.compatibilityDetail.contains("Metal") })
         precondition(GameInfo.catalog.contains { $0.id == "kw" && $0.isSage })
         precondition(GameInfo.catalog.contains { $0.id == "ra3" && $0.isSage && $0.steamID == "17480" })
+        model.selectedGame = "cnc3"
+        model.unsupportedEngines = ["cnc3"]
+        precondition(model.gameEngineUnsupported && model.engineRequirement.contains("macOS 26.4") && model.engineRequirement.contains("This Mac runs macOS"))
+        precondition(model.stepHelp(1) == model.engineRequirement)
+        model.unsupportedEngines = []
         for id in ["cnc", "ra", "cnc-original", "ra-original", "ra2", "yuri", "ts", "cnc3", "kw", "ra3"] {
             model.selectedGame = id
             precondition(model.activeProfile == id)

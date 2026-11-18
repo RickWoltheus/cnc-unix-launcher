@@ -112,7 +112,9 @@ if [[ "$ACTION" == status ]]; then
   done < "$RESOURCES/manifests/native-mods.tsv"
   for game in ra2 yuri ts cnc3 kw ra3; do
     if sage_profile "$game"; then echo "launch_$game=$(sage_launch_status "$game")"; launch_pid="$(sed -n '2p' "$ROOT/launch-$game.status" 2>/dev/null || true)"; [[ "$launch_pid" =~ ^[0-9]+$ ]] && echo "launch_pid_$game=$launch_pid"; fi
-    compatibility_engine_ready "$game" && echo "${game}_engine=ready" || echo "${game}_engine=missing"
+    if compatibility_engine_ready "$game"; then echo "${game}_engine=ready"
+    elif sage_profile "$game" && ! sage_install_supported; then echo "${game}_engine=unsupported"
+    else echo "${game}_engine=missing"; fi
     compatibility_assets_ready "$game" && echo "${game}_assets=ready" || echo "${game}_assets=missing"
   done
   for game in vanilla base cnc ra cnc-original ra-original combined-arms tdhd ra2 yuri ts cnc3 kw ra3; do

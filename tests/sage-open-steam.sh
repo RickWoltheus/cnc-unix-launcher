@@ -42,6 +42,11 @@ FIXTURE
       [[ "$output" == *'is complete and kept'* ]]
       [[ "$(cat "$runtime/.version")" == "$version" && -s "$runtime/wine/lib/wine/d3d9/mtld3d/x86_64-unix/mtld3d.so" ]]
     done
+    [[ "$(GX_MACOS_VERSION=26.3 bash "$REPO/scripts/backend.sh" status cnc3)" == *$'\ncnc3_engine=ready\n'* ]]
   fi
 done
+# A fresh Mac below Mach9's minimum is told before Prepare, not after a download.
+export GX_INSTALL_ROOT="$TEST_ROOT/fresh"
+[[ "$(GX_MACOS_VERSION=26.0.1 bash "$REPO/scripts/backend.sh" status cnc3)" == *$'\ncnc3_engine=unsupported\n'* ]]
+[[ "$(GX_MACOS_VERSION=26.4 bash "$REPO/scripts/backend.sh" status cnc3)" == *$'\ncnc3_engine=missing\n'* ]]
 printf 'Guide Open Steam retained the selected Metal environment (installed x86_64 and Mach9) and overlay settings. Synthetic client only.\n'

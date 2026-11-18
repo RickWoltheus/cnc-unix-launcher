@@ -466,8 +466,8 @@ class LauncherWindow(QMainWindow):
         self.steam_guide_button.setVisible(not self.state.sage)
         self.steam_security_note.setText("Steam handles authentication, downloads and Proton updates. Your password and Steam Guard stay in Valve’s client; this launcher does not receive them. Optional archive scans do not cover Steam-managed downloads." if self.state.sage else self.state.guide_copy["securityDetail"])
         self.signin_button.setText("OPEN STEAM INSTALL →" if self.state.sage else "SIGN IN TO STEAM →")
-        self.prepare_button.setEnabled(self.state.can_enter(1))
-        self.engine_row.setText(("✓  " if self.state.engine_ready else "○  ") + ("Compatibility " if self.state.compatibility else "Native ") + self.state.game["engine"] + " engine")
+        self.prepare_button.setEnabled(self.state.can_enter(1) and not self.state.engine_unsupported)
+        self.engine_row.setText(("✓  " if self.state.engine_ready else "✕  " if self.state.engine_unsupported else "○  ") + ("Compatibility " if self.state.compatibility else "Native ") + self.state.game["engine"] + " engine" + (" is not supported on this system" if self.state.engine_unsupported else ""))
         self.steam_row.setText(("✓  " if self.state.values.get("steam") == "ready" else "○  ") + ("Native Linux Steam client" if self.state.sage else "Valve Steam downloader and Linux support"))
         self.signin_button.setEnabled(self.state.can_enter(2) and not self.state.steam_active and not self.state.steam_starting and self.state.values.get("install") != "busy")
         self.steam_help_title.setText("Steam Proton setup" if self.state.sage else self.state.steam_guidance["title"])
@@ -604,7 +604,7 @@ class LauncherWindow(QMainWindow):
         process.start("/bin/bash", [str(self.backend), *action])
 
     def prepare(self):
-        if not self.state.can_enter(1): return
+        if not self.state.can_enter(1) or self.state.engine_unsupported: return
         if not self.state.tools_ready:
             self.waiting_dependencies = True
             self.open_terminal("Linux dependencies", ["linux-tools", self.state.selected_game])

@@ -825,3 +825,18 @@ The release smoke workflow's Mac steps were run locally against the published
 v0.5.0 assets: SHA256SUMS, signature and bundled backend status passed. The
 `macos-26` runtime smoke test could not run here (macOS 26.0.1); its first CI
 run is its first execution.
+
+## macOS 26.4 gate and v0.6.0 — 2026-11-18
+
+On this Mac (macOS 26.0.1) the pinned Mach9 Wine stops at launch: dyld cannot
+find `_posix_spawnattr_set_4k_page_size_np`, which macOS 26.4 added. Status now
+reports `unsupported` for C&C 3, Kane's Wrath and RA3 below 26.4 when no runtime
+is installed; both apps name the requirement and the Mac's version and disable
+Prepare before any download. An installed old runtime still reports ready.
+Fixtures cover 26.0.1, 26.3 (old runtime) and 26.4; Mac model, backend and
+Linux UI tests passed. The PR's `macos-26` CI run is the only Mach9 execution;
+no Steam client or game has run on Mach9.
+
+mtld3d 0.15.5 on the pinned stock Wine 11.0 under Rosetta loaded and finished
+Wine's D3D9 device tests on 26.0.1, but could not attach its Metal layer to
+windows, so it is not an older-macOS route. Older Macs are asked to update.
