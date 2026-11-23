@@ -2,9 +2,9 @@ sage-metal-wine	LGPL-2.1-or-later (Wine, vkd3d-proton, GStreamer); MIT (FEX, Mes
 macos	LGPL-2.1-or-later (Wine)	https://dl.winehq.org/wine/source/11.0/wine-11.0.tar.xz
 linux	LGPL-2.1-or-later (Wine)	https://dl.winehq.org/wine/source/11.0/wine-11.0.tar.xz
 ddraw	MIT	https://github.com/FunkyFr3sh/cnc-ddraw/tree/v7.1.0.0
-generalsx-	GPL-3.0-or-later with EA's additional terms	https://github.com/fbraz3/GeneralsX/archive/refs/tags/1.0.2.tar.gz
+generalsx-	GPL-3.0-or-later with EA's additional terms	https://github.com/fbraz3/GeneralsX/archive/refs/tags/1.0.8.tar.gz
 openra-	GPL-3.0	https://github.com/OpenRA/OpenRA/archive/refs/tags/release-20250330.tar.gz
 combined-arms-	GPL-3.0	https://github.com/Inq8/CAmod/archive/refs/tags/1.09.tar.gz
-tdhd-	GPL-3.0	https://github.com/OpenRA/TiberianDawnHD/archive/refs/tags/playtest-20260222.tar.gz
+tdhd-	GPL-3.0	https://github.com/OpenRA/TiberianDawnHD/archive/refs/tags/playtest-20261026.tar.gz
 vanilla-conquer	GPL-3.0 (source archive)	-
 sdl2	Zlib (source archive)	-

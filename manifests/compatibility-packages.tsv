@@ -2,4 +2,4 @@ macos	11.0	wine-stable-11.0_1-osx64.tar.xz	https://github.com/Gcenx/macOS_Wine_b
 linux	11.0	wine-11.0-amd64-wow64.tar.xz	https://github.com/Kron4ek/Wine-Builds/releases/download/11.0/wine-11.0-amd64-wow64.tar.xz	39574efa1132c3ca0d5c77dd2eddbe4a49cca0d6cc2c290ff4924493a1c40314	wine-11.0-amd64-wow64/bin/wine
 ddraw	7.1.0.0	cnc-ddraw-7.1.0.0.zip	https://github.com/FunkyFr3sh/cnc-ddraw/releases/download/v7.1.0.0/cnc-ddraw.zip	0b13ab89a64c9918189b1dadd449ef6ed3cb3b7b19cabd96d8adbd95505bb908	ddraw.dll
 sage-steam	Steam-bootstrap-2026-10-09	SteamSetup-2026-10-09.exe	https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe	7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb	SteamSetup.exe
-sage-metal-wine	v0.3.1	wine-v0.3.1-macos-arm64.tar.xz	https://github.com/athei/mach9/releases/download/v0.3.1/wine-v0.3.1-macos-arm64.tar.xz	90aff9a897ed0ff9aac44d0e06f0aecd3ee985afb38037f3f915451e51fa974e	wine/bin/wine
+sage-metal-wine	v0.4.0	wine-v0.4.0-macos-arm64.tar.xz	https://github.com/athei/mach9/releases/download/v0.4.0/wine-v0.4.0-macos-arm64.tar.xz	3b81aac9b93d5652872673b400769ec525f3bc2f1f7e2ec82c9f851d0a0db05d	wine/bin/wine
